@@ -56,6 +56,8 @@ add_executable(
         ${PROJECT_FORMS}
         ${PROJECT_SOURCE}
         ${PROJECT_HEADER}
+        ${PROJECT_RESOURCES}
+
 
         ${MEDIAPLAYER_FORMS}
         ${MEDIAPLAYER_SOURCE}
@@ -69,6 +71,9 @@ add_executable(
         ${EDITOR_UTILS_FORMS}
         ${EDITOR_UTILS_SOURCE}
         ${EDITOR_UTILS_HEADER}
+
+        transcriptgenerator.h
+        transcriptgenerator.cpp
 )
 
 

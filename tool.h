@@ -3,9 +3,9 @@
 #include <QMainWindow>
 #include "mediaplayer/mediaplayer.h"
 #include "editor/texteditor.h"
-
-
-
+#include<QThread>
+#include<QtConcurrent/QtConcurrent>
+#include "./transcriptgenerator.h"
 QT_BEGIN_NAMESPACE
 namespace Ui { class Tool; }
 QT_END_NAMESPACE
@@ -29,7 +29,6 @@ private slots:
     void transliterationSelected(QAction* action);
 
     void on_Upload_and_generate_Transcript_triggered();
-
 private:
     void setFontForElements();
     void setTransliterationLangCodes();

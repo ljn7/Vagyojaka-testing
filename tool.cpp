@@ -240,16 +240,22 @@ void Tool::transliterationSelected(QAction* action)
 
 void Tool::on_Upload_and_generate_Transcript_triggered()
 {
-    QString temp=QFileDialog::getOpenFileName(this,"Upload Video and Generate transcription",QString());
-    if(temp.isEmpty()) return;
-    QString filePath=temp;
-    qInfo()<<temp;
-    QFile file(filePath);
-    if(!file.open(QIODevice::ReadOnly)){
-        QMessageBox::critical(this,"Error",file.errorString());
-        return;
+    QFileDialog fileDialog(this);
+    fileDialog.setAcceptMode(QFileDialog::AcceptOpen);
+    fileDialog.setWindowTitle(tr("Open File"));
+    fileDialog.setDirectory(QStandardPaths::standardLocations(
+        QStandardPaths::DocumentsLocation).value(0, QDir::homePath()));
+
+
+    if (fileDialog.exec() == QDialog::Accepted) {
+        QUrl *fileUrl = new QUrl(fileDialog.selectedUrls().constFirst());
+        TranscriptGenerator tr(fileUrl);
+        qInfo()<<QThread::currentThread();
+    QtConcurrent::run(&tr, &TranscriptGenerator::Upload_and_generate_Transcript);
+
     }
 
-    file.close();
 }
+
+
 

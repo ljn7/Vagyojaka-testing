@@ -98,28 +98,43 @@ void TranscriptGenerator::Upload_and_generate_Transcript()
         }
         pier3.replace(" ", "\\ ");
 
-        QFile fileqrc(":/check.sh");
-        if(!fileqrc.open(QIODevice::OpenModeFlag::ReadOnly)){
-            return;
-        }
-        fileqrc.seek(0);
-        QString cp=fileqrc.readAll();
-        fileqrc.close();
 
-        QFile filexx(pier2x+"/check.sh");
-        if(!filexx.open(QIODevice::OpenModeFlag::WriteOnly|QIODevice::Truncate)){
-            return;
-        }
-        filexx.write(QByteArray(cp.toUtf8()));
-        filexx.close();
 
         std::string pi4="chmod 777 "+pier2.toStdString()+"/check.sh";
         result = system(pi4.c_str());
         qInfo()<<result;
         qInfo()<<pier2;
-        std::string pi5=pier2.toStdString()+"/check.sh";
-        result = system(pi5.c_str());
-        qInfo()<<result;
+
+//        std::string pi5=pier2.toStdString()+"/check.sh";
+//        result = system(pi5.c_str());
+//        qInfo()<<result;
+        //pier2->mp3 pier3->waves
+
+        QDir mp3folder(pier2x);
+        QStringList mp3s = mp3folder.entryList(QStringList() <<  "*.mp3",QDir::Files);
+        foreach(QString filename, mp3s) {
+
+            int lastPoint = filename.lastIndexOf(".");
+            QString fileNameNoExt = filename.left(lastPoint);
+
+
+
+            filename.replace(" ", "\\ ");
+            fileNameNoExt.replace(" ", "\\ ");
+
+
+                    std::string pi5="sox "
+                                    +pier2.toStdString()
+                                    +"/"
+                                    +filename.toStdString()
+                                    +" "
+                                    +pier3.toStdString()
+                                    +"/"
+                                    +fileNameNoExt.toStdString()
+                                    +".wav";
+                    result = system(pi5.c_str());
+                    qInfo()<<result;
+        }
 
         progressBar.setValue(100);
         progressBar.hide();

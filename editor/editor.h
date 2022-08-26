@@ -132,8 +132,10 @@ private:
     QNetworkReply* m_reply = nullptr;
     QTimer* m_saveTimer = nullptr;
     int m_saveInterval{20};
-    QStringList initialList;
-    QStringList finalList;
+
+    QString fileBeforeSave="initial.txt";
+    QString fileAfterSave="final.txt";
+    QString ComparedOutputFile="ComparedDictonary.json";
 };
 
 

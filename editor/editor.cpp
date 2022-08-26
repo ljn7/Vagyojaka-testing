@@ -344,15 +344,20 @@ void Editor::transcriptOpen()
 
         setContent();
         //*********************Inserting into file********************************
-
+        QFile initial(fileBeforeSave);
+        if(!initial.open(QIODevice::OpenModeFlag::WriteOnly)){
+            QMessageBox::critical(this,"Error",initial.errorString());
+            return;
+        }
                 QString x("");
                 for (auto& a_block: qAsConst(m_blocks)) {
-                    auto blockText = a_block.speaker + " " + a_block.text + " " ;
+                    auto blockText =  a_block.text + " " ;
                     x.append(blockText + "\n");
                 }
-                initialList = x.split(QRegExp("\\s+"), QString::SkipEmptyParts);
-                //qInfo()<<initialList;
 
+                QTextStream out(&initial);
+                out <<x;
+                initial.close();
 
         //*********************************************************
 
@@ -367,7 +372,9 @@ void Editor::transcriptOpen()
 
 void Editor::transcriptSave()
 {
-    if (m_transcriptUrl.isEmpty())
+
+
+if (m_transcriptUrl.isEmpty())
         transcriptSaveAs();
     else {
         auto *file = new QFile(m_transcriptUrl.toLocalFile());
@@ -377,41 +384,85 @@ void Editor::transcriptSave()
         }
         saveXml(file);
         emit message("File Saved " + m_transcriptUrl.toLocalFile());
+    }
+
 
         //QStringList list = str.split(QRegExp("\\s+"), QString::SkipEmptyParts);
-        QString x("");
-        for (auto& a_block: qAsConst(m_blocks)) {
-            auto blockText = a_block.speaker + " " + a_block.text + " " ;
-            x.append(blockText + "\n");
-        }
-        finalList = x.split(QRegExp("\\s+"), QString::SkipEmptyParts);
-        qInfo()<<finalList;
 
-        QDir dirww("output.json");
-        QFile fileww(dirww.absolutePath());
-        if(!fileww.open(QIODevice::OpenModeFlag::WriteOnly|QIODevice::OpenModeFlag::Append)){
-            QMessageBox::critical(this,"Error",fileww.errorString());
+
+        QFile final(fileAfterSave);
+        if(!final.open(QIODevice::OpenModeFlag::WriteOnly)){
+            QMessageBox::critical(this,"Error",final.errorString());
             return;
         }
-
-        QString replacedWords("");
-
-        auto greater=initialList.length()>finalList.length() ? initialList.length():finalList.length();
-        for(auto i=0;i<greater;i++){
-            if(initialList[i]!=finalList[i]){
-                 auto repText = '"'+initialList[i]+'"' + "  : " + '"'+finalList[i]+'"' + "\n" ;
-                replacedWords.append(repText);
-            }
+        QString x("");
+        for (auto& a_block: qAsConst(m_blocks)) {
+            auto blockText = a_block.text + " " ;
+            qInfo()<<a_block.text;
+            x.append(blockText + "\n");
         }
-        initialList=finalList;
-        QTextStream out(&fileww);
-        out <<replacedWords;
-         fileww.close();
-    }
+        QTextStream outer(&final);
+        outer<<x;
+        final.close();
+
+        if(!QFile::exists("myalgn.py")){
+            QFile mapper("myalign.py");
+            QFileInfo mapperFileInfo(mapper);
+            QFile aligner(":/alignment.py");
+            if(!aligner.open(QIODevice::OpenModeFlag::ReadOnly)){
+                QMessageBox::critical(this,"Error",aligner.errorString());
+                return;
+            }
+            aligner.seek(0);
+            QString cp=aligner.readAll();
+            aligner.close();
+
+            if(!mapper.open(QIODevice::OpenModeFlag::WriteOnly|QIODevice::Truncate)){
+                QMessageBox::critical(this,"Error",mapper.errorString());
+                return;
+            }
+            mapper.write(QByteArray(cp.toUtf8()));
+            mapper.close();
+            std::string makingexec="chmod +x "+mapperFileInfo.absoluteFilePath().replace(" ", "\\ ").toStdString();
+            int result = system(makingexec.c_str());
+            qInfo()<<result;
+        }
+        if(!QFile::exists("replacedTextDictonary.json")){
+            QFile repDict("replacedTextDictonary.json");
+            if(!repDict.open(QIODevice::OpenModeFlag::WriteOnly|QIODevice::Truncate)){
+                QMessageBox::critical(this,"Error",repDict.errorString());
+                return;
+            }
+            QString init="{}";
+            repDict.write(QByteArray(init.toUtf8()));
+            repDict.close();
+        }
+        QFile mapper("myalign.py");
+        QFileInfo mapperFileInfo(mapper);
+        QFile repDict("replacedTextDictonary.json");
+        QFileInfo repDictFileInfo(repDict);
+        QFile finalFile(fileAfterSave);
+        QFileInfo finalFileInfo(finalFile);
+        QFile initialFile(fileBeforeSave);
+        QFileInfo initialDictFileInfo(initialFile);
+        int result;
+        std::string alignmentstr=" python3 " +mapperFileInfo.absoluteFilePath().replace(" ", "\\ ").toStdString()
+            +" -cae "+initialDictFileInfo.absoluteFilePath().replace(" ", "\\ ").toStdString()
+            +" "+finalFileInfo.absoluteFilePath().replace(" ", "\\ ").toStdString()
+            +" "+repDictFileInfo.absoluteFilePath().replace(" ", "\\ ").toStdString();
+
+        result = system(alignmentstr.c_str());
+        qInfo()<<result;
+
 }
 
 void Editor::transcriptSaveAs()
 {
+
+    auto initialShowTimeStamp=showTimeStamp;
+    showTimeStamp=true;
+    setContent();
+
     QFileDialog fileDialog(this);
     fileDialog.setAcceptMode(QFileDialog::AcceptSave);
     fileDialog.setWindowTitle(tr("Save Transcript"));
@@ -426,30 +477,13 @@ void Editor::transcriptSaveAs()
                 emit message(file->errorString());
                 return;
             }
+            m_transcriptUrl = fileUrl;
             saveXml(file);
             emit message("File Saved " + fileUrl.toLocalFile());
-
-            //***********************saved output******************
-            QDir dir("output.txt");
-
-            QFile file2(dir.absolutePath());
-            if(!file2.open(QIODevice::OpenModeFlag::WriteOnly|QIODevice::Truncate)){
-                QMessageBox::critical(this,"Error",file2.errorString());
-                return;
-            }
-            QString a=dir.absolutePath();
-            qInfo()<<file<<"\n";
-            QString x("");
-            for (auto& a_block: qAsConst(m_blocks)) {
-                auto blockText = a_block.speaker + " " + a_block.text + " " ;
-                x.append(blockText + "\n");
-            }
-            file2.write(QByteArray(x.toUtf8()));
-            file2.flush();
-            file2.close();
-            //*************************************************************
         }
     }
+    showTimeStamp=initialShowTimeStamp;
+    setContent();
 }
 
 void Editor::transcriptClose()
@@ -573,6 +607,8 @@ block Editor::fromEditor(qint64 blockNumber) const
             timeStamp = getTime(matchedTimeStampString.mid(1,matchedTimeStampString.size() - 2));
             text = blockText.split(matchedTimeStampString)[0];
         }
+    }else{
+        text = blockText.trimmed();
     }
 
     match = speakerExp.match(blockText);
@@ -731,8 +767,6 @@ void Editor::loadDictionary()
     m_dictionary.clear();
 
     auto dictionaryFileName = QString(":/wordlists/%1.txt").arg(m_transcriptLang);
-    // /home/rohit/Desktop/ROHIT/GIT/Projects/asr/build-asr-post-editor-main-Desktop_Qt_5_15_2_GCC_64bit-Debug/combined.txt
-    //auto dictionaryFileName = QString("/home/rohit/Desktop/ROHIT/GIT/Projects/asr/build-asr-post-editor-main-Desktop_Qt_5_15_2_GCC_64bit-Debug/combined.txt");
     m_dictionary = listFromFile(dictionaryFileName);
     if(m_customDictonaryPath!=NULL){
         auto customdictionaryFileName = QString(m_customDictonaryPath);
@@ -928,13 +962,13 @@ void Editor::contentChanged(int position, int charsRemoved, int charsAdded)
 
         currentBlockFromData.speaker = currentBlockFromEditor.speaker;
     }
-
+    if(showTimeStamp){
     if (currentBlockFromData.timeStamp != currentBlockFromEditor.timeStamp) {
         currentBlockFromData.timeStamp = currentBlockFromEditor.timeStamp;
         qInfo() << "[TimeStamp Changed]"
                 << QString("line number: %1, %2").arg(QString::number(currentBlockNumber + 1), currentBlockFromEditor.timeStamp.toString("hh:mm:ss.zzz"));
     }
-
+    }
     if (currentBlockFromData.text != currentBlockFromEditor.text) {
         qInfo() << "[Text Changed]"
                 << QString("line number: %1").arg(QString::number(currentBlockNumber + 1))
@@ -977,7 +1011,16 @@ void Editor::contentChanged(int position, int charsRemoved, int charsAdded)
                     wordsFromEditor[i].timeStamp = wordsFromData[j].timeStamp;
         }
 
-        currentBlockFromData = currentBlockFromEditor;
+        //currentBlockFromData = currentBlockFromEditor;
+        if(showTimeStamp)
+            currentBlockFromData = currentBlockFromEditor;
+        else{
+            currentBlockFromData.speaker = currentBlockFromEditor.speaker;
+            currentBlockFromData.text = currentBlockFromEditor.text;
+            currentBlockFromData.words = currentBlockFromEditor.words;
+            currentBlockFromData.tagList = currentBlockFromEditor.tagList;
+                    }
+
         currentBlockFromData.tagList = tagList;
     }
 
@@ -1008,6 +1051,7 @@ void Editor::contentChanged(int position, int charsRemoved, int charsAdded)
     m_highlighter->setInvalidWords(invalidWords);
 
     updateWordEditor();
+    transcriptSave();
 }
 
 void Editor::jumpToHighlightedLine()

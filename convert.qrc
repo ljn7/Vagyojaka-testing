@@ -1,5 +1,5 @@
 <RCC>
     <qresource prefix="/">
-        <file>check.sh</file>
+        <file>alignment.py</file>
     </qresource>
 </RCC>

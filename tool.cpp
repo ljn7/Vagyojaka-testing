@@ -251,6 +251,7 @@ void Tool::on_Upload_and_generate_Transcript_triggered()
         QUrl *fileUrl = new QUrl(fileDialog.selectedUrls().constFirst());
         TranscriptGenerator tr(fileUrl);
         qInfo()<<QThread::currentThread();
+        //running transcript generator on another thread (parallel processing)
     QtConcurrent::run(&tr, &TranscriptGenerator::Upload_and_generate_Transcript);
 
     }

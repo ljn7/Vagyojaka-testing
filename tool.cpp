@@ -83,8 +83,9 @@ Tool::Tool(QWidget *parent)
 
     // Connect Editor menu actions and editor controls
     ui->m_editor->setWordEditor(ui->m_wordEditor);
-
-     connect(ui->Add_Custom_Dictonary, &QAction::triggered, ui->m_editor, &Editor::addCustomDictonary);
+    connect(ui->Save_as_PDF,&QAction::triggered,ui->m_editor,&Editor::saveAsPDF);
+    connect(ui->Real_Time_Data_Saver,&QAction::triggered,ui->m_editor,&Editor::realTimeDataSavingToggle);
+    connect(ui->Add_Custom_Dictonary, &QAction::triggered, ui->m_editor, &Editor::addCustomDictonary);
 
     connect(ui->editor_openTranscript, &QAction::triggered, ui->m_editor, &Editor::transcriptOpen);
     connect(ui->editor_debugBlocks, &QAction::triggered, ui->m_editor, &Editor::showBlocksFromData);
@@ -257,6 +258,3 @@ void Tool::on_Upload_and_generate_Transcript_triggered()
     }
 
 }
-
-
-

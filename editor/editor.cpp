@@ -1,5 +1,8 @@
 #include "editor.h"
-
+#include <qclipboard.h>
+#include <QJsonDocument>
+#include <QJsonArray>
+#include <QJsonObject>
 
 #include <QPainter>
 #include <QTextBlock>
@@ -300,6 +303,8 @@ void Editor::contextMenuEvent(QContextMenuEvent *event)
     }
 
     if (isAWordUnderCursor) {
+
+
         auto markAsCorrectAction = new QAction;
         markAsCorrectAction->setText("Mark As Correct");
 
@@ -308,6 +313,45 @@ void Editor::contextMenuEvent(QContextMenuEvent *event)
                 {
                     markWordAsCorrect(textCursor().blockNumber(), wordNumber);
         });
+
+        //added suggestions
+        QString text = m_blocks[textCursor().blockNumber()].words[wordNumber].text.toLower();
+        text=text.trimmed();
+        qInfo()<<text;
+        QString val;
+        QFile file;
+        file.setFileName("replacedTextDictonary.json");
+        file.open(QIODevice::ReadOnly | QIODevice::Text);
+        val = file.readAll();
+        file.close();
+        QJsonDocument d = QJsonDocument::fromJson(val.toUtf8());
+        QJsonObject sett2 = d.object();
+        QJsonArray value = sett2[text].toArray();
+        QStringList allSuggestions;
+        for( auto i : value){
+            allSuggestions<< i.toString();
+        }
+
+        QMenu *clip=menu->addMenu(tr("&Suggestions"));
+        for(auto i:allSuggestions ){
+            auto readmeJson = new QAction;
+            readmeJson->setText(i);
+            connect(readmeJson, &QAction::triggered, this,[this,i]()
+                {
+                    suggest(i);
+                });
+            clip->addAction(readmeJson);
+        }
+
+
+
+
+        //        QTextCursor cursor = textCursor();
+        //        if(cursor.hasSelection())
+        //        {qInfo()<<"inside text cursor to upper";
+        //            cursor.insertText("hello");
+        //        }
+
 
         menu->addAction(markAsCorrectAction);
     }
@@ -398,7 +442,7 @@ if (m_transcriptUrl.isEmpty())
         QString x("");
         for (auto& a_block: qAsConst(m_blocks)) {
             auto blockText = a_block.text + " " ;
-            qInfo()<<a_block.text;
+//            qInfo()<<a_block.text;
             x.append(blockText + "\n");
         }
         QTextStream outer(&final);
@@ -451,7 +495,9 @@ if (m_transcriptUrl.isEmpty())
             +" "+finalFileInfo.absoluteFilePath().replace(" ", "\\ ").toStdString()
             +" "+repDictFileInfo.absoluteFilePath().replace(" ", "\\ ").toStdString();
 
+        if(!realTimeDataSaver){
         result = system(alignmentstr.c_str());
+        }
         qInfo()<<result;
 
 }
@@ -552,7 +598,7 @@ void Editor::highlightTranscript(const QTime& elapsedTime)
 
 void Editor::addCustomDictonary()
 {
-    QString temp=QFileDialog::getOpenFileName(this,"Open Custom Dictonary",QString(),"Text Files (*txt)");
+    QString temp=QFileDialog::getOpenFileName(this,"Open Custom Dictonary",QString("/"),"Text Files (*txt)");
     if(temp.isEmpty()) return;
     m_customDictonaryPath=temp;
     QFile file(m_customDictonaryPath);
@@ -560,7 +606,7 @@ void Editor::addCustomDictonary()
         QMessageBox::critical(this,"Error",file.errorString());
         return;
     }
-    //qInfo()<<m_customDictonaryPath<<'\n';
+
     loadDictionary();
 }
 
@@ -765,16 +811,31 @@ void Editor::loadDictionary()
 {
     m_correctedWords.clear();
     m_dictionary.clear();
+    if(QFile::exists("Dictonaries/"+m_transcriptLang+"/"+m_transcriptLang+"combined.txt")){
+        auto dictionaryFileName = "Dictonaries/"+m_transcriptLang+"/"+m_transcriptLang+"combined.txt";
+        m_dictionary = listFromFile(dictionaryFileName);
+//        qInfo()<<m_dictionary;
 
+    }
+    else{
     auto dictionaryFileName = QString(":/wordlists/%1.txt").arg(m_transcriptLang);
     m_dictionary = listFromFile(dictionaryFileName);
+    }
     if(m_customDictonaryPath!=NULL){
         auto customdictionaryFileName = QString(m_customDictonaryPath);
         auto wordsFromCustomDictonary=listFromFile(customdictionaryFileName);
         auto combined_dictionary=m_dictionary;
         combined_dictionary.append(wordsFromCustomDictonary);
         combined_dictionary.sort();
-        QDir dir("combined.txt");
+        QDir dictonaryFolder("Dictonaries");
+        if(!dictonaryFolder.exists()){
+            dictonaryFolder.mkpath(".");
+        }
+        QDir languageFolder("Dictonaries/"+m_transcriptLang);
+        if(!languageFolder.exists()){
+            languageFolder.mkpath(".");
+        }
+        QDir dir("Dictonaries/"+m_transcriptLang+"/"+m_transcriptLang+"combined.txt");
 
         QFile file2(dir.absolutePath());
         if(!file2.open(QIODevice::OpenModeFlag::WriteOnly|QIODevice::Truncate)){
@@ -791,7 +852,7 @@ void Editor::loadDictionary()
         file2.close();
          auto combinedCustomdictionaryFileName = QString(a);
         m_dictionary=listFromFile(combinedCustomdictionaryFileName);
-         qInfo()<<a<<'\n';
+//         qInfo()<<a<<'\n';
     }
    // qInfo()<<m_dictionary<<'\n';
     auto correctedWordsList = listFromFile(QString("corrected_words_%1.txt").arg(m_transcriptLang));
@@ -1051,7 +1112,9 @@ void Editor::contentChanged(int position, int charsRemoved, int charsAdded)
     m_highlighter->setInvalidWords(invalidWords);
 
     updateWordEditor();
-    transcriptSave();
+    if(realTimeDataSaver){
+        transcriptSave();
+    }
 }
 
 void Editor::jumpToHighlightedLine()
@@ -1417,6 +1480,109 @@ void Editor::useTransliteration(bool value, const QString& langCode)
 {
     m_transliterate = value;
     m_transliterateLangCode = langCode;
+}
+
+void Editor::suggest(QString suggest)
+{
+
+    QTextCursor cursor = textCursor();
+    if(cursor.hasSelection())
+    {
+        cursor.insertText(suggest);
+    }
+
+
+
+
+
+}
+
+void Editor::realTimeDataSavingToggle()
+{
+    if(realTimeDataSaver){
+        realTimeDataSaver=false;
+    }
+    else if(!realTimeDataSaver){
+        realTimeDataSaver=true;
+    }
+}
+
+void Editor::saveAsPDF()
+{
+
+    QFile final("pdf.txt");
+    if(!final.open(QIODevice::OpenModeFlag::WriteOnly)){
+        QMessageBox::critical(this,"Error",final.errorString());
+        return;
+    }
+
+    QString content_with_time_stamp("");
+    QString content_without_time_stamp("");
+    for (auto& a_block: qAsConst(m_blocks)) {
+        auto blockText = "[" + a_block.speaker + "]: " + a_block.text + " [" + a_block.timeStamp.toString("hh:mm:ss.zzz") + "]";
+        content_with_time_stamp.append(blockText + "\n\n");
+    }
+
+    for (auto& a_block: qAsConst(m_blocks)) {
+        auto blockText = "[" + a_block.speaker + "]: " + a_block.text ;
+        content_without_time_stamp.append(blockText + "\n\n");
+    }
+
+    QTextStream outer(&final);
+     outer.setCodec("UTF-8");
+    if(showTimeStamp){
+        outer<<content_with_time_stamp;
+    }
+    else{
+        outer<<content_without_time_stamp;
+    }
+     outer.flush();
+    final.close();
+
+    if(!QFile::exists("saveToPDF.py")){
+
+        QFile pdfScript("saveToPDF.py");
+        QFileInfo pdfScriptFileInfo(pdfScript);
+        QFile aligner(":/saveToPDF.py");
+        if(!aligner.open(QIODevice::OpenModeFlag::ReadOnly)){
+            QMessageBox::critical(this,"Error",aligner.errorString());
+            return;
+        }
+        aligner.seek(0);
+        QString cp=aligner.readAll();
+        aligner.close();
+
+        if(!pdfScript.open(QIODevice::OpenModeFlag::WriteOnly|QIODevice::Truncate)){
+            QMessageBox::critical(this,"Error",pdfScript.errorString());
+            return;
+        }
+        pdfScript.write(QByteArray(cp.toUtf8()));
+        pdfScript.close();
+        std::string makingexec="chmod +x "+pdfScriptFileInfo.absoluteFilePath().replace(" ", "\\ ").toStdString();
+        int result = system(makingexec.c_str());
+        qInfo()<<result;
+    }
+    QFile pdfScript("saveToPDF.py");
+    QFileInfo pdfScriptFileInfo(pdfScript);
+    QFile pdfTxtDict("pdf.txt");
+    QFileInfo pdfTxtDictFileInfo(pdfTxtDict);
+
+    auto pdfSaveLocation = QFileDialog::getSaveFileName(this, "Export PDF", QString("/"), "*.pdf");
+    if(pdfSaveLocation!=""){
+//    qInfo()<<pdfSaveLocation;
+    if (QFileInfo(pdfSaveLocation).suffix().isEmpty()) { pdfSaveLocation.append(".pdf"); }
+    qInfo()<<pdfSaveLocation;
+
+    int result;
+    // txt2pdf -o document.pdf document.txt
+    std::string alignmentstr=" python3 " +pdfScriptFileInfo.absoluteFilePath().replace(" ", "\\ ").toStdString()
+        +" -o "+pdfSaveLocation.replace(" ", "\\ ").toStdString()
+        +" "+pdfTxtDictFileInfo.absoluteFilePath().replace(" ", "\\ ").toStdString();
+
+    result = system(alignmentstr.c_str());
+
+    qInfo()<<result;
+    }
 }
 
 void Editor::updateWordEditor()

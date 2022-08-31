@@ -77,7 +77,9 @@ public slots:
 
     void useTransliteration(bool value, const QString& langCode = "en");
     void useAutoSave(bool value) {m_autoSave = value;}
-
+    void suggest(QString suggest);
+    void realTimeDataSavingToggle();
+    void saveAsPDF();
 private slots:
     void contentChanged(int position, int charsRemoved, int charsAdded);
     void wordEditorChanged();
@@ -133,9 +135,11 @@ private:
     QTimer* m_saveTimer = nullptr;
     int m_saveInterval{20};
 
+    QStringList clipboardTexts;
     QString fileBeforeSave="initial.txt";
     QString fileAfterSave="final.txt";
     QString ComparedOutputFile="ComparedDictonary.json";
+    bool realTimeDataSaver=false;
 };
 
 

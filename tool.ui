@@ -112,6 +112,7 @@
      <string>File</string>
     </property>
     <addaction name="Upload_and_generate_Transcript"/>
+    <addaction name="Save_as_PDF"/>
     <addaction name="close"/>
    </widget>
    <widget class="QMenu" name="menuMedia_Player">
@@ -150,6 +151,7 @@
     <addaction name="separator"/>
     <addaction name="Add_Custom_Dictonary"/>
     <addaction name="Show_Time_Stamps"/>
+    <addaction name="Real_Time_Data_Saver"/>
    </widget>
    <widget class="QMenu" name="menuEdit">
     <property name="title">
@@ -442,6 +444,19 @@
   <action name="Upload_and_generate_Transcript">
    <property name="text">
     <string>Upload and generate Transcript</string>
+   </property>
+  </action>
+  <action name="Real_Time_Data_Saver">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Real Time Data Saver</string>
+   </property>
+  </action>
+  <action name="Save_as_PDF">
+   <property name="text">
+    <string>Save as PDF</string>
    </property>
   </action>
  </widget>

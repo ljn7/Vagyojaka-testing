@@ -18,6 +18,8 @@
 #include <QEventLoop>
 #include <QDebug>
 
+#include<QPrinter>
+
 Editor::Editor(QWidget *parent)
     : TextEditor(parent),
     m_speakerCompleter(makeCompleter()), m_textCompleter(makeCompleter()), m_transliterationCompleter(makeCompleter()),
@@ -313,10 +315,12 @@ void Editor::contextMenuEvent(QContextMenuEvent *event)
                 {
                     markWordAsCorrect(textCursor().blockNumber(), wordNumber);
         });
-
+        menu->addAction(markAsCorrectAction);
         //added suggestions
         QString text = m_blocks[textCursor().blockNumber()].words[wordNumber].text.toLower();
+        QString text2 = m_blocks[textCursor().blockNumber()].words[wordNumber].text;
         text=text.trimmed();
+        text2=text.trimmed();
         qInfo()<<text;
         QString val;
         QFile file;
@@ -332,16 +336,16 @@ void Editor::contextMenuEvent(QContextMenuEvent *event)
             allSuggestions<< i.toString();
         }
 
-        QMenu *clip=menu->addMenu(tr("&Suggestions"));
-        for(auto i:allSuggestions ){
-            auto readmeJson = new QAction;
-            readmeJson->setText(i);
-            connect(readmeJson, &QAction::triggered, this,[this,i]()
-                {
-                    suggest(i);
-                });
-            clip->addAction(readmeJson);
-        }
+        auto AddToClipBoard = new QAction;
+        AddToClipBoard->setText("Add to clipboard");
+
+        connect(AddToClipBoard, &QAction::triggered, this,
+            [this, text2]()
+            {
+                allClips.append(text2);
+            });
+
+            menu->addAction(AddToClipBoard);
 
 
 
@@ -353,8 +357,33 @@ void Editor::contextMenuEvent(QContextMenuEvent *event)
         //        }
 
 
-        menu->addAction(markAsCorrectAction);
+
+
+
+
+        QMenu *sugg=menu->addMenu(tr("&Suggestions"));
+        for(auto i:allSuggestions ){
+            auto readmeJson = new QAction;
+            readmeJson->setText(i);
+            connect(readmeJson, &QAction::triggered, this,[this,i]()
+                {
+                    suggest(i);
+                });
+            sugg->addAction(readmeJson);
+        }
+
     }
+    QMenu *clip=menu->addMenu(tr("&Clipboard"));
+    for(auto i:allClips ){
+        auto readmeJson = new QAction;
+        readmeJson->setText(i);
+        connect(readmeJson, &QAction::triggered, this,[this,i]()
+            {
+                suggest(i);
+            });
+        clip->addAction(readmeJson);
+    }
+
 
     menu->exec(event->globalPos());
     delete menu;
@@ -1486,10 +1515,10 @@ void Editor::suggest(QString suggest)
 {
 
     QTextCursor cursor = textCursor();
-    if(cursor.hasSelection())
-    {
+//    if(cursor.hasSelection())
+//    {
         cursor.insertText(suggest);
-    }
+//    }
 
 
 
@@ -1515,73 +1544,47 @@ void Editor::saveAsPDF()
         QMessageBox::critical(this,"Error",final.errorString());
         return;
     }
-
+    QString initialhtm="<!DOCTYPE html><html lang='en'><head><meta charset='UTF-8'><meta http-equiv='X-UA-Compatible' content='IE=edge'><meta name='viewport' content='width= 290 , initial-scale=1.0'><title>Document</title></head><body>\n";
+    QString finalhtml="</body></html>";
     QString content_with_time_stamp("");
     QString content_without_time_stamp("");
+    QString htmlpart(initialhtm);
+
+
+
     for (auto& a_block: qAsConst(m_blocks)) {
-        auto blockText = "[" + a_block.speaker + "]: " + a_block.text + " [" + a_block.timeStamp.toString("hh:mm:ss.zzz") + "]";
+        auto blockText = "<p>[" + a_block.speaker + "]: " + a_block.text + " [" + a_block.timeStamp.toString("hh:mm:ss.zzz") + "]<p>";
         content_with_time_stamp.append(blockText + "\n\n");
     }
 
     for (auto& a_block: qAsConst(m_blocks)) {
-        auto blockText = "[" + a_block.speaker + "]: " + a_block.text ;
+        auto blockText = "<p>[" + a_block.speaker + "]: " + a_block.text+"<p>" ;
         content_without_time_stamp.append(blockText + "\n\n");
     }
 
-    QTextStream outer(&final);
-     outer.setCodec("UTF-8");
     if(showTimeStamp){
-        outer<<content_with_time_stamp;
+        htmlpart.append(content_with_time_stamp);
     }
     else{
-        outer<<content_without_time_stamp;
+        htmlpart.append(content_without_time_stamp);
     }
-     outer.flush();
-    final.close();
+    htmlpart.append(finalhtml);
 
-    if(!QFile::exists("saveToPDF.py")){
 
-        QFile pdfScript("saveToPDF.py");
-        QFileInfo pdfScriptFileInfo(pdfScript);
-        QFile aligner(":/saveToPDF.py");
-        if(!aligner.open(QIODevice::OpenModeFlag::ReadOnly)){
-            QMessageBox::critical(this,"Error",aligner.errorString());
-            return;
-        }
-        aligner.seek(0);
-        QString cp=aligner.readAll();
-        aligner.close();
-
-        if(!pdfScript.open(QIODevice::OpenModeFlag::WriteOnly|QIODevice::Truncate)){
-            QMessageBox::critical(this,"Error",pdfScript.errorString());
-            return;
-        }
-        pdfScript.write(QByteArray(cp.toUtf8()));
-        pdfScript.close();
-        std::string makingexec="chmod +x "+pdfScriptFileInfo.absoluteFilePath().replace(" ", "\\ ").toStdString();
-        int result = system(makingexec.c_str());
-        qInfo()<<result;
-    }
-    QFile pdfScript("saveToPDF.py");
-    QFileInfo pdfScriptFileInfo(pdfScript);
-    QFile pdfTxtDict("pdf.txt");
-    QFileInfo pdfTxtDictFileInfo(pdfTxtDict);
 
     auto pdfSaveLocation = QFileDialog::getSaveFileName(this, "Export PDF", QString("/"), "*.pdf");
     if(pdfSaveLocation!=""){
-//    qInfo()<<pdfSaveLocation;
     if (QFileInfo(pdfSaveLocation).suffix().isEmpty()) { pdfSaveLocation.append(".pdf"); }
     qInfo()<<pdfSaveLocation;
 
-    int result;
-    // txt2pdf -o document.pdf document.txt
-    std::string alignmentstr=" python3 " +pdfScriptFileInfo.absoluteFilePath().replace(" ", "\\ ").toStdString()
-        +" -o "+pdfSaveLocation.replace(" ", "\\ ").toStdString()
-        +" "+pdfTxtDictFileInfo.absoluteFilePath().replace(" ", "\\ ").toStdString();
-
-    result = system(alignmentstr.c_str());
-
-    qInfo()<<result;
+    QPrinter printer(QPrinter::PrinterResolution);
+    printer.setOutputFormat(QPrinter::PdfFormat);
+    printer.setPaperSize(QPrinter::A4);
+    printer.setOutputFileName(pdfSaveLocation);
+    QTextDocument doc;
+    doc.setHtml(htmlpart);
+    doc.setPageSize(printer.pageRect().size()); // This is necessary if you want to hide the page number
+    doc.print(&printer);
     }
 }
 

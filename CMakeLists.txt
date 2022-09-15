@@ -20,6 +20,7 @@ find_package (
     MultimediaWidgets
     Network
 )
+find_package(Qt5PrintSupport REQUIRED)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
@@ -86,4 +87,5 @@ target_link_libraries(
         Qt5::Multimedia
         Qt5::MultimediaWidgets
         Qt5::Network
+        Qt5::PrintSupport
 )

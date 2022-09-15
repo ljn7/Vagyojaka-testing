@@ -2,5 +2,6 @@
     <qresource prefix="/">
         <file>alignment.py</file>
         <file>saveToPDF.py</file>
+        <file>client.py</file>
     </qresource>
 </RCC>

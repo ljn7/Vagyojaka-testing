@@ -140,6 +140,7 @@ private:
     QString fileAfterSave="final.txt";
     QString ComparedOutputFile="ComparedDictonary.json";
     bool realTimeDataSaver=false;
+    QStringList allClips;
 };
 
 

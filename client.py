@@ -4,8 +4,12 @@ import os
 import sys
 file=sys.argv[1]
 file2=sys.argv[2]
-url='https://5000-rohitbisht-asrbackend-mh87fvqbwpf.ws-us65.gitpod.io'
+url='https://5001-rohitbisht-asrbackend-mh87fvqbwpf.ws-us65.gitpod.io'
 with open(file, 'rb') as f:
     r = requests.post(url, files = {'file': open(file, 'rb')})
     with open(file2,'w',encoding='utf-8')as t:
       t.write(r.text)
+      lines = t.readlines()
+      lines = lines[1:]
+      lines = lines[:-1]
+      t.write(lines)

@@ -106,6 +106,49 @@ Tool::Tool(QWidget *parent)
     connect(ui->m_editor, &Editor::jumpToPlayer, player, &MediaPlayer::setPositionToTime);
     connect(ui->m_editor, &Editor::refreshTagList, ui->m_tagListDisplay, &TagListDisplayWidget::refreshTags);
     connect(ui->Show_Time_Stamps, &QAction::triggered, ui->m_editor,&Editor::setShowTimeStamp );
+
+
+
+    connect(ui->Open_File_in_Editor1, &QAction::triggered, ui->m_editor_2, &Editor::transcriptOpen);
+//    connect(ui->editor_debugBlocks, &QAction::triggered, ui->m_editor_2, &Editor::showBlocksFromData);
+//    connect(ui->editor_save, &QAction::triggered, ui->m_editor_2, &Editor::transcriptSave);
+//    connect(ui->editor_saveAs, &QAction::triggered, ui->m_editor_2, &Editor::transcriptSaveAs);
+//    connect(ui->editor_close, &QAction::triggered, ui->m_editor_2, &Editor::transcriptClose);
+//    connect(ui->editor_jumpToLine, &QAction::triggered, ui->m_editor_2, &Editor::jumpToHighlightedLine);
+//    connect(ui->editor_splitLine, &QAction::triggered, ui->m_editor_2, [&]() {ui->m_editor_2->splitLine(player->elapsedTime());});
+//    connect(ui->editor_mergeUp, &QAction::triggered, ui->m_editor_2, &Editor::mergeUp);
+//    connect(ui->editor_mergeDown, &QAction::triggered, ui->m_editor_2, &Editor::mergeDown);
+//    connect(ui->editor_changeLang, &QAction::triggered, ui->m_editor_2, &Editor::changeTranscriptLang);
+//    connect(ui->editor_changeSpeaker, &QAction::triggered, ui->m_editor_2, &Editor::createChangeSpeakerDialog);
+//    connect(ui->editor_propagateTime, &QAction::triggered, ui->m_editor_2, &Editor::createTimePropagationDialog);
+//    connect(ui->editor_editTags, &QAction::triggered, ui->m_editor_2, &Editor::createTagSelectionDialog);
+//    connect(ui->editor_autoSave, &QAction::triggered, ui->m_editor_2, [this](){ui->m_editor_2->useAutoSave(ui->editor_autoSave->isChecked());});
+//    connect(ui->m_editor_2, &Editor::message, this->statusBar(), &QStatusBar::showMessage);
+//    connect(ui->m_editor_2, &Editor::jumpToPlayer, player, &MediaPlayer::setPositionToTime);
+//    connect(ui->m_editor_2, &Editor::refreshTagList, ui->m_tagListDisplay, &TagListDisplayWidget::refreshTags);
+//    connect(ui->Show_Time_Stamps, &QAction::triggered, ui->m_editor_2,&Editor::setShowTimeStamp );
+
+
+    connect(ui->Open_File_in_Editor2, &QAction::triggered, ui->m_editor_3, &Editor::transcriptOpen);
+    //    connect(ui->editor_debugBlocks, &QAction::triggered, ui->m_editor_2, &Editor::showBlocksFromData);
+    //    connect(ui->editor_save, &QAction::triggered, ui->m_editor_2, &Editor::transcriptSave);
+    //    connect(ui->editor_saveAs, &QAction::triggered, ui->m_editor_2, &Editor::transcriptSaveAs);
+    //    connect(ui->editor_close, &QAction::triggered, ui->m_editor_2, &Editor::transcriptClose);
+    //    connect(ui->editor_jumpToLine, &QAction::triggered, ui->m_editor_2, &Editor::jumpToHighlightedLine);
+    //    connect(ui->editor_splitLine, &QAction::triggered, ui->m_editor_2, [&]() {ui->m_editor_2->splitLine(player->elapsedTime());});
+    //    connect(ui->editor_mergeUp, &QAction::triggered, ui->m_editor_2, &Editor::mergeUp);
+    //    connect(ui->editor_mergeDown, &QAction::triggered, ui->m_editor_2, &Editor::mergeDown);
+    //    connect(ui->editor_changeLang, &QAction::triggered, ui->m_editor_2, &Editor::changeTranscriptLang);
+    //    connect(ui->editor_changeSpeaker, &QAction::triggered, ui->m_editor_2, &Editor::createChangeSpeakerDialog);
+    //    connect(ui->editor_propagateTime, &QAction::triggered, ui->m_editor_2, &Editor::createTimePropagationDialog);
+    //    connect(ui->editor_editTags, &QAction::triggered, ui->m_editor_2, &Editor::createTagSelectionDialog);
+    //    connect(ui->editor_autoSave, &QAction::triggered, ui->m_editor_2, [this](){ui->m_editor_2->useAutoSave(ui->editor_autoSave->isChecked());});
+    //    connect(ui->m_editor_2, &Editor::message, this->statusBar(), &QStatusBar::showMessage);
+    //    connect(ui->m_editor_2, &Editor::jumpToPlayer, player, &MediaPlayer::setPositionToTime);
+    //    connect(ui->m_editor_2, &Editor::refreshTagList, ui->m_tagListDisplay, &TagListDisplayWidget::refreshTags);
+    //    connect(ui->Show_Time_Stamps, &QAction::triggered, ui->m_editor_2,&Editor::setShowTimeStamp );
+
+
     auto useTransliterationMenu = new QMenu("Use Transliteration", ui->menuEditor);
     auto group = new QActionGroup(this);
     auto langs = m_transliterationLang.keys();

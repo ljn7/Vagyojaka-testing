@@ -29,6 +29,8 @@ private slots:
     void transliterationSelected(QAction* action);
 
     void on_Upload_and_generate_Transcript_triggered();
+//    void on_editor_openTranscript_triggered();
+
 private:
     void setFontForElements();
     void setTransliterationLangCodes();

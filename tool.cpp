@@ -111,7 +111,7 @@ Tool::Tool(QWidget *parent)
 
     connect(ui->Open_File_in_Editor1, &QAction::triggered, ui->m_editor_2, &Editor::transcriptOpen);
 //    connect(ui->editor_debugBlocks, &QAction::triggered, ui->m_editor_2, &Editor::showBlocksFromData);
-//    connect(ui->editor_save, &QAction::triggered, ui->m_editor_2, &Editor::transcriptSave);
+    connect(ui->editor_save2, &QAction::triggered, ui->m_editor_2, &Editor::transcriptSave);
 //    connect(ui->editor_saveAs, &QAction::triggered, ui->m_editor_2, &Editor::transcriptSaveAs);
 //    connect(ui->editor_close, &QAction::triggered, ui->m_editor_2, &Editor::transcriptClose);
 //    connect(ui->editor_jumpToLine, &QAction::triggered, ui->m_editor_2, &Editor::jumpToHighlightedLine);
@@ -131,7 +131,7 @@ Tool::Tool(QWidget *parent)
 
     connect(ui->Open_File_in_Editor2, &QAction::triggered, ui->m_editor_3, &Editor::transcriptOpen);
     //    connect(ui->editor_debugBlocks, &QAction::triggered, ui->m_editor_2, &Editor::showBlocksFromData);
-    //    connect(ui->editor_save, &QAction::triggered, ui->m_editor_2, &Editor::transcriptSave);
+        connect(ui->editor_save3, &QAction::triggered, ui->m_editor_3, &Editor::transcriptSave);
     //    connect(ui->editor_saveAs, &QAction::triggered, ui->m_editor_2, &Editor::transcriptSaveAs);
     //    connect(ui->editor_close, &QAction::triggered, ui->m_editor_2, &Editor::transcriptClose);
     //    connect(ui->editor_jumpToLine, &QAction::triggered, ui->m_editor_2, &Editor::jumpToHighlightedLine);

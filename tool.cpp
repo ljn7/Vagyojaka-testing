@@ -250,7 +250,8 @@ void Tool::changeFontSize(int change)
 void Tool::setFontForElements()
 {
     ui->m_editor->setEditorFont(font);
-
+    ui->m_editor_2->setEditorFont(font);
+    ui->m_editor_3->setEditorFont(font);
     ui->m_wordEditor->setFont(font);
     ui->m_wordEditor->fitTableContents();
 

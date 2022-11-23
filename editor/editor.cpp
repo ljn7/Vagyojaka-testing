@@ -764,20 +764,37 @@ void Editor::loadTranscriptData(QFile& file)
                     auto blockTimeStamp = getTime(reader.attributes().value("timestamp").toString());
                     if(!blockTimeStamp.isValid()){
                         QString t2="";
-                        int hr=tl[0].toInt()/60;
-                        if(hr<10){
-                            t2+="0";
-                            t2+=QString::number(hr);
-                        }
-                        else
-                            t2+=QString::number(hr);
+                        if(t1.count(":")==1){
+                            int hr=tl[0].toInt()/60;
+                            if(hr<10){
+                                t2+="0";
+                                t2+=QString::number(hr);
+                            }
+                            else
+                                t2+=QString::number(hr);
 
-                        t2+=":";
-                        t2+=QString::number(tl[0].toInt()%60);
-                        t2+=":";
-                        t2+=tl[1];
-//                        qInfo()<<t2;
-                        blockTimeStamp=getTime(t2);
+                            t2+=":";
+                            t2+=QString::number(tl[0].toInt()%60);
+                            t2+=":";
+                            t2+=tl[1];
+                            blockTimeStamp=getTime(t2);
+                        }
+                        else if(t1.count(":")==2){
+                            int hr=(tl[1].toInt()/60)+tl[0].toInt();
+
+                            if(hr<10){
+                                t2+="0";
+                                t2+=QString::number(hr);
+                            }
+                            else
+                                t2+=QString::number(hr);
+
+                            t2+=":";
+                            t2+=QString::number(tl[1].toInt()%60);
+                            t2+=":";
+                            t2+=tl[2];
+                            blockTimeStamp=getTime(t2);
+                        }
                     }
                     qInfo()<<blockTimeStamp;
                     auto blockText = QString("");
@@ -1269,27 +1286,8 @@ void Editor::splitLine(const QTime& elapsedTime)
 
     setContent();
     updateWordEditor();
-    int i=0;
 
-    for( i=0;i<this->document()->lineCount();i++){
-
-        QTextBlock tb = this->document()->findBlockByLineNumber(i);
-        QString s = tb.text();
-
-        if(!showTimeStamp){
-            if(("["+m_blocks[highlightedBlock].speaker+"]: "+m_blocks[highlightedBlock].text)==s){
-                //                    qInfo()<<s;
-                break;}
-        }else{
-            if(("["+m_blocks[highlightedBlock].speaker+"]: "+m_blocks[highlightedBlock].text+" ["+m_blocks[highlightedBlock].timeStamp.toString()+"]")==s){
-                //                    qInfo()<<s;
-                break;}
-        }
-        i++;
-    }
-    qInfo()<<i;
-    int ln=i;
-    QTextCursor cursorx(this->document()->findBlockByLineNumber(ln)); // ln-1 because line number starts from 0
+    QTextCursor cursorx(this->document()->findBlockByNumber(highlightedBlock));
     this->setTextCursor(cursorx);
 
     qInfo() << "[Line Split]"

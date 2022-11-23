@@ -621,27 +621,17 @@ void Editor::showBlocksFromData()
 
 void Editor::highlightTranscript(const QTime& elapsedTime)
 {
-    int blockToHighlight = -1;
+    int blockToHighlight = lastHighlightedBlock;
     int wordToHighlight = -1;
 
     if (!m_blocks.isEmpty()) {
         for (int i=0; i < m_blocks.size(); i++) {
             if (m_blocks[i].timeStamp > elapsedTime) {
 
-                blockToHighlight = i;
-                QTextBlock tb = this->document()->findBlockByLineNumber(i);
-                QString s = tb.text();
 
-                if(!showTimeStamp){
-                    if(("["+m_blocks[blockToHighlight].speaker+"]: "+m_blocks[blockToHighlight].text)==s){
-                        qInfo()<<s;
-                        break;}
-                }else{
-                    if(("["+m_blocks[blockToHighlight].speaker+"]: "+m_blocks[blockToHighlight].text+" ["+m_blocks[blockToHighlight].timeStamp.toString()+"]")==s){
-                        qInfo()<<s;
-                        break;}
-                }
-                qInfo()<<s;
+                QTextBlock tb = this->document()->findBlockByNumber(i);//block number
+                QString s = tb.text();
+                blockToHighlight=tb.blockNumber();
                 break;
             }
         }
@@ -651,47 +641,27 @@ void Editor::highlightTranscript(const QTime& elapsedTime)
         highlightedBlock = blockToHighlight;
         if (!m_highlighter)
             m_highlighter = new Highlighter(document());
+
         m_highlighter->setBlockToHighlight(blockToHighlight);
-
-        this->find(m_blocks[blockToHighlight].text);
-        int i=0;
-
-        for( i=0;i<this->document()->lineCount();i++){
-
-            QTextBlock tb = this->document()->findBlockByLineNumber(i);
-            QString s = tb.text();
-
-            if(!showTimeStamp){
-                if(("["+m_blocks[blockToHighlight].speaker+"]: "+m_blocks[blockToHighlight].text)==s){
-//                    qInfo()<<s;
-                    break;}
-            }else{
-                if(("["+m_blocks[blockToHighlight].speaker+"]: "+m_blocks[blockToHighlight].text+" ["+m_blocks[blockToHighlight].timeStamp.toString()+"]")==s){
-//                    qInfo()<<s;
-                    break;}
-            }
-             i++;
-        }
-
-        int ln=i;
-        QTextCursor cursor(this->document()->findBlockByLineNumber(ln)); // ln-1 because line number starts from 0
+        QTextCursor cursor(this->document()->findBlockByNumber(blockToHighlight));
         this->setTextCursor(cursor);
-    }
+
 
     if (blockToHighlight == -1)
         return;
+    }
 
-//    for (int i = 0; i < m_blocks[blockToHighlight].words.size(); i++) {
-//        if (m_blocks[blockToHighlight].words[i].timeStamp > elapsedTime) {
-//            wordToHighlight = i;
-//            break;
-//        }
-//    }
+    for (int i = 0; i < m_blocks[blockToHighlight].words.size(); i++) {
+        if (m_blocks[blockToHighlight].words[i].timeStamp > elapsedTime) {
+            wordToHighlight = i;
+            break;
+        }
+    }
 
-//    if (wordToHighlight != highlightedWord) {
-//        highlightedWord = wordToHighlight;
-//        m_highlighter->setWordToHighlight(wordToHighlight);
-//    }
+    if (wordToHighlight != highlightedWord) {
+        highlightedWord = wordToHighlight;
+        m_highlighter->setWordToHighlight(wordToHighlight);
+    }
 }
 
 void Editor::addCustomDictonary()

@@ -145,6 +145,7 @@ private:
     QString ComparedOutputFile="ComparedDictonary.json";
     bool realTimeDataSaver=false;
     QStringList allClips;
+    int lastHighlightedBlock=-1;
 };
 
 

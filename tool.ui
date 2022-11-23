@@ -145,6 +145,40 @@
            </widget>
           </item>
           <item>
+           <layout class="QHBoxLayout" name="horizontalLayout_8">
+            <item>
+             <spacer name="horizontalSpacer">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeType">
+               <enum>QSizePolicy::Expanding</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>200</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item>
+             <widget class="QPushButton" name="pushButton_3">
+              <property name="text">
+               <string>Speak</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="btn_translate">
+              <property name="text">
+               <string>Translate</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
            <widget class="TagListDisplayWidget" name="m_tagListDisplay_2" native="true">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
@@ -165,6 +199,37 @@
             </property>
             <widget class="Editor" name="m_editor_3"/>
            </widget>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayout_9">
+            <item>
+             <spacer name="horizontalSpacer_2">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item>
+             <widget class="QPushButton" name="pushButton_4">
+              <property name="text">
+               <string>Speak</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="pushButton_2">
+              <property name="text">
+               <string>Save</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
           </item>
           <item>
            <widget class="TagListDisplayWidget" name="m_tagListDisplay_3" native="true">

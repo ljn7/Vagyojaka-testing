@@ -19,6 +19,7 @@
 #include <QNetworkRequest>
 #include <QNetworkReply>
 #include <QTimer>
+#include <QUndoCommand>
 
 class Highlighter;
 
@@ -26,8 +27,8 @@ class Editor : public TextEditor
 {
     Q_OBJECT
 
-public:
-    explicit Editor(QWidget *parent = nullptr);
+        public:
+                 explicit Editor(QWidget *parent = nullptr);
 
     void setWordEditor(WordEditor* wordEditor)
     {
@@ -40,7 +41,11 @@ public:
     QRegularExpression timeStampExp, speakerExp;
 
     void setShowTimeStamp();
-
+    QVector<block> m_blocks;
+    QUrl m_transcriptUrl;
+    void loadTranscriptData(QFile& file);
+    void setContent();
+//    QUndoStack *undoStack=nullptr;
 protected:
     void mousePressEvent(QMouseEvent *e) override;
     void keyPressEvent(QKeyEvent *event) override;
@@ -101,10 +106,9 @@ private slots:
 private:
     static QTime getTime(const QString& text);
     static word makeWord(const QTime& t, const QString& s, const QStringList& tagList);
-    QCompleter* makeCompleter(); 
+    QCompleter* makeCompleter();
 
-    void loadTranscriptData(QFile& file);
-    void setContent();
+
     void saveXml(QFile* file);
     void helpJumpToPlayer();
     void loadDictionary();
@@ -115,9 +119,9 @@ private:
     bool settingContent{false}, updatingWordEditor{false}, dontUpdateWordEditor{false};
     bool m_transliterate{false}, m_autoSave{false};
     bool showTimeStamp=false;
-    QVector<block> m_blocks;
+
     QString m_transcriptLang, m_punctuation{",.!;:"};
-    QUrl m_transcriptUrl;
+
     Highlighter* m_highlighter = nullptr;
     qint64 highlightedBlock = -1, highlightedWord = -1;
     WordEditor* m_wordEditor = nullptr;
@@ -149,8 +153,8 @@ private:
 class Highlighter : public QSyntaxHighlighter
 {
     Q_OBJECT
-public:
-    explicit Highlighter(QTextDocument *parent = nullptr) : QSyntaxHighlighter(parent) {};
+        public:
+                 explicit Highlighter(QTextDocument *parent = nullptr) : QSyntaxHighlighter(parent) {};
 
     void clearHighlight()
     {
@@ -190,4 +194,3 @@ private:
     QList<int> invalidBlockNumbers;
     QMultiMap<int, int> invalidWords;
 };
-

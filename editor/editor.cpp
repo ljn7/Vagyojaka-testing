@@ -17,7 +17,7 @@
 #include <algorithm>
 #include <QEventLoop>
 #include <QDebug>
-
+#include <QUndoStack>
 #include<QPrinter>
 
 Editor::Editor(QWidget *parent)
@@ -57,6 +57,8 @@ Editor::Editor(QWidget *parent)
     m_saveTimer->start(m_saveInterval * 1000);
 
     m_blocks.append(fromEditor(0));
+
+//    undoStack =  new QUndoStack(this);
 }
 
 void Editor::setEditorFont(const QFont& font)
@@ -125,6 +127,35 @@ void Highlighter::highlightBlock(const QString& text)
         setFormat(speakerEnd, lineEnd, format);
         format. setFontWeight(QFont::Bold);
         setFormat(speakerEnd, lineEnd, format);
+
+        if (invalidWords.contains(currentBlock().blockNumber())) {
+            auto invalidWordNumbers = invalidWords.values(currentBlock().blockNumber());
+            auto speakerEnd = 0;
+            auto speakerMatch = QRegularExpression(R"(\[.*]:)").match(text);
+            if (speakerMatch.hasMatch())
+                speakerEnd = speakerMatch.capturedEnd();
+
+            auto words = text.mid(speakerEnd + 1).split(" ");
+            int start = speakerEnd;
+
+            QTextCharFormat format;
+            format.setForeground(Qt::black);
+            setFormat(speakerEnd, lineEnd, format);
+            format. setFontWeight(QFont::Bold);
+            setFormat(speakerEnd, lineEnd, format);
+            format.setFontUnderline(true);
+            format.setUnderlineColor(Qt::red);
+            format.setUnderlineStyle(QTextCharFormat::SpellCheckUnderline);
+
+            for (int i = 0; i < words.size() - 1; i++) {
+                if (!invalidWordNumbers.contains(i))
+                    continue;
+                for (int j = 0; j < i; j++) start += (words[j].size() + 1);
+                int count = words[i].size();
+                setFormat(start + 1, count, format);
+                start = speakerEnd;
+            }
+        }
 
         format.setForeground(Qt::red);
         setFormat(timeStampStart, text.size(), format);
@@ -596,7 +627,21 @@ void Editor::highlightTranscript(const QTime& elapsedTime)
     if (!m_blocks.isEmpty()) {
         for (int i=0; i < m_blocks.size(); i++) {
             if (m_blocks[i].timeStamp > elapsedTime) {
+
                 blockToHighlight = i;
+                QTextBlock tb = this->document()->findBlockByLineNumber(i);
+                QString s = tb.text();
+
+                if(!showTimeStamp){
+                    if(("["+m_blocks[blockToHighlight].speaker+"]: "+m_blocks[blockToHighlight].text)==s){
+                        qInfo()<<s;
+                        break;}
+                }else{
+                    if(("["+m_blocks[blockToHighlight].speaker+"]: "+m_blocks[blockToHighlight].text+" ["+m_blocks[blockToHighlight].timeStamp.toString()+"]")==s){
+                        qInfo()<<s;
+                        break;}
+                }
+                qInfo()<<s;
                 break;
             }
         }
@@ -607,22 +652,46 @@ void Editor::highlightTranscript(const QTime& elapsedTime)
         if (!m_highlighter)
             m_highlighter = new Highlighter(document());
         m_highlighter->setBlockToHighlight(blockToHighlight);
+
+        this->find(m_blocks[blockToHighlight].text);
+        int i=0;
+
+        for( i=0;i<this->document()->lineCount();i++){
+
+            QTextBlock tb = this->document()->findBlockByLineNumber(i);
+            QString s = tb.text();
+
+            if(!showTimeStamp){
+                if(("["+m_blocks[blockToHighlight].speaker+"]: "+m_blocks[blockToHighlight].text)==s){
+//                    qInfo()<<s;
+                    break;}
+            }else{
+                if(("["+m_blocks[blockToHighlight].speaker+"]: "+m_blocks[blockToHighlight].text+" ["+m_blocks[blockToHighlight].timeStamp.toString()+"]")==s){
+//                    qInfo()<<s;
+                    break;}
+            }
+             i++;
+        }
+
+        int ln=i;
+        QTextCursor cursor(this->document()->findBlockByLineNumber(ln)); // ln-1 because line number starts from 0
+        this->setTextCursor(cursor);
     }
 
     if (blockToHighlight == -1)
         return;
 
-    for (int i = 0; i < m_blocks[blockToHighlight].words.size(); i++) {
-        if (m_blocks[blockToHighlight].words[i].timeStamp > elapsedTime) {
-            wordToHighlight = i;
-            break;
-        }
-    }
+//    for (int i = 0; i < m_blocks[blockToHighlight].words.size(); i++) {
+//        if (m_blocks[blockToHighlight].words[i].timeStamp > elapsedTime) {
+//            wordToHighlight = i;
+//            break;
+//        }
+//    }
 
-    if (wordToHighlight != highlightedWord) {
-        highlightedWord = wordToHighlight;
-        m_highlighter->setWordToHighlight(wordToHighlight);
-    }
+//    if (wordToHighlight != highlightedWord) {
+//        highlightedWord = wordToHighlight;
+//        m_highlighter->setWordToHighlight(wordToHighlight);
+//    }
 }
 
 void Editor::addCustomDictonary()
@@ -720,7 +789,27 @@ void Editor::loadTranscriptData(QFile& file)
 
             while(reader.readNextStartElement()) {
                 if(reader.name() == "line") {
+                    QString t1=reader.attributes().value("timestamp").toString();
+                    QStringList tl=t1.split(":");
                     auto blockTimeStamp = getTime(reader.attributes().value("timestamp").toString());
+                    if(!blockTimeStamp.isValid()){
+                        QString t2="";
+                        int hr=tl[0].toInt()/60;
+                        if(hr<10){
+                            t2+="0";
+                            t2+=QString::number(hr);
+                        }
+                        else
+                            t2+=QString::number(hr);
+
+                        t2+=":";
+                        t2+=QString::number(tl[0].toInt()%60);
+                        t2+=":";
+                        t2+=tl[1];
+//                        qInfo()<<t2;
+                        blockTimeStamp=getTime(t2);
+                    }
+                    qInfo()<<blockTimeStamp;
                     auto blockText = QString("");
                     auto blockSpeaker = reader.attributes().value("speaker").toString();
                     auto tagString = reader.attributes().value("tags").toString();
@@ -814,6 +903,7 @@ void Editor::helpJumpToPlayer()
 
     for (int i = currentBlockNumber - 1; i >= 0; i--) {
         if (m_blocks[i].timeStamp.isValid()) {
+
             timeToJump = m_blocks[i].timeStamp;
             break;
         }
@@ -832,7 +922,7 @@ void Editor::helpJumpToPlayer()
             }
         }
     }
-
+    qInfo()<<timeToJump;
     emit jumpToPlayer(timeToJump);
 }
 
@@ -1209,6 +1299,28 @@ void Editor::splitLine(const QTime& elapsedTime)
 
     setContent();
     updateWordEditor();
+    int i=0;
+
+    for( i=0;i<this->document()->lineCount();i++){
+
+        QTextBlock tb = this->document()->findBlockByLineNumber(i);
+        QString s = tb.text();
+
+        if(!showTimeStamp){
+            if(("["+m_blocks[highlightedBlock].speaker+"]: "+m_blocks[highlightedBlock].text)==s){
+                //                    qInfo()<<s;
+                break;}
+        }else{
+            if(("["+m_blocks[highlightedBlock].speaker+"]: "+m_blocks[highlightedBlock].text+" ["+m_blocks[highlightedBlock].timeStamp.toString()+"]")==s){
+                //                    qInfo()<<s;
+                break;}
+        }
+        i++;
+    }
+    qInfo()<<i;
+    int ln=i;
+    QTextCursor cursorx(this->document()->findBlockByLineNumber(ln)); // ln-1 because line number starts from 0
+    this->setTextCursor(cursorx);
 
     qInfo() << "[Line Split]"
             << QString("line number: %1").arg(QString::number(highlightedBlock + 1))
@@ -1240,6 +1352,9 @@ void Editor::mergeUp()
     qInfo() << "[Merge Up]"
             << QString("line number: %1, %2").arg(QString::number(previousBlockNumber + 1), QString::number(blockNumber + 1))
             << QString("final line: %1, %2").arg(QString::number(previousBlockNumber + 1), m_blocks[previousBlockNumber].text);
+//    qInfo()<<(undoS);
+    qDebug() << this->findChildren<QUndoStack*>();
+
 }
 
 void Editor::mergeDown()
@@ -1684,7 +1799,7 @@ void Editor::propagateTime(const QTime& time, int start, int end, bool negateTim
         auto& currentTimeStamp = m_blocks[i].timeStamp;
 
         if (currentTimeStamp.isNull())
-            currentTimeStamp = QTime(0, 0, 0);
+            currentTimeStamp = QTime(0,0, 0, 0);
 
         int secondsToAdd = time.hour() * 3600 + time.minute() * 60 + time.second();
         int msecondsToAdd = time.msec();

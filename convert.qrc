@@ -3,5 +3,6 @@
         <file>alignment.py</file>
         <file>saveToPDF.py</file>
         <file>client.py</file>
+        <file>Translate.py</file>
     </qresource>
 </RCC>

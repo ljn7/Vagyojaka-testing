@@ -1,6 +1,7 @@
 #include "tool.h"
 #include "./ui_tool.h"
 #include "editor/utilities/keyboardshortcutguide.h"
+#include <QProgressBar>
 
 #include <QFontDialog>
 #include <QMessageBox>
@@ -16,12 +17,12 @@ Tool::Tool(QWidget *parent)
     ui->splitter_tool->setCollapsible(0, false);
     ui->splitter_tool->setCollapsible(1, false);
     ui->splitter_tool->setSizes(QList<int>({static_cast<int>(0.15 * sizeHint().height()),
-                                            static_cast<int>(0.85 * sizeHint().height())}));
+        static_cast<int>(0.85 * sizeHint().height())}));
 
     ui->splitter_editor->setCollapsible(0, false);
     ui->splitter_editor->setCollapsible(1, false);
     ui->splitter_editor->setSizes(QList<int>({static_cast<int>(0.7 * sizeHint().height()),
-                                            static_cast<int>(0.3 * sizeHint().height())}));
+        static_cast<int>(0.3 * sizeHint().height())}));
 
     ui->m_wordEditor->setHidden(true);
 
@@ -29,7 +30,7 @@ Tool::Tool(QWidget *parent)
     //Upload_and_generate_Transcript
     connect(ui->close, &QAction::triggered, this, &QMainWindow::close);
 
-    // Connect Player Controls and Media Player
+       // Connect Player Controls and Media Player
     connect(ui->player_open, &QAction::triggered, player, &MediaPlayer::open);
     connect(ui->player_togglePlay, &QAction::triggered, player, &MediaPlayer::togglePlayback);
     connect(ui->player_seekForward, &QAction::triggered, player, [&]() {player->seek(5);});
@@ -49,7 +50,7 @@ Tool::Tool(QWidget *parent)
     connect(player, &MediaPlayer::message, this->statusBar(), &QStatusBar::showMessage);
     connect(player, QOverload<QMediaPlayer::Error>::of(&QMediaPlayer::error), this, &Tool::handleMediaPlayerError);
 
-    // Connect components dependent on Player's position change to player
+       // Connect components dependent on Player's position change to player
     connect(player, &QMediaPlayer::positionChanged, this,
         [&]()
         {
@@ -57,7 +58,7 @@ Tool::Tool(QWidget *parent)
             ui->label_position->setText(player->getPositionInfo());
             ui->m_editor->highlightTranscript(player->elapsedTime());
         }
-    );
+        );
 
     connect(player, &QMediaPlayer::durationChanged, this,
         [&]()
@@ -65,9 +66,9 @@ Tool::Tool(QWidget *parent)
             ui->slider_position->setRange(0, player->duration());
             ui->label_position->setText(player->getPositionInfo());
         }
-    );
+        );
 
-    // Connect edit menu actions
+       // Connect edit menu actions
     connect(ui->edit_undo, &QAction::triggered, ui->m_editor, &Editor::undo);
     connect(ui->edit_redo, &QAction::triggered, ui->m_editor, &Editor::redo);
     connect(ui->edit_cut, &QAction::triggered, ui->m_editor, &Editor::cut);
@@ -75,19 +76,19 @@ Tool::Tool(QWidget *parent)
     connect(ui->edit_paste, &QAction::triggered, ui->m_editor, &Editor::paste);
     connect(ui->edit_findReplace, &QAction::triggered, ui->m_editor, &Editor::findReplace);
 
-    // Connect view menu actions
+       // Connect view menu actions
     connect(ui->view_incFont, &QAction::triggered, this, [&]() {changeFontSize(+1);});
     connect(ui->view_decFont, &QAction::triggered, this, [&]() {changeFontSize(-1);});
     connect(ui->view_font, &QAction::triggered, this, &Tool::changeFont);
     connect(ui->view_toggleTagList, &QAction::triggered, this, [&]() {ui->m_tagListDisplay->setVisible(!ui->m_tagListDisplay->isVisible());});
 
-    // Connect Editor menu actions and editor controls
+       // Connect Editor menu actions and editor controls
     ui->m_editor->setWordEditor(ui->m_wordEditor);
     connect(ui->Save_as_PDF,&QAction::triggered,ui->m_editor,&Editor::saveAsPDF);
     connect(ui->Real_Time_Data_Saver,&QAction::triggered,ui->m_editor,&Editor::realTimeDataSavingToggle);
     connect(ui->Add_Custom_Dictonary, &QAction::triggered, ui->m_editor, &Editor::addCustomDictonary);
 
-    connect(ui->editor_openTranscript, &QAction::triggered, ui->m_editor, &Editor::transcriptOpen);
+    //    connect(ui->editor_openTranscript, &QAction::triggered, ui->m_editor, &Editor::transcriptOpen);
     connect(ui->editor_debugBlocks, &QAction::triggered, ui->m_editor, &Editor::showBlocksFromData);
     connect(ui->editor_save, &QAction::triggered, ui->m_editor, &Editor::transcriptSave);
     connect(ui->editor_saveAs, &QAction::triggered, ui->m_editor, &Editor::transcriptSaveAs);
@@ -110,28 +111,28 @@ Tool::Tool(QWidget *parent)
 
 
     connect(ui->Open_File_in_Editor1, &QAction::triggered, ui->m_editor_2, &Editor::transcriptOpen);
-//    connect(ui->editor_debugBlocks, &QAction::triggered, ui->m_editor_2, &Editor::showBlocksFromData);
+    //    connect(ui->editor_debugBlocks, &QAction::triggered, ui->m_editor_2, &Editor::showBlocksFromData);
     connect(ui->editor_save2, &QAction::triggered, ui->m_editor_2, &Editor::transcriptSave);
-//    connect(ui->editor_saveAs, &QAction::triggered, ui->m_editor_2, &Editor::transcriptSaveAs);
-//    connect(ui->editor_close, &QAction::triggered, ui->m_editor_2, &Editor::transcriptClose);
-//    connect(ui->editor_jumpToLine, &QAction::triggered, ui->m_editor_2, &Editor::jumpToHighlightedLine);
-//    connect(ui->editor_splitLine, &QAction::triggered, ui->m_editor_2, [&]() {ui->m_editor_2->splitLine(player->elapsedTime());});
-//    connect(ui->editor_mergeUp, &QAction::triggered, ui->m_editor_2, &Editor::mergeUp);
-//    connect(ui->editor_mergeDown, &QAction::triggered, ui->m_editor_2, &Editor::mergeDown);
-//    connect(ui->editor_changeLang, &QAction::triggered, ui->m_editor_2, &Editor::changeTranscriptLang);
-//    connect(ui->editor_changeSpeaker, &QAction::triggered, ui->m_editor_2, &Editor::createChangeSpeakerDialog);
-//    connect(ui->editor_propagateTime, &QAction::triggered, ui->m_editor_2, &Editor::createTimePropagationDialog);
-//    connect(ui->editor_editTags, &QAction::triggered, ui->m_editor_2, &Editor::createTagSelectionDialog);
-//    connect(ui->editor_autoSave, &QAction::triggered, ui->m_editor_2, [this](){ui->m_editor_2->useAutoSave(ui->editor_autoSave->isChecked());});
-//    connect(ui->m_editor_2, &Editor::message, this->statusBar(), &QStatusBar::showMessage);
-//    connect(ui->m_editor_2, &Editor::jumpToPlayer, player, &MediaPlayer::setPositionToTime);
-//    connect(ui->m_editor_2, &Editor::refreshTagList, ui->m_tagListDisplay, &TagListDisplayWidget::refreshTags);
-//    connect(ui->Show_Time_Stamps, &QAction::triggered, ui->m_editor_2,&Editor::setShowTimeStamp );
+    //    connect(ui->editor_saveAs, &QAction::triggered, ui->m_editor_2, &Editor::transcriptSaveAs);
+    //    connect(ui->editor_close, &QAction::triggered, ui->m_editor_2, &Editor::transcriptClose);
+    //    connect(ui->editor_jumpToLine, &QAction::triggered, ui->m_editor_2, &Editor::jumpToHighlightedLine);
+    //    connect(ui->editor_splitLine, &QAction::triggered, ui->m_editor_2, [&]() {ui->m_editor_2->splitLine(player->elapsedTime());});
+    //    connect(ui->editor_mergeUp, &QAction::triggered, ui->m_editor_2, &Editor::mergeUp);
+    //    connect(ui->editor_mergeDown, &QAction::triggered, ui->m_editor_2, &Editor::mergeDown);
+    //    connect(ui->editor_changeLang, &QAction::triggered, ui->m_editor_2, &Editor::changeTranscriptLang);
+    //    connect(ui->editor_changeSpeaker, &QAction::triggered, ui->m_editor_2, &Editor::createChangeSpeakerDialog);
+    //    connect(ui->editor_propagateTime, &QAction::triggered, ui->m_editor_2, &Editor::createTimePropagationDialog);
+    //    connect(ui->editor_editTags, &QAction::triggered, ui->m_editor_2, &Editor::createTagSelectionDialog);
+    //    connect(ui->editor_autoSave, &QAction::triggered, ui->m_editor_2, [this](){ui->m_editor_2->useAutoSave(ui->editor_autoSave->isChecked());});
+    //    connect(ui->m_editor_2, &Editor::message, this->statusBar(), &QStatusBar::showMessage);
+    //    connect(ui->m_editor_2, &Editor::jumpToPlayer, player, &MediaPlayer::setPositionToTime);
+    //    connect(ui->m_editor_2, &Editor::refreshTagList, ui->m_tagListDisplay, &TagListDisplayWidget::refreshTags);
+    //    connect(ui->Show_Time_Stamps, &QAction::triggered, ui->m_editor_2,&Editor::setShowTimeStamp );
 
 
     connect(ui->Open_File_in_Editor2, &QAction::triggered, ui->m_editor_3, &Editor::transcriptOpen);
     //    connect(ui->editor_debugBlocks, &QAction::triggered, ui->m_editor_2, &Editor::showBlocksFromData);
-        connect(ui->editor_save3, &QAction::triggered, ui->m_editor_3, &Editor::transcriptSave);
+    connect(ui->editor_save3, &QAction::triggered, ui->m_editor_3, &Editor::transcriptSave);
     //    connect(ui->editor_saveAs, &QAction::triggered, ui->m_editor_2, &Editor::transcriptSaveAs);
     //    connect(ui->editor_close, &QAction::triggered, ui->m_editor_2, &Editor::transcriptClose);
     //    connect(ui->editor_jumpToLine, &QAction::triggered, ui->m_editor_2, &Editor::jumpToHighlightedLine);
@@ -172,10 +173,10 @@ Tool::Tool(QWidget *parent)
     connect(group, &QActionGroup::triggered, this, &Tool::transliterationSelected);
 
 
-    // Connect keyboard shortcuts guide to help action
+       // Connect keyboard shortcuts guide to help action
     connect(ui->help_keyboardShortcuts, &QAction::triggered, this, &Tool::createKeyboardShortcutGuide);
 
-    // Connect position slider change to player position
+       // Connect position slider change to player position
     connect(ui->slider_position, &QSlider::sliderMoved, player, &MediaPlayer::setPosition);
 
     font = QFont( "Monospace", 10 );
@@ -202,7 +203,7 @@ void Tool::handleMediaPlayerError()
 void Tool::keyPressEvent(QKeyEvent *event)
 {
 
-     if (event->key() == Qt::Key_Up && event->modifiers() == (Qt::ControlModifier | Qt::ShiftModifier))
+    if (event->key() == Qt::Key_Up && event->modifiers() == (Qt::ControlModifier | Qt::ShiftModifier))
         ui->m_editor->speakerWiseJump("up");
     else if (event->key() == Qt::Key_Down && event->modifiers() == (Qt::ControlModifier | Qt::ShiftModifier))
         ui->m_editor->speakerWiseJump("down");
@@ -299,6 +300,164 @@ void Tool::on_Upload_and_generate_Transcript_triggered()
         //running transcript generator on another thread (parallel processing)
     QtConcurrent::run(&tr, &TranscriptGenerator::Upload_and_generate_Transcript);
 
+
+        QFile myfile(fileUrl->toLocalFile());
+        QFileInfo fileInfo(myfile);
+        QString filename(fileInfo.fileName());
+        QString filepaths=fileInfo.dir().path();
+
+        qInfo()<<filepaths+"/transcript.xml";
+
+        bool fileExists = QFileInfo::exists(filepaths+"/transcript.xml") && QFileInfo(filepaths+"/transcript.xml").isFile();
+        while(!fileExists){
+            fileExists = QFileInfo::exists(filepaths+"/transcript.xml") && QFileInfo(filepaths+"/transcript.xml").isFile();
+        }
+
+        QFile transcriptFile(filepaths+"/transcript.xml");
+        if (!transcriptFile.open(QIODevice::ReadOnly)) {
+            qInfo()<<(transcriptFile.errorString());
+            return;
+        }
+        ui->m_editor->loadTranscriptData(transcriptFile);
+        ui->m_editor->setContent();
+        transcriptFile.close();
+
+        QFile transcriptFile2(filepaths+"/transcript.xml");
+        if (!transcriptFile2.open(QIODevice::ReadOnly)) {
+            qInfo()<<(transcriptFile2.errorString());
+            return;
+        }
+        ui->m_editor_2->loadTranscriptData(transcriptFile2);
+        ui->m_editor_2->setContent();
+
     }
 
+}
+
+
+void Tool::on_btn_translate_clicked()
+{
+
+    QProgressBar progressBar;
+    progressBar.setMinimum(0);
+    progressBar.setMaximum(100);
+    progressBar.setValue(10);
+    progressBar.show();
+    progressBar.raise();
+    progressBar.activateWindow();
+
+    if(!QFile::exists("Translate.py")){
+        QFile mapper("Translate.py");
+        QFileInfo mapperFileInfo(mapper);
+        QFile aligner(":/Translate.py");
+        if(!aligner.open(QIODevice::OpenModeFlag::ReadOnly)){
+            return;
+        }
+        aligner.seek(0);
+        QString cp=aligner.readAll();
+        aligner.close();
+
+        if(!mapper.open(QIODevice::OpenModeFlag::WriteOnly|QIODevice::Truncate)){
+
+            return;
+        }
+        mapper.write(QByteArray(cp.toUtf8()));
+        mapper.close();
+        std::string makingexec="chmod +x "+mapperFileInfo.absoluteFilePath().replace(" ", "\\ ").toStdString();
+        int result = system(makingexec.c_str());
+        qInfo()<<result;
+    }
+
+
+
+
+    QFile translate("toTranslate.txt");
+    if(!translate.open(QIODevice::OpenModeFlag::WriteOnly)){
+        QMessageBox::critical(this,"Error",translate.errorString());
+        return;
+    }
+    QString x("");
+    for (auto& a_block : qAsConst(ui->m_editor_2->m_blocks)) {
+        auto blockText = a_block.text + " " ;
+        //            qInfo()<<a_block.text;
+        x.append(blockText + "\n");
+    }
+    QTextStream outer(&translate);
+    outer<<x;
+    translate.close();
+
+    QFileInfo TranslateFile(translate);
+    QString Translatefilepaths=TranslateFile.dir().path();
+
+    QFile myfile(ui->m_editor_2->m_transcriptUrl.toLocalFile());
+
+    QFileInfo fileInfo(myfile);
+    QString filename(fileInfo.fileName());
+    QString filepaths=fileInfo.dir().path();
+    QString translatedFile=filepaths+"/HindiTranslated.xml";
+    QString filepaths2=filepaths;
+    qInfo()<<filepaths2;
+
+
+
+    QFile mapper("Translate.py");
+    QFileInfo mapperFileInfo(mapper);
+
+    QFile finalFile(translatedFile);
+    QFileInfo finalFileInfo(finalFile);
+    QFile HindiTranslated("HindiTranslated.txt");
+    QFileInfo HindiTranslate(HindiTranslated);
+    QFileInfo initialDictFileInfo(translate);
+    int result;
+    QFile transcriptFileToTranslate(ui->m_editor_2->m_transcriptUrl.toLocalFile());
+    QFileInfo FromTranscriptFileToTranslate(transcriptFileToTranslate);
+
+    QFile tempXML("temp.xml");
+    QFileInfo tempXMLinfo(tempXML);
+
+    std::string translatorStr="python3 "  +mapperFileInfo.absoluteFilePath().toStdString()
+        +" "+ '\"'+initialDictFileInfo.absoluteFilePath().toStdString()+ '\"'
+        +" "+ '\"'+HindiTranslate.absoluteFilePath().toStdString()+ '\"'
+        +" "+ '\"'+finalFileInfo.absoluteFilePath().toStdString()+ '\"'
+        +" "+ '\"'+FromTranscriptFileToTranslate.absoluteFilePath().toStdString()+ '\"'
+        +" "+ '\"'+tempXMLinfo.absoluteFilePath().toStdString()+ '\"';
+
+    qInfo()<<translatorStr.c_str();
+
+    int result2 = system(translatorStr.c_str());
+    qInfo()<<result2;
+
+    qInfo()<<"Save Pressed";
+    bool fileExists = QFileInfo::exists(filepaths2+"/HindiTranslated.xml") && QFileInfo(filepaths2+"/HindiTranslated.xml").isFile();
+    while(!fileExists){
+        fileExists = QFileInfo::exists(filepaths2+"/HindiTranslated.xml") && QFileInfo(filepaths2+"/HindiTranslated.xml").isFile();
+    }
+    qInfo()<<"path exists now";
+    QFile transcriptFile3(filepaths2+"/HindiTranslated.xml");
+    if (!transcriptFile3.open(QIODevice::ReadOnly)) {
+        qInfo()<<(transcriptFile3.errorString());
+        return;
+    }
+    ui->m_editor_3->loadTranscriptData(transcriptFile3);
+    ui->m_editor_3->setContent();
+    qInfo()<<"translated";
+    progressBar.setValue(100);
+    progressBar.hide();
+
+
+}
+
+
+void Tool::on_editor_openTranscript_triggered()
+{
+
+    ui->m_editor->transcriptOpen();
+    ui->m_editor_2->m_transcriptUrl=ui->m_editor->m_transcriptUrl;
+    QFile transcriptFile(ui->m_editor->m_transcriptUrl.toLocalFile());
+    if (!transcriptFile.open(QIODevice::ReadOnly)) {
+        qInfo()<<(transcriptFile.errorString());
+        return;
+    }
+    ui->m_editor_2->loadTranscriptData(transcriptFile);
+    ui->m_editor_2->setContent();
 }

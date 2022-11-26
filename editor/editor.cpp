@@ -19,7 +19,7 @@
 #include <QDebug>
 #include <QUndoStack>
 #include<QPrinter>
-
+#include<QSettings>
 Editor::Editor(QWidget *parent)
     : TextEditor(parent),
     m_speakerCompleter(makeCompleter()), m_textCompleter(makeCompleter()), m_transliterationCompleter(makeCompleter()),
@@ -425,13 +425,17 @@ void Editor::transcriptOpen()
     QFileDialog fileDialog(this);
     fileDialog.setAcceptMode(QFileDialog::AcceptOpen);
     fileDialog.setWindowTitle(tr("Open File"));
+    if(settings.value("transcriptDir").toString()=="")
     fileDialog.setDirectory(QStandardPaths::standardLocations(QStandardPaths::DocumentsLocation).value(0, QDir::homePath()));
-
+    else
+        fileDialog.setDirectory(settings.value("transcriptDir").toString());
     if (fileDialog.exec() == QDialog::Accepted) {
         QUrl *fileUrl = new QUrl(fileDialog.selectedUrls().constFirst());
         m_transcriptUrl = *fileUrl;
         QFile transcriptFile(fileUrl->toLocalFile());
-
+        QFileInfo filedir(transcriptFile);
+        QString dirInString=filedir.dir().path();
+        settings.setValue("transcriptDir",dirInString);
         if (!transcriptFile.open(QIODevice::ReadOnly)) {
             emit message(transcriptFile.errorString());
             return;

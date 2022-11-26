@@ -6,6 +6,7 @@
 #include<QThread>
 #include<QtConcurrent/QtConcurrent>
 #include "./transcriptgenerator.h"
+#include <QSettings>
 QT_BEGIN_NAMESPACE
     namespace Ui { class Tool; }
 QT_END_NAMESPACE
@@ -43,4 +44,6 @@ private:
     Ui::Tool *ui;
     QFont font;
     QMap<QString, QString> m_transliterationLang;
+public:
+     QSettings settings;
 };

@@ -461,3 +461,4 @@ void Tool::on_editor_openTranscript_triggered()
     ui->m_editor_2->loadTranscriptData(transcriptFile);
     ui->m_editor_2->setContent();
 }
+

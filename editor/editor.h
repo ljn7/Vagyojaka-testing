@@ -20,7 +20,7 @@
 #include <QNetworkReply>
 #include <QTimer>
 #include <QUndoCommand>
-
+#include <QSettings>
 class Highlighter;
 
 class Editor : public TextEditor
@@ -146,6 +146,9 @@ private:
     bool realTimeDataSaver=false;
     QStringList allClips;
     int lastHighlightedBlock=-1;
+    QSettings settings;
+public:
+
 };
 
 

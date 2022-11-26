@@ -44,9 +44,18 @@ void MediaPlayer::open()
     QStringList supportedMimeTypes = QMediaPlayer::supportedMimeTypes();
     if (!supportedMimeTypes.isEmpty())
         fileDialog.setMimeTypeFilters(supportedMimeTypes);
+//    if(settings.value("mediaDir").toString()=="")
     fileDialog.setDirectory(QStandardPaths::standardLocations(QStandardPaths::MoviesLocation).value(0, QDir::homePath()));
+//    else
+//        fileDialog.setDirectory(settings.value("mediaDir").toString());
     if (fileDialog.exec() == QDialog::Accepted) {
         QUrl *fileUrl = new QUrl(fileDialog.selectedUrls().constFirst());
+
+//        QFile MediaFile(fileUrl->toLocalFile());
+//        QFileInfo filedir(MediaFile);
+//        QString dirInString=filedir.dir().path();
+//        settings.setValue("mediaDir",dirInString);
+
         m_mediaFileName = fileUrl->fileName();
         setMedia(*fileUrl);
         emit message("Opened file " + fileUrl->fileName());

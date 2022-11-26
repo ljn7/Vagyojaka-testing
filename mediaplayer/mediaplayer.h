@@ -5,7 +5,7 @@
 #include <QFileDialog>
 #include <QStandardPaths>
 #include <QTime>
-
+#include <QSettings>
 class MediaPlayer : public QMediaPlayer
 {
     Q_OBJECT

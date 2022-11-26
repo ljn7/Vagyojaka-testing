@@ -1,7 +1,6 @@
 #include "tool.h"
-
 #include <QApplication>
-
+#include<QSettings>
 void customMessageHandler(QtMsgType type, const QMessageLogContext &context, const QString &msg)
 {
     Q_UNUSED(context);

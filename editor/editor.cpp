@@ -19,7 +19,7 @@
 #include <QDebug>
 #include <QUndoStack>
 #include<QPrinter>
-#include<QSettings>
+
 Editor::Editor(QWidget *parent)
     : TextEditor(parent),
     m_speakerCompleter(makeCompleter()), m_textCompleter(makeCompleter()), m_transliterationCompleter(makeCompleter()),
@@ -425,17 +425,17 @@ void Editor::transcriptOpen()
     QFileDialog fileDialog(this);
     fileDialog.setAcceptMode(QFileDialog::AcceptOpen);
     fileDialog.setWindowTitle(tr("Open File"));
-    if(settings.value("transcriptDir").toString()=="")
+    if(QSettings().value("transcriptDir").toString()=="")
     fileDialog.setDirectory(QStandardPaths::standardLocations(QStandardPaths::DocumentsLocation).value(0, QDir::homePath()));
     else
-        fileDialog.setDirectory(settings.value("transcriptDir").toString());
+        fileDialog.setDirectory(QSettings().value("transcriptDir").toString());
     if (fileDialog.exec() == QDialog::Accepted) {
         QUrl *fileUrl = new QUrl(fileDialog.selectedUrls().constFirst());
         m_transcriptUrl = *fileUrl;
         QFile transcriptFile(fileUrl->toLocalFile());
         QFileInfo filedir(transcriptFile);
         QString dirInString=filedir.dir().path();
-        settings.setValue("transcriptDir",dirInString);
+        QSettings().setValue("transcriptDir",dirInString);
         if (!transcriptFile.open(QIODevice::ReadOnly)) {
             emit message(transcriptFile.errorString());
             return;
@@ -625,23 +625,26 @@ void Editor::showBlocksFromData()
 
 void Editor::highlightTranscript(const QTime& elapsedTime)
 {
-    int blockToHighlight = lastHighlightedBlock;
+    int blockToHighlight = -1;
     int wordToHighlight = -1;
 
     if (!m_blocks.isEmpty()) {
+
         for (int i=0; i < m_blocks.size(); i++) {
-            if (m_blocks[i].timeStamp > elapsedTime) {
+
+            if(m_blocks[i].timeStamp.isValid()){if (m_blocks[i].timeStamp > elapsedTime) {
 
 
                 QTextBlock tb = this->document()->findBlockByNumber(i);//block number
                 QString s = tb.text();
                 blockToHighlight=tb.blockNumber();
                 break;
-            }
+            }}
         }
-    }
 
-    if (blockToHighlight != highlightedBlock) {
+    }
+qInfo()<<blockToHighlight;
+    if (blockToHighlight != highlightedBlock ) {
         highlightedBlock = blockToHighlight;
         if (!m_highlighter)
             m_highlighter = new Highlighter(document());
@@ -654,7 +657,8 @@ void Editor::highlightTranscript(const QTime& elapsedTime)
     if (blockToHighlight == -1)
         return;
     }
-
+    if (blockToHighlight == -1)
+        return;
     for (int i = 0; i < m_blocks[blockToHighlight].words.size(); i++) {
         if (m_blocks[blockToHighlight].words[i].timeStamp > elapsedTime) {
             wordToHighlight = i;
@@ -666,6 +670,7 @@ void Editor::highlightTranscript(const QTime& elapsedTime)
         highlightedWord = wordToHighlight;
         m_highlighter->setWordToHighlight(wordToHighlight);
     }
+
 }
 
 void Editor::addCustomDictonary()

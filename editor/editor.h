@@ -146,7 +146,6 @@ private:
     bool realTimeDataSaver=false;
     QStringList allClips;
     int lastHighlightedBlock=-1;
-    QSettings settings;
 public:
 
 };

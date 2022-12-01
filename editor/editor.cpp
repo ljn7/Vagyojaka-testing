@@ -191,6 +191,32 @@ void Editor::keyPressEvent(QKeyEvent *event)
         createChangeSpeakerDialog();
     else if (event->modifiers() == Qt::ControlModifier && event->key() == Qt::Key_T)
         createTimePropagationDialog();
+    else if (event->modifiers() == Qt::ControlModifier && event->key() == Qt::Key_M){
+        QString blockText = textCursor().block().text();
+        QString textTillCursor = blockText.left(textCursor().positionInBlock());
+
+        const bool containsSpeakerBraces = blockText.leftRef(blockText.indexOf(" ")).contains("]:");
+        const bool containsTimeStamp = blockText.trimmed() != "" && blockText.trimmed().back() == ']';
+        bool isAWordUnderCursor = false;
+        int wordNumber;
+
+        if ((containsSpeakerBraces && textTillCursor.count(" ") > 0) || !containsSpeakerBraces) {
+            if (m_blocks.size() > textCursor().blockNumber() &&
+                !(containsTimeStamp && textTillCursor.count(" ") == blockText.count(" "))) {
+                isAWordUnderCursor = true;
+
+                if (containsSpeakerBraces) {
+                    auto textWithoutSpeaker = textTillCursor.split("]:").last();
+                    wordNumber = textWithoutSpeaker.trimmed().count(" ");
+                }
+                else
+                    wordNumber = textTillCursor.trimmed().count(" ");
+            }
+        }
+
+        markWordAsCorrect(textCursor().blockNumber(), wordNumber);
+    }
+    qInfo()<<event;
 
     auto checkPopupVisible = [](QCompleter* completer) {
         return completer && completer->popup()->isVisible();
@@ -199,7 +225,9 @@ void Editor::keyPressEvent(QKeyEvent *event)
     if (checkPopupVisible(m_textCompleter)
             || checkPopupVisible(m_speakerCompleter)
             || checkPopupVisible(m_transliterationCompleter)
-        ) {
+        )
+    {
+
         // The following keys are forwarded by the completer to the widget
        switch (event->key()) {
        case Qt::Key_Enter:
@@ -238,6 +266,7 @@ void Editor::keyPressEvent(QKeyEvent *event)
     if (!textTillCursor.count(" ") && !textTillCursor.contains("]:") && !textTillCursor.contains("]")
             && textTillCursor.size() && containsSpeakerBraces) {
         // Complete speaker
+
         m_completer = m_speakerCompleter;
 
         completionPrefix = blockText.left(blockText.indexOf(" "));
@@ -251,6 +280,69 @@ void Editor::keyPressEvent(QKeyEvent *event)
         m_speakerCompleter->setModel(new QStringListModel(speakers, m_speakerCompleter));
     }
     else {
+        QString blockText = textCursor().block().text();
+        QString textTillCursor = blockText.left(textCursor().positionInBlock());
+
+        const bool containsSpeakerBraces = blockText.leftRef(blockText.indexOf(" ")).contains("]:");
+        const bool containsTimeStamp = blockText.trimmed() != "" && blockText.trimmed().back() == ']';
+        bool isAWordUnderCursor = false;
+        int wordNumber;
+
+        if ((containsSpeakerBraces && textTillCursor.count(" ") > 0) || !containsSpeakerBraces) {
+            if (m_blocks.size() > textCursor().blockNumber() &&
+                !(containsTimeStamp && textTillCursor.count(" ") == blockText.count(" "))) {
+                isAWordUnderCursor = true;
+
+                if (containsSpeakerBraces) {
+                    auto textWithoutSpeaker = textTillCursor.split("]:").last();
+                    wordNumber = textWithoutSpeaker.trimmed().count(" ");
+                }
+                else
+                    wordNumber = textTillCursor.trimmed().count(" ");
+            }
+        }
+        if(m_blocks[textCursor().block().blockNumber()].words[wordNumber].text.size()>2){
+            QString text = m_blocks[textCursor().blockNumber()].words[wordNumber].text.toLower();
+            QString text2 = m_blocks[textCursor().blockNumber()].words[wordNumber].text;
+            text=text.trimmed();
+            text2=text.trimmed();
+            qInfo()<<text;
+            QString val;
+            QFile file;
+            file.setFileName("replacedTextDictonary.json");
+            file.open(QIODevice::ReadOnly | QIODevice::Text);
+            val = file.readAll();
+            file.close();
+            QJsonDocument d = QJsonDocument::fromJson(val.toUtf8());
+            QJsonObject sett2 = d.object();
+            QJsonArray value = sett2[text].toArray();
+            QStringList allSuggestions;
+            if(value.size()>0){
+                for( auto i : value){
+                    allSuggestions<< i.toString();
+                }
+                qInfo()<<allSuggestions;
+                QMenu *sugg=new QMenu;
+                for(auto i:allSuggestions ){
+                    auto readmeJson = new QAction;
+                    readmeJson->setText(i);
+                    connect(readmeJson, &QAction::triggered, this,[this,i]()
+                        {
+                            suggest(i);
+                        });
+                    sugg->addAction(readmeJson);
+                }
+//                 sugg->setMaximumHeight(50);
+                sugg->setStyleSheet("QMenu { menu-scrollable: 1; }");
+
+
+
+                sugg->exec();
+//                delete sugg;
+            }
+        }
+
+        if(showTimeStamp)
         if (m_blocks[textCursor().blockNumber()].timeStamp.isValid()
                 && textTillCursor.count(" ") == blockText.count(" "))
             return;
@@ -710,7 +802,7 @@ QCompleter* Editor::makeCompleter()
     auto completer = new QCompleter(this); 
     completer->setWidget(this); 
     completer->setCaseSensitivity(Qt::CaseInsensitive); 
-    completer->setWrapAround(false); 
+    completer->setWrapAround(false);
     completer->setCompletionMode(QCompleter::PopupCompletion); 
 
     return completer;
@@ -1607,13 +1699,14 @@ void Editor::suggest(QString suggest)
 {
 
     QTextCursor cursor = textCursor();
-//    if(cursor.hasSelection())
-//    {
-        cursor.insertText(suggest);
-//    }
 
+//        cursor.insertText(suggest);
 
+    cursor.movePosition(QTextCursor::StartOfWord);
 
+    cursor.select(QTextCursor::WordUnderCursor);
+    cursor.removeSelectedText();
+    cursor.insertText(suggest);
 
 
 }

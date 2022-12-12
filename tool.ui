@@ -419,7 +419,7 @@
     <string>Merge Up</string>
    </property>
    <property name="shortcut">
-    <string>Ctrl+Up</string>
+    <string>Alt+Up</string>
    </property>
   </action>
   <action name="editor_mergeDown">
@@ -427,7 +427,7 @@
     <string>Merge Down</string>
    </property>
    <property name="shortcut">
-    <string>Ctrl+Down</string>
+    <string>Alt+Down</string>
    </property>
   </action>
   <action name="editor_findReplace">

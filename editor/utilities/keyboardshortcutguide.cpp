@@ -50,8 +50,8 @@ void KeyboardShortcutGuide::fillDialog() {
     QStringList saveTranscript({"Save Transcript", QKeySequence(Qt::CTRL+Qt::Key_S).toString()});
     QStringList splitLine({"Split Line", QKeySequence(Qt::CTRL+Qt::Key_Semicolon).toString()});
     QStringList jumpToHighlightedLine({"Jump to Highlighted Line", QKeySequence(Qt::CTRL+Qt::Key_J).toString()});
-    QStringList mergeUp({"Merge Up", QKeySequence(Qt::CTRL+Qt::Key_Up).toString()});
-    QStringList mergeDown({"Merge Down", QKeySequence(Qt::CTRL+Qt::Key_Down).toString()});
+    QStringList mergeUp({"Merge Up", QKeySequence(Qt::ALT+Qt::Key_Up).toString()});
+    QStringList mergeDown({"Merge Down", QKeySequence(Qt::ALT+Qt::Key_Down).toString()});
     QStringList toggleWordEditor({"Toggle Word Editor", QKeySequence(Qt::CTRL+Qt::Key_W).toString()});
     QStringList changeSpeaker({"Change Speaker", QKeySequence(Qt::CTRL+Qt::Key_R).toString()});
     QStringList propagateTime({"Propagate Time", QKeySequence(Qt::CTRL+Qt::Key_T).toString()});

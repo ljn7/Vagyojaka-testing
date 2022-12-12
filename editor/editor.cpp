@@ -336,8 +336,8 @@ void Editor::keyPressEvent(QKeyEvent *event)
                 sugg->setStyleSheet("QMenu { menu-scrollable: 1; }");
 
 
-
-                sugg->exec();
+                QPoint x; x.setX(QCursor::pos().rx()+2);x.setY(QCursor::pos().ry());
+                sugg->exec(x);
 //                delete sugg;
             }
         }

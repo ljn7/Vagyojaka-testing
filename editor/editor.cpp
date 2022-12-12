@@ -1121,12 +1121,16 @@ QStringList Editor::listFromFile(const QString& fileName)
 
 void Editor::setShowTimeStamp()
 {
+
+
     if(showTimeStamp){
         showTimeStamp=false;}
     else{
         showTimeStamp=true;
     }
     setContent();
+     QTextCursor cursorx(this->document()->findBlockByNumber(highlightedBlock));
+    this->setTextCursor(cursorx);
 }
 
 void Editor::setContent()

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE QtCreatorProject>
-<!-- Written by QtCreator 6.0.2, 2022-12-05T01:42:32. -->
+<!-- Written by QtCreator 6.0.2, 2022-12-14T12:02:35. -->
 <qtcreator>
  <data>
   <variable>EnvironmentId</variable>
@@ -307,7 +307,6 @@
     <value type="bool" key="RunConfiguration.UseLibrarySearchPath">true</value>
     <value type="bool" key="RunConfiguration.UseQmlDebugger">false</value>
     <value type="bool" key="RunConfiguration.UseQmlDebuggerAuto">true</value>
-    <value type="QString" key="RunConfiguration.WorkingDirectory.default">/home/rohit/Desktop/ROHIT/GIT/Projects/asr/build-asr-post-editor-main-Desktop_Qt_5_15_2_GCC_64bit-Release</value>
    </valuemap>
    <value type="qlonglong" key="ProjectExplorer.Target.RunConfigurationCount">1</value>
   </valuemap>

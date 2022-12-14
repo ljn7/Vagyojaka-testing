@@ -88,6 +88,9 @@ void Highlighter::highlightBlock(const QString& text)
             speakerEnd = speakerMatch.capturedEnd();
 
         auto words = text.mid(speakerEnd + 1).split(" ");
+        qInfo()<<words;
+        qInfo()<<invalidWordNumbers;
+        qInfo()<<words.size();
         int start = speakerEnd;
 
         QTextCharFormat format;
@@ -95,7 +98,7 @@ void Highlighter::highlightBlock(const QString& text)
         format.setUnderlineColor(Qt::red);
         format.setUnderlineStyle(QTextCharFormat::SpellCheckUnderline);
 
-        for (int i = 0; i < words.size() - 1; i++) {
+        for (int i = 0; i < words.size() ; i++) {
             if (!invalidWordNumbers.contains(i))
                 continue;
             for (int j = 0; j < i; j++) start += (words[j].size() + 1);
@@ -235,6 +238,7 @@ void Editor::keyPressEvent(QKeyEvent *event)
        case Qt::Key_Escape:
        case Qt::Key_Tab:
        case Qt::Key_Backtab:
+//       case Qt::Key_Space:
             event->ignore();
             return; // let the completer do default behavior
        default:
@@ -306,7 +310,7 @@ void Editor::keyPressEvent(QKeyEvent *event)
             QString text2 = m_blocks[textCursor().blockNumber()].words[wordNumber].text;
             text=text.trimmed();
             text2=text.trimmed();
-            qInfo()<<text;
+//            qInfo()<<text;
             QString val;
             QFile file;
             file.setFileName("replacedTextDictonary.json");
@@ -321,7 +325,7 @@ void Editor::keyPressEvent(QKeyEvent *event)
                 for( auto i : value){
                     allSuggestions<< i.toString();
                 }
-                qInfo()<<allSuggestions;
+//                qInfo()<<allSuggestions;
                 QMenu *sugg=new QMenu;
                 for(auto i:allSuggestions ){
                     auto readmeJson = new QAction;
@@ -444,7 +448,7 @@ void Editor::contextMenuEvent(QContextMenuEvent *event)
         QString text2 = m_blocks[textCursor().blockNumber()].words[wordNumber].text;
         text=text.trimmed();
         text2=text.trimmed();
-        qInfo()<<text;
+//        qInfo()<<text;
         QString val;
         QFile file;
         file.setFileName("replacedTextDictonary.json");
@@ -735,7 +739,7 @@ void Editor::highlightTranscript(const QTime& elapsedTime)
         }
 
     }
-qInfo()<<blockToHighlight;
+//qInfo()<<blockToHighlight;
     if (blockToHighlight != highlightedBlock ) {
         highlightedBlock = blockToHighlight;
         if (!m_highlighter)
@@ -897,7 +901,7 @@ void Editor::loadTranscriptData(QFile& file)
                             blockTimeStamp=getTime(t2);
                         }
                     }
-                    qInfo()<<blockTimeStamp;
+//                    qInfo()<<blockTimeStamp;
                     auto blockText = QString("");
                     auto blockSpeaker = reader.attributes().value("speaker").toString();
                     auto tagString = reader.attributes().value("tags").toString();
@@ -1083,6 +1087,7 @@ void Editor::loadDictionary()
 
     QMultiMap<int, int> invalidWords;
     for (int i = 0; i < m_blocks.size(); i++) {
+
         for (int j = 0; j < m_blocks[i].words.size(); j++) {
             auto wordText = m_blocks[i].words[j].text.toLower();
 
@@ -1165,17 +1170,20 @@ void Editor::setContent()
             if (m_blocks[i].timeStamp.isNull())
                 invalidBlocks.append(i);
             else {
+//                qInfo()<<"\n \n m_blocks["<<i<<"].words : ";
                 for (int j = 0; j < m_blocks[i].words.size(); j++) {
                     auto wordText = m_blocks[i].words[j].text.toLower();
-
+//                        qInfo()<<wordText;
                     if (wordText != "" && m_punctuation.contains(wordText.back()))
                         wordText = wordText.left(wordText.size() - 1);
 
                     if (!std::binary_search(m_dictionary.begin(),
                                             m_dictionary.end(),
                                             wordText)
-                       )
+                        ){
+
                         invalidWords.insert(i, j);
+                    }
                 }
             }
         }
@@ -1305,6 +1313,7 @@ void Editor::contentChanged(int position, int charsRemoved, int charsAdded)
         if (m_blocks[i].timeStamp.isNull())
             invalidBlocks.append(i);
         else {
+//            qInfo()<<"\n \n m_blocks["<<i<<"].words : ";
             for (int j = 0; j < m_blocks[i].words.size(); j++) {
                 auto wordText = m_blocks[i].words[j].text.toLower();
 
@@ -1936,6 +1945,7 @@ void Editor::markWordAsCorrect(int blockNumber, int wordNumber)
 
     QMultiMap<int, int> invalidWords;
     for (int i = 0; i < m_blocks.size(); i++) {
+//        qInfo()<<"\n \n m_blocks["<<i<<"].words : ";
         for (int j = 0; j < m_blocks[i].words.size(); j++) {
             auto wordText = m_blocks[i].words[j].text.toLower();
 

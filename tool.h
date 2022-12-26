@@ -35,6 +35,7 @@ private slots:
 
     void on_editor_openTranscript_triggered();
 
+
 private:
     void setFontForElements();
     void setTransliterationLangCodes();

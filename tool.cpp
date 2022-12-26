@@ -107,7 +107,7 @@ Tool::Tool(QWidget *parent)
     connect(ui->m_editor, &Editor::jumpToPlayer, player, &MediaPlayer::setPositionToTime);
     connect(ui->m_editor, &Editor::refreshTagList, ui->m_tagListDisplay, &TagListDisplayWidget::refreshTags);
     connect(ui->Show_Time_Stamps, &QAction::triggered, ui->m_editor,&Editor::setShowTimeStamp );
-
+    connect(ui->move_along_timestamps, &QAction::triggered, ui->m_editor,&Editor::setMoveAlongTimeStamps );
 
 
     connect(ui->Open_File_in_Editor1, &QAction::triggered, ui->m_editor_2, &Editor::transcriptOpen);

@@ -57,7 +57,6 @@ Editor::Editor(QWidget *parent)
     m_saveTimer->start(m_saveInterval * 1000);
 
     m_blocks.append(fromEditor(0));
-
 //    undoStack =  new QUndoStack(this);
 }
 
@@ -68,6 +67,15 @@ void Editor::setEditorFont(const QFont& font)
     m_speakerCompleter->popup()->setFont(font);
     m_transliterationCompleter->popup()->setFont(font);
     setLineNumberAreaFont(font);
+}
+
+void Editor::setMoveAlongTimeStamps()
+{
+    if(moveAlongTimeStamps==true)
+        moveAlongTimeStamps=false;
+    else
+        moveAlongTimeStamps=true;
+    qInfo()<<moveAlongTimeStamps;
 }
 
 
@@ -88,16 +96,25 @@ void Highlighter::highlightBlock(const QString& text)
             speakerEnd = speakerMatch.capturedEnd();
 
         auto words = text.mid(speakerEnd + 1).split(" ");
-        qInfo()<<words;
-        qInfo()<<invalidWordNumbers;
-        qInfo()<<words.size();
+
         int start = speakerEnd;
 
         QTextCharFormat format;
         format.setFontUnderline(true);
         format.setUnderlineColor(Qt::red);
         format.setUnderlineStyle(QTextCharFormat::SpellCheckUnderline);
-
+        //to remove highlight of timestamp
+        /*if(Editor::showTimeStamp){
+            qInfo()<<"changed to true";
+            for (int i = 0; i < words.size() -1 ; i++) {
+                if (!invalidWordNumbers.contains(i))
+                    continue;
+                for (int j = 0; j < i; j++) start += (words[j].size() + 1);
+                int count = words[i].size();
+                setFormat(start + 1, count, format);
+                start = speakerEnd;
+            }
+        }else*/ {
         for (int i = 0; i < words.size() ; i++) {
             if (!invalidWordNumbers.contains(i))
                 continue;
@@ -105,7 +122,7 @@ void Highlighter::highlightBlock(const QString& text)
             int count = words[i].size();
             setFormat(start + 1, count, format);
             start = speakerEnd;
-        }
+        }}
     }
     if (blockToHighlight == -1)
         return;
@@ -117,7 +134,7 @@ void Highlighter::highlightBlock(const QString& text)
             speakerEnd = speakerMatch.capturedEnd();
 
         int timeStampStart = QRegularExpression(R"(\[(\d?\d:)?[0-5]?\d:[0-5]?\d(\.\d\d?\d?)?])").match(text).capturedStart();
-
+        qInfo()<<timeStampStart;
         QTextCharFormat format;
 
         format.setForeground(QColor(Qt::blue).lighter(120));
@@ -180,6 +197,8 @@ void Highlighter::highlightBlock(const QString& text)
         }
     }
 }
+
+
 
 void Editor::mousePressEvent(QMouseEvent *e)
 {
@@ -284,6 +303,7 @@ void Editor::keyPressEvent(QKeyEvent *event)
         m_speakerCompleter->setModel(new QStringListModel(speakers, m_speakerCompleter));
     }
     else {
+        if(!showTimeStamp){
         QString blockText = textCursor().block().text();
         QString textTillCursor = blockText.left(textCursor().positionInBlock());
 
@@ -345,7 +365,7 @@ void Editor::keyPressEvent(QKeyEvent *event)
 //                delete sugg;
             }
         }
-
+        }
         if(showTimeStamp)
         if (m_blocks[textCursor().blockNumber()].timeStamp.isValid()
                 && textTillCursor.count(" ") == blockText.count(" "))
@@ -736,6 +756,7 @@ void Editor::highlightTranscript(const QTime& elapsedTime)
                 blockToHighlight=tb.blockNumber();
                 break;
             }}
+
         }
 
     }
@@ -746,8 +767,11 @@ void Editor::highlightTranscript(const QTime& elapsedTime)
             m_highlighter = new Highlighter(document());
 
         m_highlighter->setBlockToHighlight(blockToHighlight);
-        QTextCursor cursor(this->document()->findBlockByNumber(blockToHighlight));
-        this->setTextCursor(cursor);
+
+        if(moveAlongTimeStamps){
+            QTextCursor cursor(this->document()->findBlockByNumber(blockToHighlight));
+            this->setTextCursor(cursor);
+        }
 
 
     if (blockToHighlight == -1)
@@ -855,6 +879,7 @@ block Editor::fromEditor(qint64 blockNumber) const
 
 void Editor::loadTranscriptData(QFile& file)
 {
+    qInfo()<<moveAlongTimeStamps;
     QXmlStreamReader reader(&file);
     m_transcriptLang = "";
     m_blocks.clear();
@@ -867,6 +892,7 @@ void Editor::loadTranscriptData(QFile& file)
                     QString t1=reader.attributes().value("timestamp").toString();
                     QStringList tl=t1.split(":");
                     auto blockTimeStamp = getTime(reader.attributes().value("timestamp").toString());
+
                     if(!blockTimeStamp.isValid()){
                         QString t2="";
                         if(t1.count(":")==1){
@@ -901,7 +927,7 @@ void Editor::loadTranscriptData(QFile& file)
                             blockTimeStamp=getTime(t2);
                         }
                     }
-//                    qInfo()<<blockTimeStamp;
+
                     auto blockText = QString("");
                     auto blockSpeaker = reader.attributes().value("speaker").toString();
                     auto tagString = reader.attributes().value("tags").toString();
@@ -1133,9 +1159,11 @@ void Editor::setShowTimeStamp()
     else{
         showTimeStamp=true;
     }
+
     setContent();
      QTextCursor cursorx(this->document()->findBlockByNumber(highlightedBlock));
     this->setTextCursor(cursorx);
+
 }
 
 void Editor::setContent()
@@ -1197,6 +1225,11 @@ void Editor::setContent()
     }
 }
 
+bool Editor::timestampVisibility()
+{
+    return showTimeStamp;
+}
+
 void Editor::contentChanged(int position, int charsRemoved, int charsAdded)
 {
     // If chars aren't added or deleted then return
@@ -1244,9 +1277,11 @@ void Editor::contentChanged(int position, int charsRemoved, int charsAdded)
     }
     if(showTimeStamp){
     if (currentBlockFromData.timeStamp != currentBlockFromEditor.timeStamp) {
+
         currentBlockFromData.timeStamp = currentBlockFromEditor.timeStamp;
         qInfo() << "[TimeStamp Changed]"
                 << QString("line number: %1, %2").arg(QString::number(currentBlockNumber + 1), currentBlockFromEditor.timeStamp.toString("hh:mm:ss.zzz"));
+
     }
     }
     if (currentBlockFromData.text != currentBlockFromEditor.text) {
@@ -1313,7 +1348,6 @@ void Editor::contentChanged(int position, int charsRemoved, int charsAdded)
         if (m_blocks[i].timeStamp.isNull())
             invalidBlocks.append(i);
         else {
-//            qInfo()<<"\n \n m_blocks["<<i<<"].words : ";
             for (int j = 0; j < m_blocks[i].words.size(); j++) {
                 auto wordText = m_blocks[i].words[j].text.toLower();
 

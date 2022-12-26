@@ -39,12 +39,15 @@ class Editor : public TextEditor
     void setEditorFont(const QFont& font);
 
     QRegularExpression timeStampExp, speakerExp;
-
+    void setMoveAlongTimeStamps();
     void setShowTimeStamp();
     QVector<block> m_blocks;
     QUrl m_transcriptUrl;
+     bool showTimeStamp=false;
     void loadTranscriptData(QFile& file);
     void setContent();
+     bool timestampVisibility();
+    friend class Highlighter;
 //    QUndoStack *undoStack=nullptr;
 protected:
     void mousePressEvent(QMouseEvent *e) override;
@@ -118,7 +121,7 @@ private:
 
     bool settingContent{false}, updatingWordEditor{false}, dontUpdateWordEditor{false};
     bool m_transliterate{false}, m_autoSave{false};
-    bool showTimeStamp=false;
+
 
     QString m_transcriptLang, m_punctuation{",.!;:"};
 
@@ -146,6 +149,7 @@ private:
     bool realTimeDataSaver=false;
     QStringList allClips;
     int lastHighlightedBlock=-1;
+    bool moveAlongTimeStamps=true;
 public:
 
 };
@@ -191,9 +195,11 @@ class Highlighter : public QSyntaxHighlighter
 
     void highlightBlock(const QString&) override;
 
+
 private:
     int blockToHighlight{-1};
     int wordToHighlight{-1};
     QList<int> invalidBlockNumbers;
+
     QMultiMap<int, int> invalidWords;
 };

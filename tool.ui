@@ -653,7 +653,7 @@
     <bool>false</bool>
    </property>
    <property name="text">
-    <string>Edit TimeStamps</string>
+    <string>Move Along TimeStamps</string>
    </property>
   </action>
  </widget>

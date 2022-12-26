@@ -88,6 +88,12 @@ void Highlighter::highlightBlock(const QString& text)
         setFormat(0, text.size(), format);
         return;
     }
+    else if (taggedBlockNumbers.contains(currentBlock().blockNumber())) {
+        QTextCharFormat format;
+        format.setForeground(Qt::blue);
+        setFormat(0, text.size(), format);
+        return;
+    }
     if (invalidWords.contains(currentBlock().blockNumber())) {
         auto invalidWordNumbers = invalidWords.values(currentBlock().blockNumber());
         auto speakerEnd = 0;
@@ -124,6 +130,40 @@ void Highlighter::highlightBlock(const QString& text)
             start = speakerEnd;
         }}
     }
+    if (taggedWords.contains(currentBlock().blockNumber())) {
+        auto invalidWordNumbers = taggedWords.values(currentBlock().blockNumber());
+        auto speakerEnd = 0;
+        auto speakerMatch = QRegularExpression(R"(\[.*]:)").match(text);
+        if (speakerMatch.hasMatch())
+            speakerEnd = speakerMatch.capturedEnd();
+
+        auto words = text.mid(speakerEnd + 1).split(" ");
+
+        int start = speakerEnd;
+
+        QTextCharFormat format;
+        format.setForeground(Qt::blue);
+        //to remove highlight of timestamp
+        /*if(Editor::showTimeStamp){
+            qInfo()<<"changed to true";
+            for (int i = 0; i < words.size() -1 ; i++) {
+                if (!invalidWordNumbers.contains(i))
+                    continue;
+                for (int j = 0; j < i; j++) start += (words[j].size() + 1);
+                int count = words[i].size();
+                setFormat(start + 1, count, format);
+                start = speakerEnd;
+            }
+        }else*/ {
+            for (int i = 0; i < words.size() ; i++) {
+                if (!invalidWordNumbers.contains(i))
+                    continue;
+                for (int j = 0; j < i; j++) start += (words[j].size() + 1);
+                int count = words[i].size();
+                setFormat(start + 1, count, format);
+                start = speakerEnd;
+            }}
+    }
     if (blockToHighlight == -1)
         return;
     else if (currentBlock().blockNumber() == blockToHighlight) {
@@ -148,7 +188,63 @@ void Highlighter::highlightBlock(const QString& text)
         format. setFontWeight(QFont::Bold);
         setFormat(speakerEnd, lineEnd, format);
 
-        if (invalidWords.contains(currentBlock().blockNumber())) {
+//        if (invalidWords.contains(currentBlock().blockNumber())) {
+//            qInfo()<<"in";
+//            auto invalidWordNumbers = invalidWords.values(currentBlock().blockNumber());
+//            auto speakerEnd = 0;
+//            auto speakerMatch = QRegularExpression(R"(\[.*]:)").match(text);
+//            if (speakerMatch.hasMatch())
+//                speakerEnd = speakerMatch.capturedEnd();
+
+//            auto words = text.mid(speakerEnd + 1).split(" ");
+//            int start = speakerEnd;
+
+//            QTextCharFormat format;
+//            format.setForeground(Qt::black);
+//            setFormat(speakerEnd, lineEnd, format);
+//            format. setFontWeight(QFont::Bold);
+//            setFormat(speakerEnd, lineEnd, format);
+//            format.setFontUnderline(true);
+//            format.setUnderlineColor(Qt::red);
+//            format.setUnderlineStyle(QTextCharFormat::SpellCheckUnderline);
+
+//            for (int i = 0; i < words.size() ; i++) {
+//                if (invalidWordNumbers.contains(i)){
+//                    for (int j = 0; j < i; j++) start += (words[j].size() + 1);
+//                    int count = words[i].size();
+//                    setFormat(start + 1, count, format);
+//                    start = speakerEnd;
+//                }
+//            }
+//        }
+//        if (taggedWords.contains(currentBlock().blockNumber())) {
+//            auto invalidWordNumbers = taggedWords.values(currentBlock().blockNumber());
+//            auto speakerEnd = 0;
+//            auto speakerMatch = QRegularExpression(R"(\[.*]:)").match(text);
+//            if (speakerMatch.hasMatch())
+//                speakerEnd = speakerMatch.capturedEnd();
+
+//            auto words = text.mid(speakerEnd + 1).split(" ");
+//            int start = speakerEnd;
+
+//            QTextCharFormat format;
+//            format.setForeground(Qt::black);
+//            setFormat(speakerEnd, lineEnd, format);
+//            format. setFontWeight(QFont::Bold);
+//            setFormat(speakerEnd, lineEnd, format);
+//            format.setForeground(Qt::blue);
+
+//            for (int i = 0; i < words.size() ; i++) {
+//                if (invalidWordNumbers.contains(i)){
+//                    for (int j = 0; j < i; j++) start += (words[j].size() + 1);
+//                    int count = words[i].size();
+//                    setFormat(start + 1, count, format);
+//                    start = speakerEnd;
+//                }
+//            }
+//        }
+        if (taggedWords.contains(currentBlock().blockNumber())||invalidWords.contains(currentBlock().blockNumber())) {
+            auto taggedWordNumbers = taggedWords.values(currentBlock().blockNumber());
             auto invalidWordNumbers = invalidWords.values(currentBlock().blockNumber());
             auto speakerEnd = 0;
             auto speakerMatch = QRegularExpression(R"(\[.*]:)").match(text);
@@ -158,25 +254,60 @@ void Highlighter::highlightBlock(const QString& text)
             auto words = text.mid(speakerEnd + 1).split(" ");
             int start = speakerEnd;
 
+
+            QTextCharFormat format1;
+            format1.setForeground(Qt::black);
+            format1. setFontWeight(QFont::Bold);
+            format1.setFontUnderline(true);
+            format1.setUnderlineColor(Qt::red);
+            format1.setUnderlineStyle(QTextCharFormat::SpellCheckUnderline);
+
+            for (int i = 0; i < words.size() ; i++) {
+                if (invalidWordNumbers.contains(i)){
+                    for (int j = 0; j < i; j++) start += (words[j].size() + 1);
+                    int count = words[i].size();
+                    setFormat(start + 1, count, format1);
+                    start = speakerEnd;
+                    qInfo()<<"in";
+                }
+            }
+
+
+            QTextCharFormat format2;
+            format2.setForeground(Qt::black);
+            format2. setFontWeight(QFont::Bold);
+            format2.setForeground(Qt::blue);
+
+            for (int i = 0; i < words.size() ; i++) {
+                if (taggedWordNumbers.contains(i)){
+                    for (int j = 0; j < i; j++) start += (words[j].size() + 1);
+                    int count = words[i].size();
+                    setFormat(start + 1, count, format2);
+                    start = speakerEnd;
+                }
+            }
+
+
+
+
             QTextCharFormat format;
             format.setForeground(Qt::black);
-            setFormat(speakerEnd, lineEnd, format);
             format. setFontWeight(QFont::Bold);
-            setFormat(speakerEnd, lineEnd, format);
+            format.setForeground(Qt::blue);
             format.setFontUnderline(true);
             format.setUnderlineColor(Qt::red);
             format.setUnderlineStyle(QTextCharFormat::SpellCheckUnderline);
 
-            for (int i = 0; i < words.size() - 1; i++) {
-                if (!invalidWordNumbers.contains(i))
-                    continue;
-                for (int j = 0; j < i; j++) start += (words[j].size() + 1);
-                int count = words[i].size();
-                setFormat(start + 1, count, format);
-                start = speakerEnd;
+            for (int i = 0; i < words.size() ; i++) {
+                if (taggedWordNumbers.contains(i)&&invalidWordNumbers.contains(i))
+                {
+                    for (int j = 0; j < i; j++) start += (words[j].size() + 1);
+                    int count = words[i].size();
+                    setFormat(start + 1, count, format);
+                    start = speakerEnd;
+                }
             }
         }
-
         format.setForeground(Qt::red);
         setFormat(timeStampStart, text.size(), format);
         format. setFontWeight(QFont::Light);
@@ -1193,10 +1324,15 @@ void Editor::setContent()
         m_highlighter = new Highlighter(document());
 
         QList<int> invalidBlocks;
+        QList<int> taggedBlocks;
         QMultiMap<int, int> invalidWords;
+        QMultiMap<int, int>  taggedWords;
         for (int i = 0; i < m_blocks.size(); i++) {
             if (m_blocks[i].timeStamp.isNull())
                 invalidBlocks.append(i);
+            else if(!m_blocks[i].tagList.isEmpty()){
+                taggedBlocks.append(i);
+            }
             else {
 //                qInfo()<<"\n \n m_blocks["<<i<<"].words : ";
                 for (int j = 0; j < m_blocks[i].words.size(); j++) {
@@ -1205,6 +1341,57 @@ void Editor::setContent()
                     if (wordText != "" && m_punctuation.contains(wordText.back()))
                         wordText = wordText.left(wordText.size() - 1);
 
+                    if (wordText != "" && wordText[0]=='\"'&&wordText[wordText.size()-1]=='\"'){
+                        wordText = wordText.left(wordText.size() - 1);
+                        QString text="";
+                        for(int i=1;i<wordText.size();i++){
+                            text+=wordText[i];
+                        }
+                        wordText=text;
+                    }
+                    if (wordText != "" && wordText[0]=='('&&wordText[wordText.size()-1]==')'){
+                        wordText = wordText.left(wordText.size() - 1);
+                        QString text="";
+                        for(int i=1;i<wordText.size();i++){
+                            text+=wordText[i];
+                        }
+                        wordText=text;
+                    }
+                    if (wordText != "" && wordText[0]=='['&&wordText[wordText.size()-1]==']'){
+                        wordText = wordText.left(wordText.size() - 1);
+                        QString text="";
+                        for(int i=1;i<wordText.size();i++){
+                            text+=wordText[i];
+                        }
+                        wordText=text;
+                    }
+                    if (wordText != "" && wordText[0]=='{'&&wordText[wordText.size()-1]=='}'){
+                        wordText = wordText.left(wordText.size() - 1);
+                        QString text="";
+                        for(int i=1;i<wordText.size();i++){
+                            text+=wordText[i];
+                        }
+                        wordText=text;
+                    }
+                    if (wordText != "" && wordText[0]=="\'"&&wordText[wordText.size()-1]=="\'"){
+                        wordText = wordText.left(wordText.size() - 1);
+                        QString text="";
+                        for(int i=1;i<wordText.size();i++){
+                            text+=wordText[i];
+                        }
+                        wordText=text;
+                    }
+                    if (wordText != "" && wordText[0]=="<"&&wordText[wordText.size()-1]==">"){
+                        wordText = wordText.left(wordText.size() - 1);
+                        QString text="";
+                        for(int i=1;i<wordText.size();i++){
+                            text+=wordText[i];
+                        }
+                        wordText=text;
+                    }
+
+
+
                     if (!std::binary_search(m_dictionary.begin(),
                                             m_dictionary.end(),
                                             wordText)
@@ -1212,12 +1399,17 @@ void Editor::setContent()
 
                         invalidWords.insert(i, j);
                     }
+                    if(!m_blocks[i].words[j].tagList.empty()){
+                        taggedWords.insert(i,j);
+                    }
                 }
             }
         }
 
         m_highlighter->setInvalidBlocks(invalidBlocks);
+        m_highlighter->setTaggedBlocks(taggedBlocks);
         m_highlighter->setInvalidWords(invalidWords);
+        m_highlighter->setTaggedWords(taggedWords);
         m_highlighter->setBlockToHighlight(highlightedBlock);
         m_highlighter->setWordToHighlight(highlightedWord);
 
@@ -1343,28 +1535,87 @@ void Editor::contentChanged(int position, int charsRemoved, int charsAdded)
     m_highlighter->setWordToHighlight(highlightedWord);
 
     QList<int> invalidBlocks;
+    QList<int> taggedBlocks;
     QMultiMap<int, int> invalidWords;
+    QMultiMap<int, int>  taggedWords;
     for (int i = 0; i < m_blocks.size(); i++) {
         if (m_blocks[i].timeStamp.isNull())
             invalidBlocks.append(i);
+        else if(!m_blocks[i].tagList.isEmpty()){
+            taggedBlocks.append(i);
+        }
         else {
             for (int j = 0; j < m_blocks[i].words.size(); j++) {
                 auto wordText = m_blocks[i].words[j].text.toLower();
 
                 if (wordText != "" && m_punctuation.contains(wordText.back()))
                     wordText = wordText.left(wordText.size() - 1);
+                if (wordText != "" && wordText[0]=='\"'&&wordText[wordText.size()-1]=='\"'){
+                    wordText = wordText.left(wordText.size() - 1);
+                    QString text="";
+                    for(int i=1;i<wordText.size();i++){
+                        text+=wordText[i];
+                    }
+                    wordText=text;
+//                    qInfo()<<text;
+                }
+                if (wordText != "" && wordText[0]=='('&&wordText[wordText.size()-1]==')'){
+                    wordText = wordText.left(wordText.size() - 1);
+                    QString text="";
+                    for(int i=1;i<wordText.size();i++){
+                        text+=wordText[i];
+                    }
+                    wordText=text;
+                }
+                if (wordText != "" && wordText[0]=='['&&wordText[wordText.size()-1]==']'){
+                    wordText = wordText.left(wordText.size() - 1);
+                    QString text="";
+                    for(int i=1;i<wordText.size();i++){
+                        text+=wordText[i];
+                    }
+                    wordText=text;
+                }
+                if (wordText != "" && wordText[0]=='{'&&wordText[wordText.size()-1]=='}'){
+                    wordText = wordText.left(wordText.size() - 1);
+                    QString text="";
+                    for(int i=1;i<wordText.size();i++){
+                        text+=wordText[i];
+                    }
+                    wordText=text;
+                }
+                if (wordText != "" && wordText[0]=="\'"&&wordText[wordText.size()-1]=="\'"){
+                    wordText = wordText.left(wordText.size() - 1);
+                    QString text="";
+                    for(int i=1;i<wordText.size();i++){
+                        text+=wordText[i];
+                    }
+                    wordText=text;
+                }
+                if (wordText != "" && wordText[0]=="<"&&wordText[wordText.size()-1]==">"){
+                    wordText = wordText.left(wordText.size() - 1);
+                    QString text="";
+                    for(int i=1;i<wordText.size();i++){
+                        text+=wordText[i];
+                    }
+                    wordText=text;
+                }
 
                 if (!std::binary_search(m_dictionary.begin(),
                                         m_dictionary.end(),
                                         wordText)
                     )
                     invalidWords.insert(i, j);
+                if(!m_blocks[i].words[j].tagList.empty()){
+                    taggedWords.insert(i,j);
+                }
             }
+
         }
     }
     m_highlighter->setInvalidBlocks(invalidBlocks);
+    m_highlighter->setTaggedBlocks(taggedBlocks);
     m_highlighter->setInvalidWords(invalidWords);
-
+    m_highlighter->setTaggedWords(taggedWords);
     updateWordEditor();
     if(realTimeDataSaver){
         transcriptSave();
@@ -1951,6 +2202,8 @@ void Editor::selectTags(const QStringList& newTagList)
 
     qInfo() << "[Tags Selected]"
             << "new tags: " << newTagList;
+    setContent();
+
 }
 
 void Editor::markWordAsCorrect(int blockNumber, int wordNumber)

@@ -183,9 +183,23 @@ class Highlighter : public QSyntaxHighlighter
         invalidBlockNumbers = invalidBlocks;
         rehighlight();
     }
+    void setTaggedBlocks(const QList<int>& taggedBlock)
+    {
+        taggedBlockNumbers = taggedBlock;
+        rehighlight();
+    }
+    void clearTaggedBlocks()
+    {
+        taggedBlockNumbers.clear();
+    }
     void setInvalidWords(const QMultiMap<int, int>& invalidWordsMap)
     {
         invalidWords = invalidWordsMap;
+        rehighlight();
+    }
+    void setTaggedWords(const QMultiMap<int, int>& taggedWordsMap)
+    {
+        taggedWords = taggedWordsMap;
         rehighlight();
     }
     void clearInvalidBlocks()
@@ -200,6 +214,8 @@ private:
     int blockToHighlight{-1};
     int wordToHighlight{-1};
     QList<int> invalidBlockNumbers;
+    QList<int> taggedBlockNumbers;
 
     QMultiMap<int, int> invalidWords;
+    QMultiMap<int, int> taggedWords;
 };

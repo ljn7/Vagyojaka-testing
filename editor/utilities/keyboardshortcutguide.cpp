@@ -56,6 +56,7 @@ void KeyboardShortcutGuide::fillDialog() {
     QStringList changeSpeaker({"Change Speaker", QKeySequence(Qt::CTRL+Qt::Key_R).toString()});
     QStringList propagateTime({"Propagate Time", QKeySequence(Qt::CTRL+Qt::Key_T).toString()});
     QStringList editTags({"Edit Tags", QKeySequence(Qt::CTRL+Qt::Key_Apostrophe).toString()});
+    QStringList markAsCorrect({"Mark word as correct", QKeySequence(Qt::CTRL+Qt::Key_M).toString()});
 
     editing->addChild(new QTreeWidgetItem(undo));
     editing->addChild(new QTreeWidgetItem(redo));
@@ -74,6 +75,7 @@ void KeyboardShortcutGuide::fillDialog() {
     editing->addChild(new QTreeWidgetItem(changeSpeaker));
     editing->addChild(new QTreeWidgetItem(propagateTime));
     editing->addChild(new QTreeWidgetItem(editTags));
+    editing->addChild(new QTreeWidgetItem(markAsCorrect));
 
     auto insertTimeStamp = new QTreeWidgetItem({"Insert Player timestamp in active editor", QKeySequence(Qt::CTRL + Qt::Key_I).toString()});
 

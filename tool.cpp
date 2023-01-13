@@ -30,6 +30,10 @@ Tool::Tool(QWidget *parent)
     //Upload_and_generate_Transcript
     connect(ui->close, &QAction::triggered, this, &QMainWindow::close);
 
+    //ToolBar icons
+//    connect(ui->add_video, &QAction::clicked, player, &MediaPlayer::open);
+
+
        // Connect Player Controls and Media Player
     connect(ui->player_open, &QAction::triggered, player, &MediaPlayer::open);
     connect(ui->player_togglePlay, &QAction::triggered, player, &MediaPlayer::togglePlayback);
@@ -461,4 +465,83 @@ void Tool::on_editor_openTranscript_triggered()
     ui->m_editor_2->loadTranscriptData(transcriptFile);
     ui->m_editor_2->setContent();
 }
+
+
+
+
+
+void Tool::on_add_video_clicked()
+{
+    player->open();
+}
+
+
+void Tool::on_open_transcript_clicked()
+{
+    Tool::on_editor_openTranscript_triggered();
+}
+
+
+void Tool::on_new_transcript_clicked()
+{
+    ui->m_editor->close();
+}
+
+
+void Tool::on_save_transcript_clicked()
+{
+    ui->m_editor->transcriptSave();
+}
+
+
+void Tool::on_save_as_transcript_clicked()
+{
+    ui->m_editor->transcriptSaveAs();
+}
+
+
+void Tool::on_load_a_custom_dict_clicked()
+{
+    ui->m_editor->addCustomDictonary();
+}
+
+
+void Tool::on_get_PDF_clicked()
+{
+    ui->m_editor->saveAsPDF();
+}
+
+
+void Tool::on_decreseFontSize_clicked()
+{
+    this->changeFontSize(-1);
+}
+
+
+void Tool::on_increaseFontSize_clicked()
+{
+    this->changeFontSize(+1);
+
+}
+
+
+void Tool::on_toggleWordEditor_clicked()
+{
+ui->m_wordEditor->setVisible(!ui->m_wordEditor->isVisible());
+}
+
+
+void Tool::on_keyboard_shortcuts_clicked()
+{
+    this->createKeyboardShortcutGuide();
+}
+
+
+void Tool::on_fontComboBox_currentFontChanged(const QFont &f)
+{
+//    bool fontSelected;
+    font = f;
+
+//    if (fontSelected)
+        setFontForElements();}
 

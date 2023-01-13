@@ -36,6 +36,31 @@ private slots:
     void on_editor_openTranscript_triggered();
 
 
+
+    void on_add_video_clicked();
+
+    void on_open_transcript_clicked();
+
+    void on_new_transcript_clicked();
+
+    void on_save_transcript_clicked();
+
+    void on_save_as_transcript_clicked();
+
+    void on_load_a_custom_dict_clicked();
+
+    void on_get_PDF_clicked();
+
+    void on_decreseFontSize_clicked();
+
+    void on_increaseFontSize_clicked();
+
+    void on_toggleWordEditor_clicked();
+
+    void on_keyboard_shortcuts_clicked();
+
+    void on_fontComboBox_currentFontChanged(const QFont &f);
+
 private:
     void setFontForElements();
     void setTransliterationLangCodes();

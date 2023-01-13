@@ -369,6 +369,24 @@ void Editor::keyPressEvent(QKeyEvent *event)
 
         markWordAsCorrect(textCursor().blockNumber(), wordNumber);
     }
+    else if (event->modifiers() == Qt::ControlModifier && event->key() == Qt::Key_I){
+        qInfo()<<"doubtful";
+        int blocknumber=textCursor().blockNumber(), wordNumber=textCursor().block().text().left(textCursor().positionInBlock()).trimmed().count(" ");
+        qInfo()<<blocknumber;
+        qInfo()<<wordNumber;
+        if(m_blocks[blocknumber].words[wordNumber-1].tagList.empty()){
+            m_blocks[blocknumber].words[wordNumber-1].tagList.append("InvW");
+            qInfo()<<"marked";
+        }
+
+        QTextBlock block = document()->findBlockByNumber(blocknumber);
+        QTextCursor cursor(document()->findBlockByNumber(blocknumber));
+        setContent();
+        cursor.setPosition(block.position());
+        cursor.movePosition(QTextCursor::NextWord, QTextCursor::MoveAnchor, wordNumber - 1);
+        setTextCursor(cursor);
+        centerCursor();
+    }
     qInfo()<<event;
 
     auto checkPopupVisible = [](QCompleter* completer) {
@@ -1334,63 +1352,97 @@ void Editor::setContent()
                 taggedBlocks.append(i);
             }
             else {
-//                qInfo()<<"\n \n m_blocks["<<i<<"].words : ";
+
                 for (int j = 0; j < m_blocks[i].words.size(); j++) {
                     auto wordText = m_blocks[i].words[j].text.toLower();
-//                        qInfo()<<wordText;
+
                     if (wordText != "" && m_punctuation.contains(wordText.back()))
                         wordText = wordText.left(wordText.size() - 1);
 
-                    if (wordText != "" && wordText[0]=='\"'&&wordText[wordText.size()-1]=='\"'){
-                        wordText = wordText.left(wordText.size() - 1);
+                    if (wordText != "" && wordText[0]=='\"'){
+
                         QString text="";
                         for(int i=1;i<wordText.size();i++){
                             text+=wordText[i];
                         }
                         wordText=text;
                     }
-                    if (wordText != "" && wordText[0]=='('&&wordText[wordText.size()-1]==')'){
+                    if (wordText != "" && wordText[wordText.size()-1]=='\"'){
                         wordText = wordText.left(wordText.size() - 1);
+
+                    }
+                    if (wordText != "" && wordText[0]=='('){
+
                         QString text="";
                         for(int i=1;i<wordText.size();i++){
                             text+=wordText[i];
                         }
                         wordText=text;
                     }
-                    if (wordText != "" && wordText[0]=='['&&wordText[wordText.size()-1]==']'){
+                    if (wordText != "" && wordText[wordText.size()-1]==')'){
                         wordText = wordText.left(wordText.size() - 1);
+
+                    }
+                    if (wordText != "" && wordText[0]=='['){
+
                         QString text="";
                         for(int i=1;i<wordText.size();i++){
                             text+=wordText[i];
                         }
                         wordText=text;
                     }
-                    if (wordText != "" && wordText[0]=='{'&&wordText[wordText.size()-1]=='}'){
+                    if (wordText != "" && wordText[wordText.size()-1]==']'){
                         wordText = wordText.left(wordText.size() - 1);
+
+                    }
+                    if (wordText != "" && wordText[0]=='{'){
                         QString text="";
                         for(int i=1;i<wordText.size();i++){
                             text+=wordText[i];
                         }
                         wordText=text;
                     }
-                    if (wordText != "" && wordText[0]=="\'"&&wordText[wordText.size()-1]=="\'"){
+                    if (wordText != "" &&wordText[wordText.size()-1]=='}'){
                         wordText = wordText.left(wordText.size() - 1);
+
+                    }
+                    if (wordText != "" && wordText[0]=="\'"){
+
                         QString text="";
                         for(int i=1;i<wordText.size();i++){
                             text+=wordText[i];
                         }
                         wordText=text;
                     }
-                    if (wordText != "" && wordText[0]=="<"&&wordText[wordText.size()-1]==">"){
+                    if (wordText != "" && wordText[wordText.size()-1]=="\'"){
                         wordText = wordText.left(wordText.size() - 1);
+
+                    }
+                    if (wordText != "" && wordText[0]=="<"){
+
                         QString text="";
                         for(int i=1;i<wordText.size();i++){
                             text+=wordText[i];
                         }
                         wordText=text;
+                    }
+                    if (wordText != "" && wordText[wordText.size()-1]==">"){
+                        wordText = wordText.left(wordText.size() - 1);
+
                     }
 
+                    if (wordText != "" && wordText[wordText.size()-1]=="?"){
+                        wordText = wordText.left(wordText.size() - 1);
 
+                    }
+                    if (wordText != "" && wordText[wordText.size()-1]=="!"){
+                        wordText = wordText.left(wordText.size() - 1);
+
+                    }
+                    if (wordText != "" && wordText[wordText.size()-1]==","){
+                        wordText = wordText.left(wordText.size() - 1);
+
+                    }
 
                     if (!std::binary_search(m_dictionary.begin(),
                                             m_dictionary.end(),
@@ -1500,22 +1552,31 @@ void Editor::contentChanged(int position, int charsRemoved, int charsAdded)
         if (diffStart == -1)
             diffStart = wordsFromEditor.size() - 1;
         for (int i = 0; i <= diffStart; i++)
-            if (i < wordsFromData.size())
+            if (i < wordsFromData.size()){
                 wordsFromEditor[i].timeStamp = wordsFromData[i].timeStamp;
+                wordsFromEditor[i].tagList = wordsFromData[i].tagList;
+            }
+
         if (!wordsDifference) {
-            for (int i = diffStart; i < wordsFromEditor.size(); i++)
+            for (int i = diffStart; i < wordsFromEditor.size(); i++){
                 wordsFromEditor[i].timeStamp = wordsFromData[i].timeStamp;
+                wordsFromEditor[i].tagList = wordsFromData[i].tagList;
+            }
         }
 
         if (wordsDifference > 0) {
             for (int i = wordsFromEditor.size() - 1, j = wordsFromData.size() - 1; j > diffStart; i--, j--)
-                if (wordsFromEditor[i].text == wordsFromData[j].text)
+                if (wordsFromEditor[i].text == wordsFromData[j].text){
                     wordsFromEditor[i].timeStamp = wordsFromData[j].timeStamp;
+                    wordsFromEditor[i].tagList = wordsFromData[j].tagList;
+                }
         }
         else if (wordsDifference < 0) {
             for (int i = wordsFromEditor.size() - 1, j = wordsFromData.size() - 1; i > diffStart; i--, j--)
-                if (wordsFromEditor[i].text == wordsFromData[j].text)
+                if (wordsFromEditor[i].text == wordsFromData[j].text){
                     wordsFromEditor[i].timeStamp = wordsFromData[j].timeStamp;
+                    wordsFromEditor[i].tagList = wordsFromData[j].tagList;
+                }
         }
 
         //currentBlockFromData = currentBlockFromEditor;
@@ -1550,54 +1611,91 @@ void Editor::contentChanged(int position, int charsRemoved, int charsAdded)
 
                 if (wordText != "" && m_punctuation.contains(wordText.back()))
                     wordText = wordText.left(wordText.size() - 1);
-                if (wordText != "" && wordText[0]=='\"'&&wordText[wordText.size()-1]=='\"'){
-                    wordText = wordText.left(wordText.size() - 1);
-                    QString text="";
-                    for(int i=1;i<wordText.size();i++){
-                        text+=wordText[i];
-                    }
-                    wordText=text;
-//                    qInfo()<<text;
-                }
-                if (wordText != "" && wordText[0]=='('&&wordText[wordText.size()-1]==')'){
-                    wordText = wordText.left(wordText.size() - 1);
+
+                if (wordText != "" && wordText[0]=='\"'){
+
                     QString text="";
                     for(int i=1;i<wordText.size();i++){
                         text+=wordText[i];
                     }
                     wordText=text;
                 }
-                if (wordText != "" && wordText[0]=='['&&wordText[wordText.size()-1]==']'){
+                if (wordText != "" && wordText[wordText.size()-1]=='\"'){
                     wordText = wordText.left(wordText.size() - 1);
+
+                }
+                if (wordText != "" && wordText[0]=='('){
+
+                    QString text="";
+                    for(int i=1;i<wordText.size();i++){
+                        text+=wordText[i];
+                    }
+                    qInfo()<<text;
+                    wordText=text;
+                }
+                if (wordText != "" && wordText[wordText.size()-1]==')'){
+                    wordText = wordText.left(wordText.size() - 1);
+
+                }
+                if (wordText != "" && wordText[0]=='['){
+
                     QString text="";
                     for(int i=1;i<wordText.size();i++){
                         text+=wordText[i];
                     }
                     wordText=text;
                 }
-                if (wordText != "" && wordText[0]=='{'&&wordText[wordText.size()-1]=='}'){
+                if (wordText != "" && wordText[wordText.size()-1]==']'){
                     wordText = wordText.left(wordText.size() - 1);
+
+                }
+                if (wordText != "" && wordText[0]=='{'){
                     QString text="";
                     for(int i=1;i<wordText.size();i++){
                         text+=wordText[i];
                     }
                     wordText=text;
                 }
-                if (wordText != "" && wordText[0]=="\'"&&wordText[wordText.size()-1]=="\'"){
+                if (wordText != "" &&wordText[wordText.size()-1]=='}'){
                     wordText = wordText.left(wordText.size() - 1);
+
+                }
+                if (wordText != "" && wordText[0]=="\'"){
+
                     QString text="";
                     for(int i=1;i<wordText.size();i++){
                         text+=wordText[i];
                     }
                     wordText=text;
                 }
-                if (wordText != "" && wordText[0]=="<"&&wordText[wordText.size()-1]==">"){
+                if (wordText != "" && wordText[wordText.size()-1]=="\'"){
                     wordText = wordText.left(wordText.size() - 1);
+
+                }
+                if (wordText != "" && wordText[0]=="<"){
+
                     QString text="";
                     for(int i=1;i<wordText.size();i++){
                         text+=wordText[i];
                     }
                     wordText=text;
+                }
+                if (wordText != "" && wordText[wordText.size()-1]==">"){
+                    wordText = wordText.left(wordText.size() - 1);
+
+                }
+
+                if (wordText != "" && wordText[wordText.size()-1]=="?"){
+                    wordText = wordText.left(wordText.size() - 1);
+
+                }
+                if (wordText != "" && wordText[wordText.size()-1]=="!"){
+                    wordText = wordText.left(wordText.size() - 1);
+
+                }
+                if (wordText != "" && wordText[wordText.size()-1]==","){
+                    wordText = wordText.left(wordText.size() - 1);
+
                 }
 
                 if (!std::binary_search(m_dictionary.begin(),

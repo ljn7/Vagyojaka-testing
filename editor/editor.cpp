@@ -1393,7 +1393,7 @@ void Editor::setContent()
                     }
                     if (wordText != "" && wordText[wordText.size()-1]==']'){
                         wordText = wordText.left(wordText.size() - 1);
-
+                        qInfo()<<wordText;
                     }
                     if (wordText != "" && wordText[0]=='{'){
                         QString text="";
@@ -1442,6 +1442,12 @@ void Editor::setContent()
                     if (wordText != "" && wordText[wordText.size()-1]==","){
                         wordText = wordText.left(wordText.size() - 1);
 
+                    }
+                    QRegExp regex("([0-1][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])(\\.[0-9]+)?");
+                    bool match = regex.exactMatch(wordText);
+                    if (match) {
+                        continue;
+                        // the string is a valid time in the format "HH:MM:SS.f"
                     }
 
                     if (!std::binary_search(m_dictionary.begin(),
@@ -1696,6 +1702,12 @@ void Editor::contentChanged(int position, int charsRemoved, int charsAdded)
                 if (wordText != "" && wordText[wordText.size()-1]==","){
                     wordText = wordText.left(wordText.size() - 1);
 
+                }
+                QRegExp regex("([0-1][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])(\\.[0-9]+)?");
+                bool match = regex.exactMatch(wordText);
+                if (match) {
+                    continue;
+                    // the string is a valid time in the format "HH:MM:SS.f"
                 }
 
                 if (!std::binary_search(m_dictionary.begin(),

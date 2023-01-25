@@ -1560,7 +1560,7 @@ void Editor::contentChanged(int position, int charsRemoved, int charsAdded)
         for (int i = 0; i <= diffStart; i++)
             if (i < wordsFromData.size()){
                 wordsFromEditor[i].timeStamp = wordsFromData[i].timeStamp;
-                wordsFromEditor[i].tagList = wordsFromData[i].tagList;
+//                wordsFromEditor[i].tagList = wordsFromData[i].tagList;
             }
 
         if (!wordsDifference) {
@@ -1571,18 +1571,39 @@ void Editor::contentChanged(int position, int charsRemoved, int charsAdded)
         }
 
         if (wordsDifference > 0) {
+            qInfo()<<"exceeds";
             for (int i = wordsFromEditor.size() - 1, j = wordsFromData.size() - 1; j > diffStart; i--, j--)
                 if (wordsFromEditor[i].text == wordsFromData[j].text){
                     wordsFromEditor[i].timeStamp = wordsFromData[j].timeStamp;
-                    wordsFromEditor[i].tagList = wordsFromData[j].tagList;
+//                    wordsFromEditor[i].tagList = wordsFromData[j].tagList;
                 }
+            for (int i=wordsFromData.size()-1;i>=0;i--){
+                if(!wordsFromData[i].tagList.empty()){
+                    for (int j=wordsFromEditor.size()-1;j>=0;j--){
+                        if (wordsFromEditor[j].text == wordsFromData[i].text){
+                            if(wordsFromEditor[j].tagList.empty())
+                            wordsFromEditor[j].tagList = wordsFromData[i].tagList;
+                        }
+                    }
+                }
+            }
         }
         else if (wordsDifference < 0) {
             for (int i = wordsFromEditor.size() - 1, j = wordsFromData.size() - 1; i > diffStart; i--, j--)
                 if (wordsFromEditor[i].text == wordsFromData[j].text){
                     wordsFromEditor[i].timeStamp = wordsFromData[j].timeStamp;
-                    wordsFromEditor[i].tagList = wordsFromData[j].tagList;
+//                    wordsFromEditor[i].tagList = wordsFromData[j].tagList;
                 }
+            for (int i=wordsFromData.size()-1;i>=0;i--){
+                if(!wordsFromData[i].tagList.empty()){
+                    for (int j=wordsFromEditor.size()-1;j>=0;j--){
+                        if (wordsFromEditor[j].text == wordsFromData[i].text){
+                            if(wordsFromEditor[j].tagList.empty())
+                            wordsFromEditor[j].tagList = wordsFromData[i].tagList;
+                        }
+                    }
+                }
+            }
         }
 
         //currentBlockFromData = currentBlockFromEditor;

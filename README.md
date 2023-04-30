@@ -17,7 +17,7 @@ To build the tool you'll need a few things to get started
 * Clone the repo or download as zip
 * Qt creator can be used to skip steps below and build the tool
 ```shell
-git clone https://github.com/jatindalal/asr-post-editor](https://github.com/R-ohit-B-isht/Transcriptor.git
+git clone https://github.com/R-ohit-B-isht/Transcriptor.git
 cd asr-post-editor
 
 # The '-j flag' will help building the tool faster

@@ -4,5 +4,76 @@
         <file>saveToPDF.py</file>
         <file>client.py</file>
         <file>Translate.py</file>
+        <file>images/Old Icons/AlignCenter.png</file>
+        <file>images/Old Icons/AlignLeft.png</file>
+        <file>images/Old Icons/AlignRight.png</file>
+        <file>images/Old Icons/AllFont.png</file>
+        <file>images/Old Icons/copy.png</file>
+        <file>images/Old Icons/cut.png</file>
+        <file>images/Old Icons/find-and-replace.png</file>
+        <file>images/Old Icons/Help.png</file>
+        <file>images/Old Icons/highlight-icon.png</file>
+        <file>images/Old Icons/horizontal-line.png</file>
+        <file>images/Old Icons/icon_diacritics.png</file>
+        <file>images/Old Icons/JustifiedAlign.png</file>
+        <file>images/Old Icons/linespacing.png</file>
+        <file>images/Old Icons/LoadData.png</file>
+        <file>images/Old Icons/New.png</file>
+        <file>images/Old Icons/next-page.png</file>
+        <file>images/Old Icons/next.png</file>
+        <file>images/Old Icons/open.png</file>
+        <file>images/Old Icons/paste.png</file>
+        <file>images/Old Icons/previous-page.png</file>
+        <file>images/Old Icons/previous.png</file>
+        <file>images/Old Icons/redoOld.png</file>
+        <file>images/Old Icons/save-as.png</file>
+        <file>images/Old Icons/SaveLoadPwords1.png</file>
+        <file>images/Old Icons/saveOld.png</file>
+        <file>images/Old Icons/spellcheck.png</file>
+        <file>images/Old Icons/symbols.png</file>
+        <file>images/Old Icons/toDevangari.png</file>
+        <file>images/Old Icons/toSlp1.png</file>
+        <file>images/Old Icons/Zoom-In-icon.png</file>
+        <file>images/Old Icons/Zoom-Out-icon.png</file>
+        <file>images/add.png</file>
+        <file>images/align center.png</file>
+        <file>images/align para.png</file>
+        <file>images/align right.png</file>
+        <file>images/all font properties 1.png</file>
+        <file>images/all font properties 2.png</file>
+        <file>images/allign left.png</file>
+        <file>images/bold.png</file>
+        <file>images/english to hindi.png</file>
+        <file>images/find 1.png</file>
+        <file>images/find 2.png</file>
+        <file>images/font black.png</file>
+        <file>images/font color.png</file>
+        <file>images/help.png</file>
+        <file>images/highlighter.png</file>
+        <file>images/information.png</file>
+        <file>images/ittalic.png</file>
+        <file>images/load data.png</file>
+        <file>images/next page.png</file>
+        <file>images/next.png</file>
+        <file>images/open file.png</file>
+        <file>images/preivious page.png</file>
+        <file>images/Previous.png</file>
+        <file>images/redo.png</file>
+        <file>images/save as.png</file>
+        <file>images/save load p words.png</file>
+        <file>images/save.png</file>
+        <file>images/search.jpeg</file>
+        <file>images/spell check.png</file>
+        <file>images/spl symbol.png</file>
+        <file>images/stylesheet-branch-closed.png</file>
+        <file>images/stylesheet-branch-open.png</file>
+        <file>images/subscpt.png</file>
+        <file>images/superscrpt.png</file>
+        <file>images/tospl.png</file>
+        <file>images/underline  2.png</file>
+        <file>images/underline 1.png</file>
+        <file>images/undo.png</file>
+        <file>images/zoom in.png</file>
+        <file>images/zoom out.png</file>
     </qresource>
 </RCC>

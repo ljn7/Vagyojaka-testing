@@ -1,0 +1,44 @@
+<RCC>
+    <qresource prefix="/images">
+        <file>images/add.png</file>
+        <file>images/align center.png</file>
+        <file>images/align para.png</file>
+        <file>images/align right.png</file>
+        <file>images/all font properties 1.png</file>
+        <file>images/all font properties 2.png</file>
+        <file>images/allign left.png</file>
+        <file>images/bold.png</file>
+        <file>images/english to hindi.png</file>
+        <file>images/find 1.png</file>
+        <file>images/find 2.png</file>
+        <file>images/font black.png</file>
+        <file>images/font color.png</file>
+        <file>images/help.png</file>
+        <file>images/highlighter.png</file>
+        <file>images/information.png</file>
+        <file>images/ittalic.png</file>
+        <file>images/load data.png</file>
+        <file>images/next page.png</file>
+        <file>images/next.png</file>
+        <file>images/open file.png</file>
+        <file>images/preivious page.png</file>
+        <file>images/Previous.png</file>
+        <file>images/redo.png</file>
+        <file>images/save as.png</file>
+        <file>images/save load p words.png</file>
+        <file>images/save.png</file>
+        <file>images/search.jpeg</file>
+        <file>images/spell check.png</file>
+        <file>images/spl symbol.png</file>
+        <file>images/stylesheet-branch-closed.png</file>
+        <file>images/stylesheet-branch-open.png</file>
+        <file>images/subscpt.png</file>
+        <file>images/superscrpt.png</file>
+        <file>images/tospl.png</file>
+        <file>images/underline  2.png</file>
+        <file>images/underline 1.png</file>
+        <file>images/undo.png</file>
+        <file>images/zoom in.png</file>
+        <file>images/zoom out.png</file>
+    </qresource>
+</RCC>

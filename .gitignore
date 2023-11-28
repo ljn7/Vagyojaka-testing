@@ -60,7 +60,3 @@ build/
 # Clion
 .idea
 .cache
-
-
-#Cmake user Config
-CmakeLists.txt.user*

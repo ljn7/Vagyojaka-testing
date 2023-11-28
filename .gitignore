@@ -44,6 +44,7 @@ target_wrapper.*
 
 # QtCreator CMake
 CMakeLists.txt.user*
+CMakeLists.txt.user
 
 # QtCreator 4.8< compilation database 
 compile_commands.json
@@ -60,7 +61,3 @@ build/
 # Clion
 .idea
 .cache
-
-# CMakeLists User Config
-CMakeLists.txt.user
-CMakeLists.txt.user.*

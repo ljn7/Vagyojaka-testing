@@ -1,0 +1,16 @@
+--- mediaplayer/mediaplayer.cpp
++++ mediaplayer/mediaplayer.cpp
+@@ -20,13 +20,11 @@ void MediaPlayer::setPositionToTime(const QTime& time)
+     if (time.isNull())
+         return;
+     qint64 position = 3600000*time.hour() + 60000*time.minute() + 1000*time.second() + time.msec();
+-    //    qInfo()<<"from 18"<<position<<"\n";
+     setPosition(position);
+ }
+ 
+ QString MediaPlayer::getMediaFileName()
+ {
+-    //    qInfo()<<"from 27"<<m_mediaFileName<<"\n";
+     return m_mediaFileName;
+ }
+ 

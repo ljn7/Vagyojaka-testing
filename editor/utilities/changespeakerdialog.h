@@ -4,7 +4,7 @@
 #include "ui_changespeakerdialog.h"
 
 namespace Ui {
-    class ChangeSpeakerDialog;
+class ChangeSpeakerDialog;
 }
 
 class ChangeSpeakerDialog : public QDialog
@@ -23,12 +23,12 @@ public:
     {
         return ui->comboBox_speaker->currentText();
     }
-    
+
     bool replaceAll() const
     {
         return ui->checkBox_changeAllOccurences->isChecked();
     }
-    
+
     void addItems(const QStringList& speakers) const
     {
         ui->comboBox_speaker->addItems(speakers);

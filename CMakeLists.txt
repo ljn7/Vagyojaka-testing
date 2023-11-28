@@ -75,6 +75,9 @@ add_executable(
 
         transcriptgenerator.h
         transcriptgenerator.cpp
+        editor/utilities/equationeditor.h
+        editor/utilities/equationeditor.cpp
+        editor/utilities/equationeditor.ui
 )
 
 

@@ -5,7 +5,7 @@
 #include "ui_timepropagationdialog.h"
 
 namespace Ui {
-    class TimePropagationDialog;
+class TimePropagationDialog;
 }
 
 class TimePropagationDialog : public QDialog

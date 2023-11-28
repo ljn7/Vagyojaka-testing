@@ -5,6 +5,10 @@
 
 #include <QFontDialog>
 #include <QMessageBox>
+
+#include <QStyle>
+#include <QIcon>
+
 Tool::Tool(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::Tool)
@@ -17,12 +21,12 @@ Tool::Tool(QWidget *parent)
     ui->splitter_tool->setCollapsible(0, false);
     ui->splitter_tool->setCollapsible(1, false);
     ui->splitter_tool->setSizes(QList<int>({static_cast<int>(0.15 * sizeHint().height()),
-        static_cast<int>(0.85 * sizeHint().height())}));
+                                            static_cast<int>(0.85 * sizeHint().height())}));
 
     ui->splitter_editor->setCollapsible(0, false);
     ui->splitter_editor->setCollapsible(1, false);
     ui->splitter_editor->setSizes(QList<int>({static_cast<int>(0.7 * sizeHint().height()),
-        static_cast<int>(0.3 * sizeHint().height())}));
+                                              static_cast<int>(0.3 * sizeHint().height())}));
 
     ui->m_wordEditor->setHidden(true);
 
@@ -31,10 +35,10 @@ Tool::Tool(QWidget *parent)
     connect(ui->close, &QAction::triggered, this, &QMainWindow::close);
 
     //ToolBar icons
-//    connect(ui->add_video, &QAction::clicked, player, &MediaPlayer::open);
+    //    connect(ui->add_video, &QAction::clicked, player, &MediaPlayer::open);
 
 
-       // Connect Player Controls and Media Player
+    // Connect Player Controls and Media Player
     connect(ui->player_open, &QAction::triggered, player, &MediaPlayer::open);
     connect(ui->player_togglePlay, &QAction::triggered, player, &MediaPlayer::togglePlayback);
     connect(ui->player_seekForward, &QAction::triggered, player, [&]() {player->seek(5);});
@@ -54,25 +58,25 @@ Tool::Tool(QWidget *parent)
     connect(player, &MediaPlayer::message, this->statusBar(), &QStatusBar::showMessage);
     connect(player, QOverload<QMediaPlayer::Error>::of(&QMediaPlayer::error), this, &Tool::handleMediaPlayerError);
 
-       // Connect components dependent on Player's position change to player
+    // Connect components dependent on Player's position change to player
     connect(player, &QMediaPlayer::positionChanged, this,
-        [&]()
-        {
-            ui->slider_position->setValue(player->position());
-            ui->label_position->setText(player->getPositionInfo());
-            ui->m_editor->highlightTranscript(player->elapsedTime());
-        }
-        );
+            [&]()
+            {
+                ui->slider_position->setValue(player->position());
+                ui->label_position->setText(player->getPositionInfo());
+                ui->m_editor->highlightTranscript(player->elapsedTime());
+            }
+            );
 
     connect(player, &QMediaPlayer::durationChanged, this,
-        [&]()
-        {
-            ui->slider_position->setRange(0, player->duration());
-            ui->label_position->setText(player->getPositionInfo());
-        }
-        );
+            [&]()
+            {
+                ui->slider_position->setRange(0, player->duration());
+                ui->label_position->setText(player->getPositionInfo());
+            }
+            );
 
-       // Connect edit menu actions
+    // Connect edit menu actions
     connect(ui->edit_undo, &QAction::triggered, ui->m_editor, &Editor::undo);
     connect(ui->edit_redo, &QAction::triggered, ui->m_editor, &Editor::redo);
     connect(ui->edit_cut, &QAction::triggered, ui->m_editor, &Editor::cut);
@@ -80,17 +84,24 @@ Tool::Tool(QWidget *parent)
     connect(ui->edit_paste, &QAction::triggered, ui->m_editor, &Editor::paste);
     connect(ui->edit_findReplace, &QAction::triggered, ui->m_editor, &Editor::findReplace);
 
-       // Connect view menu actions
+    // Connect view menu actions
     connect(ui->view_incFont, &QAction::triggered, this, [&]() {changeFontSize(+1);});
     connect(ui->view_decFont, &QAction::triggered, this, [&]() {changeFontSize(-1);});
     connect(ui->view_font, &QAction::triggered, this, &Tool::changeFont);
     connect(ui->view_toggleTagList, &QAction::triggered, this, [&]() {ui->m_tagListDisplay->setVisible(!ui->m_tagListDisplay->isVisible());});
 
-       // Connect Editor menu actions and editor controls
+    // Connect Editor menu actions and editor controls
     ui->m_editor->setWordEditor(ui->m_wordEditor);
     connect(ui->Save_as_PDF,&QAction::triggered,ui->m_editor,&Editor::saveAsPDF);
+    connect(ui->actionSave_as_Text,&QAction::triggered,ui->m_editor,&Editor::saveAsTXT);
     connect(ui->Real_Time_Data_Saver,&QAction::triggered,ui->m_editor,&Editor::realTimeDataSavingToggle);
     connect(ui->Add_Custom_Dictonary, &QAction::triggered, ui->m_editor, &Editor::addCustomDictonary);
+    connect(ui->actionShowLineTimeStamp,&QAction::triggered,ui->m_editor,[&]() {ui->m_editor->pushbutton(player->elapsedTime());});      // newly added
+    connect(ui->actionRemove_Speaker,&QAction::triggered,ui->m_editor,&Editor::removespeaker);                                      // newly added
+    connect(ui->actionword_count,&QAction::triggered,ui->m_editor,&Editor::on_actionword_count_triggered);
+    connect(ui->actionRemove_Time_Stamp,&QAction::triggered,ui->m_editor,&Editor::removetimestamp);
+    connect(ui->actionLink,&QAction::triggered,ui->m_editor,&Editor::on_actionLink_triggered);
+    connect(ui->actionVoice_Typing_2,&QAction::triggered,ui->m_editor,&Editor::on_actionVoice_triggered);
 
     //    connect(ui->editor_openTranscript, &QAction::triggered, ui->m_editor, &Editor::transcriptOpen);
     connect(ui->editor_debugBlocks, &QAction::triggered, ui->m_editor, &Editor::showBlocksFromData);
@@ -177,10 +188,10 @@ Tool::Tool(QWidget *parent)
     connect(group, &QActionGroup::triggered, this, &Tool::transliterationSelected);
 
 
-       // Connect keyboard shortcuts guide to help action
+    // Connect keyboard shortcuts guide to help action
     connect(ui->help_keyboardShortcuts, &QAction::triggered, this, &Tool::createKeyboardShortcutGuide);
 
-       // Connect position slider change to player position
+    // Connect position slider change to player position
     connect(ui->slider_position, &QSlider::sliderMoved, player, &MediaPlayer::setPosition);
 
     font = QFont( "Monospace", 10 );
@@ -294,7 +305,7 @@ void Tool::on_Upload_and_generate_Transcript_triggered()
     fileDialog.setAcceptMode(QFileDialog::AcceptOpen);
     fileDialog.setWindowTitle(tr("Open File"));
     fileDialog.setDirectory(QStandardPaths::standardLocations(
-        QStandardPaths::DocumentsLocation).value(0, QDir::homePath()));
+                                QStandardPaths::DocumentsLocation).value(0, QDir::homePath()));
 
 
     if (fileDialog.exec() == QDialog::Accepted) {
@@ -302,7 +313,7 @@ void Tool::on_Upload_and_generate_Transcript_triggered()
         TranscriptGenerator tr(fileUrl);
         qInfo()<<QThread::currentThread();
         //running transcript generator on another thread (parallel processing)
-    QtConcurrent::run(&tr, &TranscriptGenerator::Upload_and_generate_Transcript);
+        QtConcurrent::run(&tr, &TranscriptGenerator::Upload_and_generate_Transcript);
 
 
         QFile myfile(fileUrl->toLocalFile());
@@ -420,11 +431,11 @@ void Tool::on_btn_translate_clicked()
     QFileInfo tempXMLinfo(tempXML);
 
     std::string translatorStr="python3 "  +mapperFileInfo.absoluteFilePath().toStdString()
-        +" "+ '\"'+initialDictFileInfo.absoluteFilePath().toStdString()+ '\"'
-        +" "+ '\"'+HindiTranslate.absoluteFilePath().toStdString()+ '\"'
-        +" "+ '\"'+finalFileInfo.absoluteFilePath().toStdString()+ '\"'
-        +" "+ '\"'+FromTranscriptFileToTranslate.absoluteFilePath().toStdString()+ '\"'
-        +" "+ '\"'+tempXMLinfo.absoluteFilePath().toStdString()+ '\"';
+                                +" "+ '\"'+initialDictFileInfo.absoluteFilePath().toStdString()+ '\"'
+                                +" "+ '\"'+HindiTranslate.absoluteFilePath().toStdString()+ '\"'
+                                +" "+ '\"'+finalFileInfo.absoluteFilePath().toStdString()+ '\"'
+                                +" "+ '\"'+FromTranscriptFileToTranslate.absoluteFilePath().toStdString()+ '\"'
+                                +" "+ '\"'+tempXMLinfo.absoluteFilePath().toStdString()+ '\"';
 
     qInfo()<<translatorStr.c_str();
 
@@ -454,16 +465,17 @@ void Tool::on_btn_translate_clicked()
 
 void Tool::on_editor_openTranscript_triggered()
 {
-
+    ui->m_editor->m_transcriptUrl.clear();
     ui->m_editor->transcriptOpen();
-    ui->m_editor_2->m_transcriptUrl=ui->m_editor->m_transcriptUrl;
-    QFile transcriptFile(ui->m_editor->m_transcriptUrl.toLocalFile());
-    if (!transcriptFile.open(QIODevice::ReadOnly)) {
-        qInfo()<<(transcriptFile.errorString());
-        return;
-    }
-    ui->m_editor_2->loadTranscriptData(transcriptFile);
-    ui->m_editor_2->setContent();
+    ui->m_editor->setContent();
+    //    ui->m_editor_2->m_transcriptUrl=ui->m_editor->m_transcriptUrl;
+    //    QFile transcriptFile(ui->m_editor->m_transcriptUrl.toLocalFile());
+    //    if (!transcriptFile.open(QIODevice::ReadOnly)) {
+    //        qInfo()<<(transcriptFile.errorString());
+    //        return;
+    //    }
+    //    ui->m_editor_2->loadTranscriptData(transcriptFile);
+    //    ui->m_editor_2->setContent();
 }
 
 
@@ -527,7 +539,7 @@ void Tool::on_increaseFontSize_clicked()
 
 void Tool::on_toggleWordEditor_clicked()
 {
-ui->m_wordEditor->setVisible(!ui->m_wordEditor->isVisible());
+    ui->m_wordEditor->setVisible(!ui->m_wordEditor->isVisible());
 }
 
 
@@ -539,9 +551,9 @@ void Tool::on_keyboard_shortcuts_clicked()
 
 void Tool::on_fontComboBox_currentFontChanged(const QFont &f)
 {
-//    bool fontSelected;
+    //    bool fontSelected;
     font = f;
 
-//    if (fontSelected)
-        setFontForElements();}
+    //    if (fontSelected)
+    setFontForElements();}
 

@@ -3,7 +3,7 @@
 #include <QHeaderView>
 
 TagListDisplayWidget::TagListDisplayWidget(QWidget* parent)
-	: QTableWidget(parent)
+    : QTableWidget(parent)
 {
     horizontalHeader()->hide();
     verticalHeader()->hide();

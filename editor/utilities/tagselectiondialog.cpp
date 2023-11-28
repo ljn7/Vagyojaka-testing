@@ -16,12 +16,12 @@ TagSelectionDialog::TagSelectionDialog(QWidget* parent)
     ui->comboBox_lang->addItems(m_languages);
 
     connect(ui->checkBox_lang, &QCheckBox::stateChanged, this,
-    [&]()
-    {
-        ui->label->setVisible(!ui->label->isVisible());
-        ui->comboBox_lang->setVisible(!ui->comboBox_lang->isVisible());
-    }
-    );
+            [&]()
+            {
+                ui->label->setVisible(!ui->label->isVisible());
+                ui->comboBox_lang->setVisible(!ui->comboBox_lang->isVisible());
+            }
+            );
 }
 
 TagSelectionDialog::~TagSelectionDialog()

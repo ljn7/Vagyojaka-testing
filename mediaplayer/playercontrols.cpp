@@ -43,11 +43,13 @@ PlayerControls::PlayerControls(QWidget *parent)
     connect(m_volumeSlider, &QSlider::valueChanged, this, &PlayerControls::onVolumeSliderValueChanged);
 
     m_rateBox = new QComboBox(this);
+
     m_rateBox->addItem("0.5x", QVariant(0.5));
+    m_rateBox->addItem("0.7x", QVariant(0.7));
     m_rateBox->addItem("1.0x", QVariant(1.0));
     m_rateBox->addItem("1.5x", QVariant(1.5));
     m_rateBox->addItem("2.0x", QVariant(2.0));
-    m_rateBox->setCurrentIndex(1);
+    m_rateBox->setCurrentIndex(2);
 
     connect(m_rateBox, QOverload<int>::of(&QComboBox::activated), this, &PlayerControls::updateRate);
 
@@ -94,8 +96,8 @@ void PlayerControls::setState(QMediaPlayer::State state)
 int PlayerControls::volume() const
 {
     qreal linearVolume =  QAudio::convertVolume(m_volumeSlider->value() / qreal(100),
-                                                QAudio::LogarithmicVolumeScale,
-                                                QAudio::LinearVolumeScale);
+                                               QAudio::LogarithmicVolumeScale,
+                                               QAudio::LinearVolumeScale);
 
     return qRound(linearVolume * 100);
 }
@@ -120,8 +122,8 @@ void PlayerControls::setMuted(bool muted)
         m_playerMuted = muted;
 
         m_muteButton->setIcon(style()->standardIcon(muted
-                ? QStyle::SP_MediaVolumeMuted
-                : QStyle::SP_MediaVolume));
+                                                        ? QStyle::SP_MediaVolumeMuted
+                                                        : QStyle::SP_MediaVolume));
     }
 }
 

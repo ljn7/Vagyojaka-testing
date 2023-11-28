@@ -13,8 +13,8 @@ KeyboardShortcutGuide::KeyboardShortcutGuide(QWidget *parent)
     int nHeight = 800;
     if (parent != NULL)
         setGeometry(parent->x() + parent->width()/2 - nWidth/2,
-            parent->y() + parent->height()/2 - nHeight/2,
-            nWidth, nHeight);
+                    parent->y() + parent->height()/2 - nHeight/2,
+                    nWidth, nHeight);
     else
         resize(nWidth, nHeight);
 

@@ -3,8 +3,8 @@
 
 FindReplaceDialog::FindReplaceDialog(QPlainTextEdit *parentEditor)
     : QDialog (parentEditor),
-      m_Editor(parentEditor),
-      ui (new Ui::FindReplaceDialog)
+    m_Editor(parentEditor),
+    ui (new Ui::FindReplaceDialog)
 {
     ui->setupUi(this);
     connect(ui->button_find_next, &QPushButton::clicked, this, &FindReplaceDialog::findNext);

@@ -4,7 +4,7 @@
 #include <QPlainTextEdit>
 
 namespace Ui {
-    class FindReplaceDialog;
+class FindReplaceDialog;
 }
 
 class FindReplaceDialog : public QDialog

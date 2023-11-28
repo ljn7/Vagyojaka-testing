@@ -21,14 +21,22 @@
 #include <QTimer>
 #include <QUndoCommand>
 #include <QSettings>
+#include <QAudioRecorder>
+#include <QAudioProbe>
+#include <QAudioInput>
+#include <QBuffer>
+#include <QNetworkRequest>
+
+
+
 class Highlighter;
 
 class Editor : public TextEditor
 {
     Q_OBJECT
 
-        public:
-                 explicit Editor(QWidget *parent = nullptr);
+public:
+    explicit Editor(QWidget *parent = nullptr);
 
     void setWordEditor(WordEditor* wordEditor)
     {
@@ -43,12 +51,15 @@ class Editor : public TextEditor
     void setShowTimeStamp();
     QVector<block> m_blocks;
     QUrl m_transcriptUrl;
-     bool showTimeStamp=false;
+    bool showTimeStamp=false;
+    bool removespeakerbool = false;
+    bool removetimebool = false;
     void loadTranscriptData(QFile& file);
     void setContent();
-     bool timestampVisibility();
+    bool timestampVisibility();
+    // void showversion();
     friend class Highlighter;
-//    QUndoStack *undoStack=nullptr;
+    //    QUndoStack *undoStack=nullptr;
 protected:
     void mousePressEvent(QMouseEvent *e) override;
     void keyPressEvent(QKeyEvent *event) override;
@@ -77,7 +88,15 @@ public slots:
     void createTimePropagationDialog();
     void createTagSelectionDialog();
     void insertTimeStamp(const QTime& elapsedTime);
-    void changeTranscriptLang();
+    void pushbutton(const QTime& elapsedTime);       // newly added
+    void removespeaker();                           // newly added
+    void changeTranscriptLang();                    // newly added
+    void removetimestamp();
+    void on_actionword_count_triggered();
+    void showwordcount();
+    void on_actionLink_triggered();
+    void on_actionVoice_triggered();
+    //    QAudioRecorder *m_audioRecorder = nullptr;
 
     void speakerWiseJump(const QString& jumpDirection);
     void wordWiseJump(const QString& jumpDirection);
@@ -88,6 +107,8 @@ public slots:
     void suggest(QString suggest);
     void realTimeDataSavingToggle();
     void saveAsPDF();
+    void saveAsTXT();
+
 private slots:
     void contentChanged(int position, int charsRemoved, int charsAdded);
     void wordEditorChanged();
@@ -106,6 +127,8 @@ private slots:
     void handleReply();
     void sendRequest(const QString& input, const QString& langCode);
 
+
+
 private:
     static QTime getTime(const QString& text);
     static word makeWord(const QTime& t, const QString& s, const QStringList& tagList);
@@ -115,6 +138,7 @@ private:
     void saveXml(QFile* file);
     void helpJumpToPlayer();
     void loadDictionary();
+    static QStringList getGoogleSuggestions(const QString& word);
 
     block fromEditor(qint64 blockNumber) const;
     static QStringList listFromFile(const QString& fileName) ;
@@ -150,6 +174,12 @@ private:
     QStringList allClips;
     int lastHighlightedBlock=-1;
     bool moveAlongTimeStamps=true;
+
+    QAudioRecorder* m_audioRecorder = nullptr;
+    QAudioProbe* m_probe = nullptr;
+    QByteArray m_audioData;
+    QAudioInput* m_audioInput;
+
 public:
 
 };
@@ -160,8 +190,8 @@ public:
 class Highlighter : public QSyntaxHighlighter
 {
     Q_OBJECT
-        public:
-                 explicit Highlighter(QTextDocument *parent = nullptr) : QSyntaxHighlighter(parent) {};
+public:
+    explicit Highlighter(QTextDocument *parent = nullptr) : QSyntaxHighlighter(parent) {};
 
     void clearHighlight()
     {

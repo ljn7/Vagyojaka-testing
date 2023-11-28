@@ -3,7 +3,7 @@
 #include <QDialog>
 
 namespace Ui {
-    class TagSelectionDialog;
+class TagSelectionDialog;
 }
 
 class TagSelectionDialog: public QDialog

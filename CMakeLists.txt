@@ -10,7 +10,7 @@ SET(CMAKE_AUTOMOC ON)
 SET(CMAKE_AUTORCC ON)
 set(Qt5_DIR "*PATH TO YOUR QT QT5CONFIG FILE HERE*" CACHE PATH "Initial cache" FORCE)
 find_package (
-    Qt5
+    Qt6
     HINTS "$ENV{QTDIR}"
     REQUIRED COMPONENTS
     Core
@@ -20,7 +20,7 @@ find_package (
     MultimediaWidgets
     Network
 )
-find_package(Qt5PrintSupport REQUIRED)
+find_package(Qt6PrintSupport REQUIRED)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
@@ -84,11 +84,11 @@ add_executable(
 target_link_libraries(
         ${PROJECT_NAME}
         PUBLIC
-        Qt5::Core
-        Qt5::Gui
-        Qt5::Widgets
-        Qt5::Multimedia
-        Qt5::MultimediaWidgets
-        Qt5::Network
-        Qt5::PrintSupport
+        Qt6::Core
+        Qt6::Gui
+        Qt6::Widgets
+        Qt6::Multimedia
+        Qt6::MultimediaWidgets
+        Qt6::Network
+        Qt6::PrintSupport
 )

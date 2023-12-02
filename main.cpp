@@ -34,7 +34,9 @@ void customMessageHandler(QtMsgType type, const QMessageLogContext &context, con
     outFile.open(QIODevice::WriteOnly | QIODevice::Append);
 
     QTextStream textStream(&outFile);
-    textStream.setCodec("UTF-8");
+    //Qt6
+    // textStream.setCodec("UTF-8");
+    textStream.setEncoding(QStringConverter::Utf8);
 
     QHash<QtMsgType, QString> msgLevelHash({{QtDebugMsg, "Debug:"},
                                             {QtInfoMsg, "Info:"},

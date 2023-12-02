@@ -21,8 +21,10 @@
 #include <QTimer>
 #include <QUndoCommand>
 #include <QSettings>
-#include <QAudioRecorder>
-#include <QAudioProbe>
+//Qt6
+// #include <QAudioRecorder>
+#include <QMediaRecorder>
+// #include <QAudioProbe>
 #include <QAudioInput>
 #include <QBuffer>
 #include <QNetworkRequest>

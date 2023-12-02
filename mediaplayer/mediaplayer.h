@@ -16,6 +16,7 @@ public:
     void setPositionToTime(const QTime& time);
     QString getMediaFileName();
     QString getPositionInfo();
+    QStringList supportedFormats;
 
 public slots:
     void open();

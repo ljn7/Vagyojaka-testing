@@ -3,6 +3,11 @@
 MediaPlayer::MediaPlayer(QWidget *parent)
     : QMediaPlayer(parent)
 {
+    //Qt6
+    this->supportedFormats = {
+        "Media Files (*.avi *.divx *.amv *.mpg *.mpeg *.mpe *.m1v *.m2v *.mpv2 *.mp2v *.m2p *.vob *.evo *.mod *.ts *.m2ts *.m2t *.mts *.pva *.tp *.tpr *.mp4 *.m4v *.mp4v *.mpv4 *.hdmov *.mov *.3gp *.3gpp *.3g2 *.3gp2 *.mkv *.webm *.ogm *.ogv *.flv *.f4v *.wmv *.asf *.rmvb *.rm *.dv *.mxf *.dav *.mp3 *.ogg *.oga *.mka *.m4a *.aac *.flac *.wv *.mpc *.ape *.alac *.amr *.tta *.ac3 *.dts *.ra *.opus *.spx *.aif *.aiff *.aifc *.caf *.tak *.shr)",
+        "All Files (*)"
+    };
 }
 
 QTime MediaPlayer::elapsedTime()
@@ -42,9 +47,13 @@ void MediaPlayer::open()
     QFileDialog fileDialog;
     fileDialog.setAcceptMode(QFileDialog::AcceptOpen);
     fileDialog.setWindowTitle(tr("Open Media"));
-    QStringList supportedMimeTypes = QMediaPlayer::supportedMimeTypes();
-    if (!supportedMimeTypes.isEmpty())
-        fileDialog.setMimeTypeFilters(supportedMimeTypes);
+
+    //Qt6 porting
+    // QStringList supportedMimeTypes = QMediaPlayer::supportedMimeTypes();
+    // if (!supportedMimeTypes.isEmpty())
+    //     fileDialog.setMimeTypeFilters(supportedMimeTypes);
+
+    fileDialog.setMimeTypeFilters(supportedFormats);
     if(QSettings().value("mediaDir").toString()=="")
         fileDialog.setDirectory(QStandardPaths::standardLocations(QStandardPaths::MoviesLocation).value(0, QDir::homePath()));
     else
@@ -57,7 +66,9 @@ void MediaPlayer::open()
         QString dirInString=filedir.dir().path();
         QSettings().setValue("mediaDir",dirInString);
         m_mediaFileName = fileUrl->fileName();
-        setMedia(*fileUrl);
+        //Qt6
+        // setMedia(*fileUrl);
+        setSource(*fileUrl);
         emit message("Opened file " + fileUrl->fileName());
         play();
     }

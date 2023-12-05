@@ -35,29 +35,29 @@ void KeyboardShortcutGuide::fillDialog() {
 
     auto app = new QTreeWidgetItem({"Application"});
 
-    QStringList closeApp({"Close Application", QKeySequence(Qt::ALT+Qt::Key_F4).toString()});
+    QStringList closeApp({"Close Application", QKeySequence(Qt::ALT | Qt::Key_F4).toString()});
     app->addChild(new QTreeWidgetItem(closeApp));
 
     auto editing = new QTreeWidgetItem({"Editing"});
-    QStringList undo({"Undo", QKeySequence(Qt::CTRL+Qt::Key_Z).toString()});
-    QStringList redo({"Redo", QKeySequence(Qt::CTRL+Qt::Key_Y).toString()});
-    QStringList cut({"Cut", QKeySequence(Qt::CTRL+Qt::Key_X).toString()});
-    QStringList copy({"Copy", QKeySequence(Qt::CTRL+Qt::Key_C).toString()});
-    QStringList paste({"Paste", QKeySequence(Qt::CTRL+Qt::Key_V).toString()});
-    QStringList findReplace({"Find / Replace", QKeySequence(Qt::CTRL+Qt::Key_F).toString()});
-    QStringList zoomIn({"Increase Font Size", QKeySequence(Qt::CTRL+Qt::Key_Equal).toString()});
-    QStringList zoomOut({"Decrease Font Size", QKeySequence(Qt::CTRL+Qt::Key_Minus).toString()});
-    QStringList saveTranscript({"Save Transcript", QKeySequence(Qt::CTRL+Qt::Key_S).toString()});
-    QStringList splitLine({"Split Line", QKeySequence(Qt::CTRL+Qt::Key_Semicolon).toString()});
-    QStringList jumpToHighlightedLine({"Jump to Highlighted Line", QKeySequence(Qt::CTRL+Qt::Key_J).toString()});
-    QStringList mergeUp({"Merge Up", QKeySequence(Qt::ALT+Qt::Key_Up).toString()});
-    QStringList mergeDown({"Merge Down", QKeySequence(Qt::ALT+Qt::Key_Down).toString()});
-    QStringList toggleWordEditor({"Toggle Word Editor", QKeySequence(Qt::CTRL+Qt::Key_W).toString()});
-    QStringList changeSpeaker({"Change Speaker", QKeySequence(Qt::CTRL+Qt::Key_R).toString()});
-    QStringList propagateTime({"Propagate Time", QKeySequence(Qt::CTRL+Qt::Key_T).toString()});
-    QStringList editTags({"Edit Tags", QKeySequence(Qt::CTRL+Qt::Key_Apostrophe).toString()});
-    QStringList markAsCorrect({"Mark word as correct", QKeySequence(Qt::CTRL+Qt::Key_M).toString()});
-    QStringList markAsDoubtful({"Mark word as Doubtful", QKeySequence(Qt::CTRL+Qt::Key_I).toString()});
+    QStringList undo({"Undo", QKeySequence(Qt::CTRL | Qt::Key_Z).toString()});
+    QStringList redo({"Redo", QKeySequence(Qt::CTRL | Qt::Key_Y).toString()});
+    QStringList cut({"Cut", QKeySequence(Qt::CTRL | Qt::Key_X).toString()});
+    QStringList copy({"Copy", QKeySequence(Qt::CTRL | Qt::Key_C).toString()});
+    QStringList paste({"Paste", QKeySequence(Qt::CTRL | Qt::Key_V).toString()});
+    QStringList findReplace({"Find / Replace", QKeySequence(Qt::CTRL | Qt::Key_F).toString()});
+    QStringList zoomIn({"Increase Font Size", QKeySequence(Qt::CTRL | Qt::Key_Equal).toString()});
+    QStringList zoomOut({"Decrease Font Size", QKeySequence(Qt::CTRL | Qt::Key_Minus).toString()});
+    QStringList saveTranscript({"Save Transcript", QKeySequence(Qt::CTRL | Qt::Key_S).toString()});
+    QStringList splitLine({"Split Line", QKeySequence(Qt::CTRL | Qt::Key_Semicolon).toString()});
+    QStringList jumpToHighlightedLine({"Jump to Highlighted Line", QKeySequence(Qt::CTRL | Qt::Key_J).toString()});
+    QStringList mergeUp({"Merge Up", QKeySequence(Qt::ALT | Qt::Key_Up).toString()});
+    QStringList mergeDown({"Merge Down", QKeySequence(Qt::ALT | Qt::Key_Down).toString()});
+    QStringList toggleWordEditor({"Toggle Word Editor", QKeySequence(Qt::CTRL | Qt::Key_W).toString()});
+    QStringList changeSpeaker({"Change Speaker", QKeySequence(Qt::CTRL | Qt::Key_R).toString()});
+    QStringList propagateTime({"Propagate Time", QKeySequence(Qt::CTRL | Qt::Key_T).toString()});
+    QStringList editTags({"Edit Tags", QKeySequence(Qt::CTRL | Qt::Key_Apostrophe).toString()});
+    QStringList markAsCorrect({"Mark word as correct", QKeySequence(Qt::CTRL | Qt::Key_M).toString()});
+    QStringList markAsDoubtful({"Mark word as Doubtful", QKeySequence(Qt::CTRL | Qt::Key_I).toString()});
 
     editing->addChild(new QTreeWidgetItem(undo));
     editing->addChild(new QTreeWidgetItem(redo));
@@ -79,7 +79,7 @@ void KeyboardShortcutGuide::fillDialog() {
     editing->addChild(new QTreeWidgetItem(markAsCorrect));
     editing->addChild(new QTreeWidgetItem(markAsDoubtful));
 
-    auto insertTimeStamp = new QTreeWidgetItem({"Insert Player timestamp in active editor", QKeySequence(Qt::CTRL + Qt::Key_I).toString()});
+    auto insertTimeStamp = new QTreeWidgetItem({"Insert Player timestamp in active editor", QKeySequence(Qt::CTRL | Qt::Key_I).toString()});
 
     auto jumpToPlayerTime = new QTreeWidgetItem({"Jump To Player"});
 
@@ -107,9 +107,9 @@ void KeyboardShortcutGuide::fillDialog() {
     jumpToPlayerTime->addChild(new QTreeWidgetItem(blockJumpDown));
 
     auto mediaPlayer = new QTreeWidgetItem({"Media Player"});
-    QStringList playPause({"Play / Pause", QKeySequence(Qt::CTRL+Qt::Key_Space).toString()});
-    QStringList seekForward({"Seek Forward", QKeySequence(Qt::CTRL+Qt::Key_Period).toString()});
-    QStringList seekBackward({"Seek Backward", QKeySequence(Qt::CTRL+Qt::Key_Comma).toString()});
+    QStringList playPause({"Play / Pause", QKeySequence(Qt::CTRL | Qt::Key_Space).toString()});
+    QStringList seekForward({"Seek Forward", QKeySequence(Qt::CTRL | Qt::Key_Period).toString()});
+    QStringList seekBackward({"Seek Backward", QKeySequence(Qt::CTRL | Qt::Key_Comma).toString()});
 
     mediaPlayer->addChild(new QTreeWidgetItem(playPause));
     mediaPlayer->addChild(new QTreeWidgetItem(seekForward));

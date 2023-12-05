@@ -82,12 +82,22 @@ void KeyboardShortcutGuide::fillDialog() {
     auto insertTimeStamp = new QTreeWidgetItem({"Insert Player timestamp in active editor", QKeySequence(Qt::CTRL + Qt::Key_I).toString()});
 
     auto jumpToPlayerTime = new QTreeWidgetItem({"Jump To Player"});
-    QStringList speakerJumpUp({"Jump to line above with same speaker", QKeySequence(Qt::CTRL+Qt::SHIFT+Qt::Key_Up).toString()});
-    QStringList speakerJumpDown({"Jump to line down with same speaker", QKeySequence(Qt::CTRL+Qt::SHIFT+Qt::Key_Down).toString()});
-    QStringList wordJumpLeft({"Jump to word on left", QKeySequence(Qt::ALT+Qt::Key_Left).toString()});
-    QStringList wordJumpRight({"Jump to word on right", QKeySequence(Qt::ALT+Qt::Key_Right).toString()});
-    QStringList blockJumpUp({"Jump one block up", QKeySequence(Qt::ALT+Qt::Key_Up).toString()});
-    QStringList blockJumpDown({"Jump one block down", QKeySequence(Qt::ALT+Qt::Key_Down).toString()});
+
+    //Qt6
+    // QStringList speakerJumpUp({"Jump to line above with same speaker", QKeySequence(Qt::CTRL+Qt::SHIFT+Qt::Key_Up).toString()});
+    // QStringList speakerJumpDown({"Jump to line down with same speaker", QKeySequence(Qt::CTRL+Qt::SHIFT+Qt::Key_Down).toString()});
+    // QStringList wordJumpLeft({"Jump to word on left", QKeySequence(Qt::ALT+Qt::Key_Left).toString()});
+    // QStringList wordJumpRight({"Jump to word on right", QKeySequence(Qt::ALT+Qt::Key_Right).toString()});
+    // QStringList blockJumpUp({"Jump one block up", QKeySequence(Qt::ALT+Qt::Key_Up).toString()});
+    // QStringList blockJumpDown({"Jump one block down", QKeySequence(Qt::ALT+Qt::Key_Down).toString()});
+
+    QStringList speakerJumpUp({"Jump to line above with same speaker", QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_Up).toString()});
+    QStringList speakerJumpDown({"Jump to line down with same speaker", QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_Down).toString()});
+    QStringList wordJumpLeft({"Jump to word on left", QKeySequence(Qt::ALT | Qt::Key_Left).toString()});
+    QStringList wordJumpRight({"Jump to word on right", QKeySequence(Qt::ALT | Qt::Key_Right).toString()});
+    QStringList blockJumpUp({"Jump one block up", QKeySequence(Qt::ALT | Qt::Key_Up).toString()});
+    QStringList blockJumpDown({"Jump one block down", QKeySequence(Qt::ALT | Qt::Key_Down).toString()});
+
 
     jumpToPlayerTime->addChild(new QTreeWidgetItem(speakerJumpUp));
     jumpToPlayerTime->addChild(new QTreeWidgetItem(speakerJumpDown));

@@ -9,6 +9,9 @@
 #include <QStyle>
 #include <QIcon>
 
+#include <QMediaPlayer>
+#include <QActionGroup>
+
 Tool::Tool(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::Tool)
@@ -17,7 +20,9 @@ Tool::Tool(QWidget *parent)
 
     player = new MediaPlayer(this);
     player->setVideoOutput(ui->m_videoWidget);
-
+    m_audioOutput = new QAudioOutput(this);
+    player->setAudioOutput(m_audioOutput);
+    
     ui->splitter_tool->setCollapsible(0, false);
     ui->splitter_tool->setCollapsible(1, false);
     ui->splitter_tool->setSizes(QList<int>({static_cast<int>(0.15 * sizeHint().height()),
@@ -48,15 +53,17 @@ Tool::Tool(QWidget *parent)
     connect(ui->m_playerControls, &PlayerControls::stop, player, &QMediaPlayer::stop);
     connect(ui->m_playerControls, &PlayerControls::seekForward, player, [&]() {player->seek(5);});
     connect(ui->m_playerControls, &PlayerControls::seekBackward, player, [&]() {player->seek(-5);});
-    connect(ui->m_playerControls, &PlayerControls::changeVolume, player, &QMediaPlayer::setVolume);
-    connect(ui->m_playerControls, &PlayerControls::changeMuting, player, &QMediaPlayer::setMuted);
+    connect(ui->m_playerControls, &PlayerControls::changeVolume, m_audioOutput, &QAudioOutput::setVolume);
+    connect(ui->m_playerControls, &PlayerControls::changeMuting, m_audioOutput, &QAudioOutput::setMuted);
     connect(ui->m_playerControls, &PlayerControls::changeRate, player, &QMediaPlayer::setPlaybackRate);
     connect(ui->m_playerControls, &PlayerControls::stop, ui->m_videoWidget, QOverload<>::of(&QVideoWidget::update));
-    connect(player, &QMediaPlayer::stateChanged, ui->m_playerControls, &PlayerControls::setState);
-    connect(player, &QMediaPlayer::volumeChanged, ui->m_playerControls, &PlayerControls::setVolume);
-    connect(player, &QMediaPlayer::mutedChanged, ui->m_playerControls, &PlayerControls::setMuted);
+    connect(player, &MediaPlayer::playbackStateChanged, ui->m_playerControls, &PlayerControls::setState);
+    connect(m_audioOutput, &QAudioOutput::volumeChanged, ui->m_playerControls, &PlayerControls::setVolume);
+    connect(m_audioOutput, &QAudioOutput::mutedChanged, ui->m_playerControls, &PlayerControls::setMuted);
     connect(player, &MediaPlayer::message, this->statusBar(), &QStatusBar::showMessage);
-    connect(player, QOverload<QMediaPlayer::Error>::of(&QMediaPlayer::error), this, &Tool::handleMediaPlayerError);
+    // Qt6
+    // connect(player, QOverload<QMediaPlayer::Error>::of(&QMediaPlayer::error), this, &Tool::handleMediaPlayerError);
+    connect(player, &MediaPlayer::errorChanged, this, &Tool::handleMediaPlayerError);
 
     // Connect components dependent on Player's position change to player
     connect(player, &QMediaPlayer::positionChanged, this,
@@ -101,7 +108,8 @@ Tool::Tool(QWidget *parent)
     connect(ui->actionword_count,&QAction::triggered,ui->m_editor,&Editor::on_actionword_count_triggered);
     connect(ui->actionRemove_Time_Stamp,&QAction::triggered,ui->m_editor,&Editor::removetimestamp);
     connect(ui->actionLink,&QAction::triggered,ui->m_editor,&Editor::on_actionLink_triggered);
-    connect(ui->actionVoice_Typing_2,&QAction::triggered,ui->m_editor,&Editor::on_actionVoice_triggered);
+    // Qt6 Disabled temp
+    // connect(ui->actionVoice_Typing_2,&QAction::triggered,ui->m_editor,&Editor::on_actionVoice_triggered);
 
     //    connect(ui->editor_openTranscript, &QAction::triggered, ui->m_editor, &Editor::transcriptOpen);
     connect(ui->editor_debugBlocks, &QAction::triggered, ui->m_editor, &Editor::showBlocksFromData);
@@ -206,6 +214,9 @@ Tool::~Tool()
 
 void Tool::handleMediaPlayerError()
 {
+    if (player->error() == QMediaPlayer::NoError)
+        return;
+
     const QString errorString = player->errorString();
     QString message = "Error: ";
     if (errorString.isEmpty())
@@ -301,51 +312,52 @@ void Tool::transliterationSelected(QAction* action)
 
 void Tool::on_Upload_and_generate_Transcript_triggered()
 {
-    QFileDialog fileDialog(this);
-    fileDialog.setAcceptMode(QFileDialog::AcceptOpen);
-    fileDialog.setWindowTitle(tr("Open File"));
-    fileDialog.setDirectory(QStandardPaths::standardLocations(
-                                QStandardPaths::DocumentsLocation).value(0, QDir::homePath()));
+    //Qt 6 (disabled since not utilized in app yet)
+    // QFileDialog fileDialog(this);
+    // fileDialog.setAcceptMode(QFileDialog::AcceptOpen);
+    // fileDialog.setWindowTitle(tr("Open File"));
+    // fileDialog.setDirectory(QStandardPaths::standardLocations(
+    //                             QStandardPaths::DocumentsLocation).value(0, QDir::homePath()));
 
 
-    if (fileDialog.exec() == QDialog::Accepted) {
-        QUrl *fileUrl = new QUrl(fileDialog.selectedUrls().constFirst());
-        TranscriptGenerator tr(fileUrl);
-        qInfo()<<QThread::currentThread();
-        //running transcript generator on another thread (parallel processing)
-        QtConcurrent::run(&tr, &TranscriptGenerator::Upload_and_generate_Transcript);
+    // if (fileDialog.exec() == QDialog::Accepted) {
+    //     QUrl *fileUrl = new QUrl(fileDialog.selectedUrls().constFirst());
+    //     TranscriptGenerator tr(fileUrl);
+    //     qInfo()<<QThread::currentThread();
+    //     //running transcript generator on another thread (parallel processing)
+    //     QtConcurrent::run(&tr, &TranscriptGenerator::Upload_and_generate_Transcript);
 
 
-        QFile myfile(fileUrl->toLocalFile());
-        QFileInfo fileInfo(myfile);
-        QString filename(fileInfo.fileName());
-        QString filepaths=fileInfo.dir().path();
+    //     QFile myfile(fileUrl->toLocalFile());
+    //     QFileInfo fileInfo(myfile);
+    //     QString filename(fileInfo.fileName());
+    //     QString filepaths=fileInfo.dir().path();
 
-        qInfo()<<filepaths+"/transcript.xml";
+    //     qInfo()<<filepaths+"/transcript.xml";
 
-        bool fileExists = QFileInfo::exists(filepaths+"/transcript.xml") && QFileInfo(filepaths+"/transcript.xml").isFile();
-        while(!fileExists){
-            fileExists = QFileInfo::exists(filepaths+"/transcript.xml") && QFileInfo(filepaths+"/transcript.xml").isFile();
-        }
+    //     bool fileExists = QFileInfo::exists(filepaths+"/transcript.xml") && QFileInfo(filepaths+"/transcript.xml").isFile();
+    //     while(!fileExists){
+    //         fileExists = QFileInfo::exists(filepaths+"/transcript.xml") && QFileInfo(filepaths+"/transcript.xml").isFile();
+    //     }
 
-        QFile transcriptFile(filepaths+"/transcript.xml");
-        if (!transcriptFile.open(QIODevice::ReadOnly)) {
-            qInfo()<<(transcriptFile.errorString());
-            return;
-        }
-        ui->m_editor->loadTranscriptData(transcriptFile);
-        ui->m_editor->setContent();
-        transcriptFile.close();
+    //     QFile transcriptFile(filepaths+"/transcript.xml");
+    //     if (!transcriptFile.open(QIODevice::ReadOnly)) {
+    //         qInfo()<<(transcriptFile.errorString());
+    //         return;
+    //     }
+    //     ui->m_editor->loadTranscriptData(transcriptFile);
+    //     ui->m_editor->setContent();
+    //     transcriptFile.close();
 
-        QFile transcriptFile2(filepaths+"/transcript.xml");
-        if (!transcriptFile2.open(QIODevice::ReadOnly)) {
-            qInfo()<<(transcriptFile2.errorString());
-            return;
-        }
-        ui->m_editor_2->loadTranscriptData(transcriptFile2);
-        ui->m_editor_2->setContent();
+    //     QFile transcriptFile2(filepaths+"/transcript.xml");
+    //     if (!transcriptFile2.open(QIODevice::ReadOnly)) {
+    //         qInfo()<<(transcriptFile2.errorString());
+    //         return;
+    //     }
+    //     ui->m_editor_2->loadTranscriptData(transcriptFile2);
+    //     ui->m_editor_2->setContent();
 
-    }
+    // }
 
 }
 
@@ -392,7 +404,7 @@ void Tool::on_btn_translate_clicked()
         return;
     }
     QString x("");
-    for (auto& a_block : qAsConst(ui->m_editor_2->m_blocks)) {
+    for (auto& a_block : std::as_const(ui->m_editor_2->m_blocks)) {
         auto blockText = a_block.text + " " ;
         //            qInfo()<<a_block.text;
         x.append(blockText + "\n");

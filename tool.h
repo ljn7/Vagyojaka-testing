@@ -66,6 +66,7 @@ private:
     void setTransliterationLangCodes();
 
     MediaPlayer *player = nullptr;
+    QAudioOutput *m_audioOutput = nullptr;
     Ui::Tool *ui;
     QFont font;
     QMap<QString, QString> m_transliterationLang;

@@ -94,10 +94,25 @@ QTime MediaPlayer::getTimeFromPosition(const qint64& position)
     return QTime(hours, minutes, seconds, milliseconds);
 }
 
+//Qt6
 void MediaPlayer::togglePlayback()
 {
-    if (state() == MediaPlayer::PausedState || state() == MediaPlayer::StoppedState)
+    if (PlaybackState() == MediaPlayer::PausedState || PlaybackState() == MediaPlayer::StoppedState)
         play();
-    else if (state() == MediaPlayer::PlayingState)
+    else if (PlaybackState() == MediaPlayer::PlayingState)
         pause();
 }
+
+// Qt6
+// void MediaPlayer::setVolume(int volume)
+// {
+//     audioOutput()->setVolume(volume);
+// }
+
+// // Qt6
+
+// void MediaPlayer::setMuted(bool muted)
+// {
+//     audioOutput()->setMuted(muted);
+// }
+

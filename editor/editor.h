@@ -97,7 +97,8 @@ public slots:
     void on_actionword_count_triggered();
     void showwordcount();
     void on_actionLink_triggered();
-    void on_actionVoice_triggered();
+    //Qt6 Disabled Temp
+    // void on_actionVoice_triggered();
     //    QAudioRecorder *m_audioRecorder = nullptr;
 
     void speakerWiseJump(const QString& jumpDirection);
@@ -177,8 +178,9 @@ private:
     int lastHighlightedBlock=-1;
     bool moveAlongTimeStamps=true;
 
-    QAudioRecorder* m_audioRecorder = nullptr;
-    QAudioProbe* m_probe = nullptr;
+    //Qt6
+    // QAudioRecorder* m_audioRecorder = nullptr;
+    // QAudioProbe* m_probe = nullptr;
     QByteArray m_audioData;
     QAudioInput* m_audioInput;
 

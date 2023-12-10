@@ -2,14 +2,14 @@ cmake_minimum_required(VERSION 3.16)
 
 project(asr-post-editor)
 
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_AUTOUIC_SEARCH_PATHS)
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
-SET(CMAKE_AUTOMOC ON)
-SET(CMAKE_AUTORCC ON)
-set(Qt5_DIR "*PATH TO YOUR QT QT5CONFIG FILE HERE*" CACHE PATH "Initial cache" FORCE)
-find_package (
+set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTORCC ON)
+set(CMAKE_PREFIX_PATH "Path to Qt example D:/Qt/6.6.1/mingw_64" CACHE PATH "Initial cache" FORCE)
+find_package(
     Qt6
     HINTS "$ENV{QTDIR}"
     REQUIRED COMPONENTS
@@ -37,7 +37,6 @@ file(GLOB EDITOR_UTILS_FORMS "${CMAKE_CURRENT_SOURCE_DIR}/editor/utilities/*.ui"
 file(GLOB EDITOR_UTILS_SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/editor/utilities/*.cpp")
 file(GLOB EDITOR_UTILS_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/editor/utilities/*.h")
 
-
 file(GLOB PROJECT_FORMS "${CMAKE_CURRENT_SOURCE_DIR}/*.ui")
 file(GLOB PROJECT_SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp")
 file(GLOB PROJECT_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/*.h")
@@ -59,7 +58,6 @@ add_executable(
         ${PROJECT_HEADER}
         ${PROJECT_RESOURCES}
 
-
         ${MEDIAPLAYER_FORMS}
         ${MEDIAPLAYER_SOURCE}
         ${MEDIAPLAYER_HEADER}
@@ -79,7 +77,6 @@ add_executable(
         editor/utilities/equationeditor.cpp
         editor/utilities/equationeditor.ui
 )
-
 
 target_link_libraries(
         ${PROJECT_NAME}

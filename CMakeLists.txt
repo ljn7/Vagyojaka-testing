@@ -82,8 +82,8 @@ add_executable(
         editor/utilities/equationeditor.h
         editor/utilities/equationeditor.cpp
         editor/utilities/equationeditor.ui
-        mediaplayer/utilities/mediaspiltter.h
-        mediaplayer/utilities/mediaspiltter.cpp
+        mediaplayer/utilities/mediasplitter.h
+        mediaplayer/utilities/mediasplitter.cpp
 )
 
 target_link_libraries(

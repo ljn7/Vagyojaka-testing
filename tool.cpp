@@ -11,6 +11,7 @@
 
 #include <QMediaPlayer>
 #include <QActionGroup>
+#include <iostream>
 
 Tool::Tool(QWidget *parent)
     : QMainWindow(parent)
@@ -202,6 +203,8 @@ Tool::Tool(QWidget *parent)
     // Connect position slider change to player position
     connect(ui->slider_position, &QSlider::sliderMoved, player, &MediaPlayer::setPosition);
 
+    connect(ui->m_playerControls, &PlayerControls::splitClick, this, &Tool::createMediaSplitter);
+
     font = QFont( "Monospace", 10 );
     setFontForElements();
 }
@@ -257,6 +260,29 @@ void Tool::createKeyboardShortcutGuide()
 
     help_keyshortcuts->setAttribute(Qt::WA_DeleteOnClose);
     help_keyshortcuts->show();
+
+}
+
+void Tool::createMediaSplitter() {
+
+    QString mediaFileName = player->getMediaFileName();
+    if (mediaFileName.isNull() || mediaFileName.isEmpty()) {
+        this->statusBar()->showMessage("Please select a media file", 5000);
+        return;
+    }
+
+    QList<QTime> timeStamps = ui->m_editor->getTimeStamps();
+    std::cerr << "TimeStamps" << timeStamps.isEmpty() << " Size: " << timeStamps.size() << std::endl;
+
+    if (timeStamps.isEmpty() || timeStamps.size() <= 0) {
+        this->statusBar()->showMessage("Please select a transcription file", 5000);
+        return;
+    }
+
+    auto mediaSplitter = new MediaSplitter(this, mediaFileName, timeStamps);
+    mediaSplitter->show();
+
+
 }
 
 void Tool::changeFont()

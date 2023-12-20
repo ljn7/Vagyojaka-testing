@@ -53,6 +53,11 @@ PlayerControls::PlayerControls(QWidget *parent)
 
     connect(m_rateBox, QOverload<int>::of(&QComboBox::activated), this, &PlayerControls::updateRate);
 
+    m_splitButton = new QToolButton(this);
+    m_splitButton->setIcon(style()->standardIcon(QStyle::SP_MessageBoxInformation));
+    connect(m_splitButton, &QAbstractButton::clicked, this, &PlayerControls::splitClicked);
+
+
     QBoxLayout *layout = new QHBoxLayout;
     layout->setContentsMargins(0, 0, 0, 0);
     layout->addWidget(m_stopButton);
@@ -62,6 +67,7 @@ PlayerControls::PlayerControls(QWidget *parent)
     layout->addWidget(m_muteButton);
     layout->addWidget(m_volumeSlider);
     layout->addWidget(m_rateBox);
+    layout->addWidget(m_splitButton);
 
     setLayout(layout);
 }
@@ -175,4 +181,9 @@ void PlayerControls::updateRate()
 void PlayerControls::onVolumeSliderValueChanged()
 {
     emit changeVolume(volume());
+}
+
+void PlayerControls::splitClicked()
+{
+    emit splitClick();
 }

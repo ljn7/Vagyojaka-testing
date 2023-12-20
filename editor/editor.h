@@ -59,6 +59,8 @@ public:
     void loadTranscriptData(QFile& file);
     void setContent();
     bool timestampVisibility();
+    QList<QTime> getTimeStamps();
+
     // void showversion();
     friend class Highlighter;
     //    QUndoStack *undoStack=nullptr;
@@ -147,6 +149,7 @@ private:
     static QStringList listFromFile(const QString& fileName) ;
 
     bool settingContent{false}, updatingWordEditor{false}, dontUpdateWordEditor{false};
+    bool splittingMedia{false};
     bool m_transliterate{false}, m_autoSave{false};
 
 

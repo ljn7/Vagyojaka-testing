@@ -1,4 +1,5 @@
 #include "editor.h"
+#include <iostream>
 #include <qclipboard.h>
 #include <QJsonDocument>
 #include <QJsonArray>
@@ -87,7 +88,7 @@ Editor::Editor(QWidget *parent)
     });
     m_saveTimer->start(m_saveInterval * 1000);
 
-    m_blocks.append(fromEditor(0));
+    // m_blocks.append(fromEditor(0));
 
     //Qt6
     // m_audioRecorder = new QAudioRecorder();
@@ -752,7 +753,7 @@ void Editor::transcriptOpen()
         QFile transcriptFile(fileUrl->toLocalFile());
         QFileInfo filedir(transcriptFile);
         QString dirInString=filedir.dir().path();
-        QSettings().setValue("transcriptDir",dirInString);
+        QSettings().setValue("transcriptDir", dirInString);
         if (!transcriptFile.open(QIODevice::ReadOnly)) {
             emit message(transcriptFile.errorString());
             return;
@@ -2955,3 +2956,26 @@ void Editor:: removetimestamp()
 //                            "This work is licensed under Creative Commons Attribution-NonCommercial 4.0 International License", this));
 //     dialog.exec();
 // }
+
+
+QList<QTime> Editor::getTimeStamps()
+{
+
+    QList<QTime> timeStamps;
+
+    std::cerr << "Mblocks " <<  m_blocks.isEmpty();// << " " <<  m_blocks.size();
+    if (m_blocks.isEmpty())
+    {
+        std::cerr << "Mblocks " <<  m_blocks.size();
+       return timeStamps;
+    }
+
+    timeStamps.append(m_blocks[0].timeStamp);
+
+    for (int i = 1; i < m_blocks.size(); i++) {
+        timeStamps.append(std::as_const(m_blocks[i]).timeStamp);
+    }
+
+    return timeStamps;
+
+}

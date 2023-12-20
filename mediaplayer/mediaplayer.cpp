@@ -1,11 +1,19 @@
 #include "mediaplayer.h"
+#include <iostream>
 
 MediaPlayer::MediaPlayer(QWidget *parent)
     : QMediaPlayer(parent)
 {
     //Qt6
     this->supportedFormats = {
-        "Media Files (*.avi *.divx *.amv *.mpg *.mpeg *.mpe *.m1v *.m2v *.mpv2 *.mp2v *.m2p *.vob *.evo *.mod *.ts *.m2ts *.m2t *.mts *.pva *.tp *.tpr *.mp4 *.m4v *.mp4v *.mpv4 *.hdmov *.mov *.3gp *.3gpp *.3g2 *.3gp2 *.mkv *.webm *.ogm *.ogv *.flv *.f4v *.wmv *.asf *.rmvb *.rm *.dv *.mxf *.dav *.mp3 *.ogg *.oga *.mka *.m4a *.aac *.flac *.wv *.mpc *.ape *.alac *.amr *.tta *.ac3 *.dts *.ra *.opus *.spx *.aif *.aiff *.aifc *.caf *.tak *.shr)",
+        "Video Files (*.avi *.divx *.amv *.mpg *.mpeg *.mpe *.m1v *.m2v *.mpv2 "
+        "*.mp2v *.m2p *.vob *.evo *.mod *.ts *.m2ts *.m2t *.mts *.pva *.tp *.tpr "
+        "*.mp4 *.m4v *.mp4v *.mpv4 *.hdmov *.mov *.3gp *.3gpp *.3g2 *.3gp2 *.mkv "
+        "*.webm *.ogm *.ogv *.flv *.f4v *.wmv *.asf *.rmvb *.rm *.dv *.mxf *.dav)",
+
+        "Audio Files (*.mp3 *.ogg *.oga *.mka *.m4a *.aac *.flac *.wv *.mpc *.ape *.alac *.amr "
+        "*.tta *.ac3 *.dts *.ra *.opus *.spx *.aif *.aiff *.aifc *.caf *.tak *.shr)",
+
         "All Files (*)"
     };
 }
@@ -25,12 +33,14 @@ void MediaPlayer::setPositionToTime(const QTime& time)
     if (time.isNull())
         return;
     qint64 position = 3600000*time.hour() + 60000*time.minute() + 1000*time.second() + time.msec();
+    std::cerr << "Media Player: " << 3600000*time.hour() + 60000*time.minute() + 1000*time.second() + time.msec() << std::endl
+              << "Position in MediaPlayer: " << position << std::endl;
     setPosition(position);
 }
 
 QString MediaPlayer::getMediaFileName()
 {
-    return m_mediaFileName;
+    return std::as_const(m_mediaFileName);
 }
 
 QString MediaPlayer::getPositionInfo()
@@ -47,13 +57,13 @@ void MediaPlayer::open()
     QFileDialog fileDialog;
     fileDialog.setAcceptMode(QFileDialog::AcceptOpen);
     fileDialog.setWindowTitle(tr("Open Media"));
-
     //Qt6 porting
     // QStringList supportedMimeTypes = QMediaPlayer::supportedMimeTypes();
     // if (!supportedMimeTypes.isEmpty())
     //     fileDialog.setMimeTypeFilters(supportedMimeTypes);
 
-    fileDialog.setMimeTypeFilters(supportedFormats);
+    // fileDialog.setMimeTypeFilters(supportedFormats);
+    fileDialog.setNameFilters(supportedFormats);
     if(QSettings().value("mediaDir").toString()=="")
         fileDialog.setDirectory(QStandardPaths::standardLocations(QStandardPaths::MoviesLocation).value(0, QDir::homePath()));
     else
@@ -103,6 +113,7 @@ void MediaPlayer::togglePlayback()
         pause();
 }
 
+
 // Qt6
 // void MediaPlayer::setVolume(int volume)
 // {
@@ -115,4 +126,5 @@ void MediaPlayer::togglePlayback()
 // {
 //     audioOutput()->setMuted(muted);
 // }
+
 

@@ -34,12 +34,14 @@ signals:
     void changeVolume(int volume);
     void changeMuting(bool muting);
     void changeRate(qreal rate);
+    void splitClick();
 
 private slots:
     void playClicked();
     void muteClicked();
     void updateRate();
     void onVolumeSliderValueChanged();
+    void splitClicked();
 
 private:
     QMediaPlayer::PlaybackState m_playerState = QMediaPlayer::StoppedState;
@@ -51,4 +53,5 @@ private:
     QAbstractButton *m_muteButton = nullptr;
     QAbstractSlider *m_volumeSlider = nullptr;
     QComboBox *m_rateBox = nullptr;
+    QAbstractButton *m_splitButton = nullptr;
 };

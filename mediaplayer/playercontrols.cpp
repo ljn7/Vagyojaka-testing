@@ -54,7 +54,7 @@ PlayerControls::PlayerControls(QWidget *parent)
     connect(m_rateBox, QOverload<int>::of(&QComboBox::activated), this, &PlayerControls::updateRate);
 
     m_splitButton = new QToolButton(this);
-    m_splitButton->setIcon(style()->standardIcon(QStyle::SP_MessageBoxInformation));
+    m_splitButton->setIcon(QIcon(":/images/images/cutting-tool.png"));
     connect(m_splitButton, &QAbstractButton::clicked, this, &PlayerControls::splitClicked);
 
 

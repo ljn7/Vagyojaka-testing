@@ -72,6 +72,7 @@ void MediaSplitter::splitMedia() {
         splitMediaUtil(startSeconds, endSeconds);
     }
     pBar->setValue(100);
+    this->close();
 
 }
 
@@ -94,20 +95,20 @@ bool MediaSplitter::splitMediaUtil(uint64_t startSeconds = 0, uint64_t endSecond
         operationResult = avformat_open_input(&avInputFormatContext, mediaFileName.toStdString().c_str(), 0, 0);
         if (operationResult < 0) {
             sBar->showMessage(QString("Failed to open the input file '%1'.").arg(mediaFileName).toStdString().c_str());
-            throw std::runtime_error(QString("Failed to open the input file '%1'.").arg(mediaFileName).toStdString().c_str());
+            qCritical("%s", QString("Failed to open the input file '%1'.").arg(mediaFileName).toStdString().c_str());
         }
 
         operationResult = avformat_find_stream_info(avInputFormatContext, 0);
         if (operationResult < 0) {
             sBar->showMessage(QString("Failed to retrieve the input stream information.").toStdString().c_str());
-            throw std::runtime_error(QString("Failed to retrieve the input stream information.").toStdString().c_str());
+            qCritical("%s", QString("Failed to retrieve the input stream information.").toStdString().c_str());
         }
 
         avformat_alloc_output_context2(&avOutputFormatContext, NULL, NULL, outputFilePath.toStdString().c_str());
         if (!avOutputFormatContext) {
             operationResult = AVERROR_UNKNOWN;
             sBar->showMessage(QString("Failed to create the output context.").toStdString().c_str());
-            throw std::runtime_error(QString("Failed to create the output context.").toStdString().c_str());
+            qCritical("%s", QString("Failed to create the output context.").toStdString().c_str());
         }
 
         int streamIndex = 0;
@@ -141,14 +142,14 @@ bool MediaSplitter::splitMediaUtil(uint64_t startSeconds = 0, uint64_t endSecond
             if (!outStream) {
                 operationResult = AVERROR_UNKNOWN;
                 sBar->showMessage(QString("Failed to allocate the output stream.").toStdString().c_str());
-                throw std::runtime_error(QString("Failed to allocate the output stream.").toStdString().c_str());
+                qCritical("%s", QString("Failed to allocate the output stream.").toStdString().c_str());
             }
 
             operationResult = avcodec_parameters_copy(outStream->codecpar, inStream->codecpar);
             if (operationResult < 0) {
                 sBar->showMessage(QString("Failed to copy codec parameters from input stream to output stream.").toStdString().c_str());
-                throw std::runtime_error(
-                    QString("Failed to copy codec parameters from input stream to output stream.").toStdString().c_str());
+                qCritical(
+                    "%s", QString("Failed to copy codec parameters from input stream to output stream.").toStdString().c_str());
             }
             outStream->codecpar->codec_tag = 0;
         }
@@ -157,23 +158,23 @@ bool MediaSplitter::splitMediaUtil(uint64_t startSeconds = 0, uint64_t endSecond
             operationResult = avio_open(&avOutputFormatContext->pb, outputFilePath.toStdString().c_str(), AVIO_FLAG_WRITE);
             if (operationResult < 0) {
                 sBar->showMessage(QString("Failed to open the output file '%1'.").arg(outputFilePath).toStdString().c_str());
-                throw std::runtime_error(
-                    QString("Failed to open the output file '%1'.").arg(outputFilePath).toStdString().c_str());
+                qCritical(
+                    "%s", QString("Failed to open the output file '%1'.").arg(outputFilePath).toStdString().c_str());
             }
         }
 
         operationResult = avformat_write_header(avOutputFormatContext, NULL);
         if (operationResult < 0) {
             sBar->showMessage(QString("Error occurred when opening output file.").toStdString().c_str());
-            throw std::runtime_error(QString("Error occurred when opening output file.").toStdString().c_str());
+            qCritical("%s", QString("Error occurred when opening output file.").toStdString().c_str());
         }
 
         operationResult = avformat_seek_file(avInputFormatContext, -1, INT64_MIN, startSeconds * AV_TIME_BASE,
                                              startSeconds * AV_TIME_BASE, 0);
         if (operationResult < 0) {
             sBar->showMessage(QString("Failed to seek the input file to the targeted start position.").toStdString().c_str());
-            throw std::runtime_error(
-                QString("Failed to seek the input file to the targeted start position.").toStdString().c_str());
+            qCritical(
+                "%s", QString("Failed to seek the input file to the targeted start position.").toStdString().c_str());
         }
 
         while (true) {
@@ -200,7 +201,7 @@ bool MediaSplitter::splitMediaUtil(uint64_t startSeconds = 0, uint64_t endSecond
             operationResult = av_interleaved_write_frame(avOutputFormatContext, avPacket);
             if (operationResult < 0) {
                 sBar->showMessage(QString("Failed to mux the packet.").toStdString().c_str());
-                throw std::runtime_error(QString("Failed to mux the packet.").toStdString().c_str());
+                qCritical("%s", QString("Failed to mux the packet.").toStdString().c_str());
             }
         }
 

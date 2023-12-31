@@ -279,7 +279,7 @@ void Tool::createMediaSplitter() {
         return;
     }
 
-    auto mediaSplitter = new MediaSplitter(this, mediaFileName, timeStamps);
+    auto mediaSplitter = new MediaSplitter(nullptr, mediaFileName, timeStamps);
 
     setEnabled(false);
     mediaSplitter->exec();

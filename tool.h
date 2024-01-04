@@ -6,6 +6,7 @@
 #include<QThread>
 #include<QtConcurrent/QtConcurrent>
 #include "./transcriptgenerator.h"
+#include "qmainwindow.h"
 QT_BEGIN_NAMESPACE
     namespace Ui { class Tool; }
 QT_END_NAMESPACE

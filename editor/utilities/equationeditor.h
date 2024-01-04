@@ -1,6 +1,7 @@
 #ifndef EQUATIONEDITOR_H
 #define EQUATIONEDITOR_H
 
+#include "qmainwindow.h"
 #include <QMainWindow>
 
 namespace Ui {

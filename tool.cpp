@@ -569,3 +569,9 @@ void Tool::on_fontComboBox_currentFontChanged(const QFont &f)
     //    if (fontSelected)
     setFontForElements();}
 
+
+void Tool::on_actionOpen_Gui_triggered()
+{
+
+}
+

@@ -13,7 +13,10 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 set(CMAKE_PREFIX_PATH "D:/Qt/6.6.1/mingw_64" CACHE PATH "Initial cache" FORCE)
+set(CMAKE_PREFIX_PATH "${CMAKE_PREFIX_PATH};C:/vcpkg/installed/x64-mingw-dynamic/share")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/output)
+
+find_package(unofficial-libgit2 CONFIG REQUIRED)
 
 find_package(
     Qt6
@@ -94,4 +97,6 @@ target_link_libraries(
         Qt6::MultimediaWidgets
         Qt6::Network
         Qt6::PrintSupport
+        PRIVATE
+        unofficial::libgit2::libgit2
 )

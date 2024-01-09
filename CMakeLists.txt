@@ -85,7 +85,8 @@ add_executable(
         editor/utilities/equationeditor.h
         editor/utilities/equationeditor.cpp
         editor/utilities/equationeditor.ui
-        git/git.cpp git/git.h
+        git/git.cpp
+        git/git.h
         git/git.ui
 )
 

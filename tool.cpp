@@ -11,6 +11,7 @@
 
 #include <QMediaPlayer>
 #include <QActionGroup>
+#include <git/git.h>
 
 Tool::Tool(QWidget *parent)
     : QMainWindow(parent)
@@ -572,6 +573,7 @@ void Tool::on_fontComboBox_currentFontChanged(const QFont &f)
 
 void Tool::on_actionOpen_Gui_triggered()
 {
-
+    Git* git = new Git();
+    git->init();
 }
 

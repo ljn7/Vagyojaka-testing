@@ -11,6 +11,7 @@
 
 #include <QMediaPlayer>
 #include <QActionGroup>
+#include <iostream>
 
 Tool::Tool(QWidget *parent)
     : QMainWindow(parent)
@@ -103,13 +104,6 @@ Tool::Tool(QWidget *parent)
     connect(ui->actionSave_as_Text,&QAction::triggered,ui->m_editor,&Editor::saveAsTXT);
     connect(ui->Real_Time_Data_Saver,&QAction::triggered,ui->m_editor,&Editor::realTimeDataSavingToggle);
     connect(ui->Add_Custom_Dictonary, &QAction::triggered, ui->m_editor, &Editor::addCustomDictonary);
-    connect(ui->actionShowLineTimeStamp,&QAction::triggered,ui->m_editor,[&]() {ui->m_editor->pushbutton(player->elapsedTime());});      // newly added
-    connect(ui->actionRemove_Speaker,&QAction::triggered,ui->m_editor,&Editor::removespeaker);                                      // newly added
-    connect(ui->actionword_count,&QAction::triggered,ui->m_editor,&Editor::on_actionword_count_triggered);
-    connect(ui->actionRemove_Time_Stamp,&QAction::triggered,ui->m_editor,&Editor::removetimestamp);
-    connect(ui->actionLink,&QAction::triggered,ui->m_editor,&Editor::on_actionLink_triggered);
-    // Qt6 Disabled temp
-    // connect(ui->actionVoice_Typing_2,&QAction::triggered,ui->m_editor,&Editor::on_actionVoice_triggered);
 
     //    connect(ui->editor_openTranscript, &QAction::triggered, ui->m_editor, &Editor::transcriptOpen);
     connect(ui->editor_debugBlocks, &QAction::triggered, ui->m_editor, &Editor::showBlocksFromData);
@@ -202,6 +196,8 @@ Tool::Tool(QWidget *parent)
     // Connect position slider change to player position
     connect(ui->slider_position, &QSlider::sliderMoved, player, &MediaPlayer::setPosition);
 
+    connect(ui->m_playerControls, &PlayerControls::splitClick, this, &Tool::createMediaSplitter);
+
     font = QFont( "Monospace", 10 );
     setFontForElements();
 }
@@ -257,6 +253,32 @@ void Tool::createKeyboardShortcutGuide()
 
     help_keyshortcuts->setAttribute(Qt::WA_DeleteOnClose);
     help_keyshortcuts->show();
+
+}
+
+void Tool::createMediaSplitter() {
+
+    QString mediaFileName = player->getMediaFileName();
+    if (mediaFileName.isNull() || mediaFileName.isEmpty()) {
+        this->statusBar()->showMessage("Please select a media file", 5000);
+        return;
+    }
+
+    QList<QTime> timeStamps = ui->m_editor->getTimeStamps();
+    std::cerr << "TimeStamps" << timeStamps.isEmpty() << " Size: " << timeStamps.size() << std::endl;
+
+    if (timeStamps.isEmpty() || timeStamps.size() <= 0) {
+        this->statusBar()->showMessage("Please select a transcription file", 5000);
+        return;
+    }
+
+    auto mediaSplitter = new MediaSplitter(nullptr, mediaFileName, timeStamps);
+
+    setEnabled(false);
+    mediaSplitter->exec();
+    setEnabled(true);
+
+
 }
 
 void Tool::changeFont()
@@ -479,15 +501,14 @@ void Tool::on_editor_openTranscript_triggered()
 {
     ui->m_editor->m_transcriptUrl.clear();
     ui->m_editor->transcriptOpen();
-    ui->m_editor->setContent();
-    //    ui->m_editor_2->m_transcriptUrl=ui->m_editor->m_transcriptUrl;
-    //    QFile transcriptFile(ui->m_editor->m_transcriptUrl.toLocalFile());
-    //    if (!transcriptFile.open(QIODevice::ReadOnly)) {
-    //        qInfo()<<(transcriptFile.errorString());
-    //        return;
-    //    }
-    //    ui->m_editor_2->loadTranscriptData(transcriptFile);
-    //    ui->m_editor_2->setContent();
+    ui->m_editor_2->m_transcriptUrl=ui->m_editor->m_transcriptUrl;
+    QFile transcriptFile(ui->m_editor->m_transcriptUrl.toLocalFile());
+    if (!transcriptFile.open(QIODevice::ReadOnly)) {
+        qInfo()<<(transcriptFile.errorString());
+        return;
+    }
+    ui->m_editor_2->loadTranscriptData(transcriptFile);
+    ui->m_editor_2->setContent();
 }
 
 

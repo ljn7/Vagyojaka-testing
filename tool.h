@@ -6,6 +6,7 @@
 #include<QThread>
 #include<QtConcurrent/QtConcurrent>
 #include "./transcriptgenerator.h"
+#include "mediaplayer/utilities/mediasplitter.h"
 #include "qmainwindow.h"
 QT_BEGIN_NAMESPACE
     namespace Ui { class Tool; }
@@ -28,6 +29,7 @@ private slots:
     void changeFont();
     void changeFontSize(int change);
     void transliterationSelected(QAction* action);
+    void createMediaSplitter();
 
     void on_Upload_and_generate_Transcript_triggered();
     //    void on_editor_openTranscript_triggered();

@@ -100,8 +100,11 @@
       </item>
       <item>
        <widget class="QToolButton" name="new_transcript">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
         <property name="toolTip">
-         <string>New Transcript</string>
+         <string>New Transcript (Disabled)</string>
         </property>
         <property name="text">
          <string/>
@@ -679,7 +682,6 @@
     <addaction name="Save_as_PDF"/>
     <addaction name="close"/>
     <addaction name="actionSave_as_Text"/>
-    <addaction name="actionVersion_1_0_3"/>
    </widget>
    <widget class="QMenu" name="menuMedia_Player">
     <property name="title">
@@ -689,7 +691,6 @@
     <addaction name="player_togglePlay"/>
     <addaction name="player_seekForward"/>
     <addaction name="player_seekBackward"/>
-    <addaction name="actionRemove_Time_Stamp"/>
    </widget>
    <widget class="QMenu" name="menuEditor">
     <property name="title">
@@ -720,10 +721,6 @@
     <addaction name="Show_Time_Stamps"/>
     <addaction name="Real_Time_Data_Saver"/>
     <addaction name="move_along_timestamps"/>
-    <addaction name="actionShowLineTimeStamp"/>
-    <addaction name="actionRemove_Speaker"/>
-    <addaction name="actionword_count"/>
-    <addaction name="actionVoice_Typing_2"/>
    </widget>
    <widget class="QMenu" name="menuEdit">
     <property name="title">
@@ -737,7 +734,6 @@
     <addaction name="edit_paste"/>
     <addaction name="separator"/>
     <addaction name="edit_findReplace"/>
-    <addaction name="actionLink"/>
    </widget>
    <widget class="QMenu" name="menuView">
     <property name="title">
@@ -753,7 +749,6 @@
      <string>Help</string>
     </property>
     <addaction name="help_keyboardShortcuts"/>
-    <addaction name="actionAbout"/>
    </widget>
    <widget class="QMenu" name="menuTranslation">
     <property name="title">
@@ -765,6 +760,12 @@
     <addaction name="Open_File_in_Editor2"/>
     <addaction name="editor_save3"/>
    </widget>
+   <widget class="QMenu" name="menuAbout">
+    <property name="title">
+     <string>About</string>
+    </property>
+    <addaction name="actionVersion_5_1_0"/>
+   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
    <addaction name="menuView"/>
@@ -772,6 +773,7 @@
    <addaction name="menuEditor"/>
    <addaction name="menuTranslation"/>
    <addaction name="menuHelp"/>
+   <addaction name="menuAbout"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <action name="close">
@@ -1090,52 +1092,9 @@
     <string>Move Along TimeStamps</string>
    </property>
   </action>
-  <action name="actionShowLineTimeStamp">
-   <property name="checkable">
-    <bool>false</bool>
-   </property>
-   <property name="text">
-    <string>ShowLineTimeStamp</string>
-   </property>
-  </action>
-  <action name="actionRemove_Speaker">
-   <property name="text">
-    <string>Remove Speaker</string>
-   </property>
-  </action>
   <action name="actionSave_as_Text">
    <property name="text">
     <string>Save as Text</string>
-   </property>
-  </action>
-  <action name="actionVoice_Typing">
-   <property name="text">
-    <string>Voice Typing</string>
-   </property>
-  </action>
-  <action name="actionword_count">
-   <property name="text">
-    <string>word count</string>
-   </property>
-  </action>
-  <action name="actionLink">
-   <property name="text">
-    <string>Link</string>
-   </property>
-  </action>
-  <action name="actionVoice_Typing_2">
-   <property name="text">
-    <string>Voice Typing</string>
-   </property>
-  </action>
-  <action name="actionRemove_Time_Stamp">
-   <property name="text">
-    <string>Remove Time Stamp</string>
-   </property>
-  </action>
-  <action name="actionAbout">
-   <property name="text">
-    <string>About</string>
    </property>
   </action>
   <action name="actionSave_as_XML">
@@ -1143,12 +1102,9 @@
     <string>Save as XML</string>
    </property>
   </action>
-  <action name="actionVersion_1_0_3">
-   <property name="enabled">
-    <bool>false</bool>
-   </property>
+  <action name="actionVersion_5_1_0">
    <property name="text">
-    <string>Version 3.0.1</string>
+    <string>Version 5.1.0</string>
    </property>
   </action>
  </widget>

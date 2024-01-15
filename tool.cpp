@@ -104,13 +104,6 @@ Tool::Tool(QWidget *parent)
     connect(ui->actionSave_as_Text,&QAction::triggered,ui->m_editor,&Editor::saveAsTXT);
     connect(ui->Real_Time_Data_Saver,&QAction::triggered,ui->m_editor,&Editor::realTimeDataSavingToggle);
     connect(ui->Add_Custom_Dictonary, &QAction::triggered, ui->m_editor, &Editor::addCustomDictonary);
-    connect(ui->actionShowLineTimeStamp,&QAction::triggered,ui->m_editor,[&]() {ui->m_editor->pushbutton(player->elapsedTime());});      // newly added
-    connect(ui->actionRemove_Speaker,&QAction::triggered,ui->m_editor,&Editor::removespeaker);                                      // newly added
-    connect(ui->actionword_count,&QAction::triggered,ui->m_editor,&Editor::on_actionword_count_triggered);
-    connect(ui->actionRemove_Time_Stamp,&QAction::triggered,ui->m_editor,&Editor::removetimestamp);
-    connect(ui->actionLink,&QAction::triggered,ui->m_editor,&Editor::on_actionLink_triggered);
-    // Qt6 Disabled temp
-    // connect(ui->actionVoice_Typing_2,&QAction::triggered,ui->m_editor,&Editor::on_actionVoice_triggered);
 
     //    connect(ui->editor_openTranscript, &QAction::triggered, ui->m_editor, &Editor::transcriptOpen);
     connect(ui->editor_debugBlocks, &QAction::triggered, ui->m_editor, &Editor::showBlocksFromData);
@@ -508,15 +501,14 @@ void Tool::on_editor_openTranscript_triggered()
 {
     ui->m_editor->m_transcriptUrl.clear();
     ui->m_editor->transcriptOpen();
-    ui->m_editor->setContent();
-    //    ui->m_editor_2->m_transcriptUrl=ui->m_editor->m_transcriptUrl;
-    //    QFile transcriptFile(ui->m_editor->m_transcriptUrl.toLocalFile());
-    //    if (!transcriptFile.open(QIODevice::ReadOnly)) {
-    //        qInfo()<<(transcriptFile.errorString());
-    //        return;
-    //    }
-    //    ui->m_editor_2->loadTranscriptData(transcriptFile);
-    //    ui->m_editor_2->setContent();
+    ui->m_editor_2->m_transcriptUrl=ui->m_editor->m_transcriptUrl;
+    QFile transcriptFile(ui->m_editor->m_transcriptUrl.toLocalFile());
+    if (!transcriptFile.open(QIODevice::ReadOnly)) {
+        qInfo()<<(transcriptFile.errorString());
+        return;
+    }
+    ui->m_editor_2->loadTranscriptData(transcriptFile);
+    ui->m_editor_2->setContent();
 }
 
 

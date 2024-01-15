@@ -12,33 +12,39 @@ PlayerControls::PlayerControls(QWidget *parent)
 {
     m_playButton = new QToolButton(this);
     m_playButton->setIcon(style()->standardIcon(QStyle::SP_MediaPlay));
+    m_playButton->setToolTip("Play");
 
     connect(m_playButton, &QAbstractButton::clicked, this, &PlayerControls::playClicked);
 
     m_stopButton = new QToolButton(this);
     m_stopButton->setIcon(style()->standardIcon(QStyle::SP_MediaStop));
     m_stopButton->setEnabled(false);
+    m_stopButton->setToolTip("Stop");
 
     connect(m_stopButton, &QAbstractButton::clicked, this, &PlayerControls::stop);
 
     m_seekForwardButton = new QToolButton(this);
     m_seekForwardButton->setIcon(style()->standardIcon(QStyle::SP_MediaSeekForward));
+    m_seekForwardButton->setToolTip("Forward");
 
     connect(m_seekForwardButton, &QAbstractButton::clicked, this, &PlayerControls::seekForward);
 
     m_seekBackwardButton = new QToolButton(this);
     m_seekBackwardButton->setIcon(style()->standardIcon(QStyle::SP_MediaSeekBackward));
+    m_seekBackwardButton->setToolTip("Backward");
 
     connect(m_seekBackwardButton, &QAbstractButton::clicked, this, &PlayerControls::seekBackward);
 
     m_muteButton = new QToolButton(this);
     m_muteButton->setIcon(style()->standardIcon(QStyle::SP_MediaVolume));
+    m_muteButton->setToolTip("Mute");
 
     connect(m_muteButton, &QAbstractButton::clicked, this, &PlayerControls::muteClicked);
 
     m_volumeSlider = new QSlider(Qt::Horizontal, this);
     m_volumeSlider->setRange(0, 100);
     m_volumeSlider->setValue(100);
+    m_volumeSlider->setToolTip("Volume");
 
     connect(m_volumeSlider, &QSlider::valueChanged, this, &PlayerControls::onVolumeSliderValueChanged);
 
@@ -50,12 +56,14 @@ PlayerControls::PlayerControls(QWidget *parent)
     m_rateBox->addItem("1.5x", QVariant(1.5));
     m_rateBox->addItem("2.0x", QVariant(2.0));
     m_rateBox->setCurrentIndex(2);
+    m_rateBox->setToolTip("Speed");
 
     connect(m_rateBox, QOverload<int>::of(&QComboBox::activated), this, &PlayerControls::updateRate);
 
     m_splitButton = new QToolButton(this);
     m_splitButton->setIcon(QIcon(":/images/images/cutting-tool.png"));
     connect(m_splitButton, &QAbstractButton::clicked, this, &PlayerControls::splitClicked);
+    m_splitButton->setToolTip("Split Media");
 
 
     QBoxLayout *layout = new QHBoxLayout;

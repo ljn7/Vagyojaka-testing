@@ -26,14 +26,19 @@ find_package(
     Multimedia
     MultimediaWidgets
     Network
+    PrintSupport
 )
-find_package(Qt6PrintSupport REQUIRED)
+# find_package(Qt6PrintSupport REQUIRED)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
 file(GLOB MEDIAPLAYER_FORMS "${CMAKE_CURRENT_SOURCE_DIR}/mediaplayer/*.ui")
 file(GLOB MEDIAPLAYER_SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/mediaplayer/*.cpp")
 file(GLOB MEDIAPLAYER_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/mediaplayer/*.h")
+
+file(GLOB MEDIAPLAYER_UTILS_FORMS "${CMAKE_CURRENT_SOURCE_DIR}/mediaplayer/utilities/*.ui")
+file(GLOB MEDIAPLAYER_UTILS_SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/mediaplayer/utilities/*.cpp")
+file(GLOB MEDIAPLAYER_UTILS_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/mediaplayer/utilities/*.h")
 
 file(GLOB EDITOR_FORMS "${CMAKE_CURRENT_SOURCE_DIR}/editor/*.ui")
 file(GLOB EDITOR_SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/editor/*.cpp")
@@ -69,6 +74,10 @@ add_executable(
         ${MEDIAPLAYER_SOURCE}
         ${MEDIAPLAYER_HEADER}
 
+        ${MEDIAPLAYER_UTILS_FORMS}
+        ${MEDIAPLAYER_UTILS_SOURCE}
+        ${MEDIAPLAYER_UTILS_HEADER}
+
         ${EDITOR_FORMS}
         ${EDITOR_SOURCE}
         ${EDITOR_HEADER}
@@ -78,13 +87,13 @@ add_executable(
         ${EDITOR_UTILS_SOURCE}
         ${EDITOR_UTILS_HEADER}
 
-        transcriptgenerator.h
-        transcriptgenerator.cpp
-        editor/utilities/equationeditor.h
-        editor/utilities/equationeditor.cpp
-        editor/utilities/equationeditor.ui
-        mediaplayer/utilities/mediasplitter.h
-        mediaplayer/utilities/mediasplitter.cpp
+        # transcriptgenerator.h
+        # transcriptgenerator.cpp
+        # editor/utilities/equationeditor.h
+        # editor/utilities/equationeditor.cpp
+        # editor/utilities/equationeditor.ui
+        # mediaplayer/utilities/mediasplitter.h
+        # mediaplayer/utilities/mediasplitter.cpp
 )
 
 target_link_libraries(

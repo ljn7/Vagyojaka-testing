@@ -1,8 +1,9 @@
-<!DOCTYPE RCC><RCC version="1.0">
-<qresource prefix="/">
-   <file>wordlists/sanskrit.txt</file>
-   <file>wordlists/english.txt</file>
-   <file>wordlists/hindi.txt</file>
-   <file>wordlists/gujarati.txt</file>
-</qresource>
+<RCC>
+    <qresource prefix="/">
+        <file>wordlists/sanskrit.txt</file>
+        <file>wordlists/english.txt</file>
+        <file>wordlists/hindi.txt</file>
+        <file>wordlists/gujarati.txt</file>
+        <file>wordlists/tamil.txt</file>
+    </qresource>
 </RCC>

@@ -725,7 +725,7 @@ void Editor::transcriptOpen()
         if (m_transcriptLang == "")
             m_transcriptLang = "english";
 
-        //        loadDictionary();
+        loadDictionary();
 
         setContent();
         //*********************Inserting into file********************************
@@ -1235,8 +1235,8 @@ void Editor::loadDictionary()
 
     }
     else{
-    auto dictionaryFileName = QString(":/wordlists/%1.txt").arg(m_transcriptLang);
-    m_dictionary = listFromFile(dictionaryFileName);
+        auto dictionaryFileName = QString(":/wordlists/%1.txt").arg(m_transcriptLang);
+        m_dictionary = listFromFile(dictionaryFileName);
     }
     if(!m_customDictonaryPath.isNull()){
         auto customdictionaryFileName = QString(m_customDictonaryPath);
@@ -1275,7 +1275,8 @@ void Editor::loadDictionary()
         m_dictionary=listFromFile(combinedCustomdictionaryFileName);
 		//         qInfo()<<a<<'\n';
     }
-   	// qInfo()<<m_dictionary<<'\n';
+    // if (m_transcriptLang == "hindi")
+    //     qInfo()<<m_dictionary<<'\n';
     auto correctedWordsList = listFromFile(QString("corrected_words_%1.txt").arg(m_transcriptLang));
     if (!correctedWordsList.isEmpty()) {
         std::copy(correctedWordsList.begin(),
@@ -1290,6 +1291,7 @@ void Editor::loadDictionary()
             		);
         }
     }
+    m_dictionary.sort();
     m_textCompleter->setModel(new QStringListModel(m_dictionary, m_textCompleter));
 
     if (!m_highlighter)
@@ -1307,8 +1309,9 @@ void Editor::loadDictionary()
             if (!std::binary_search(m_dictionary.begin(),
                                     m_dictionary.end(),
                                     wordText)
-                )
+                ) {
                 invalidWords.insert(i, j);
+            }
         }
     }
     m_highlighter->setInvalidWords(invalidWords);
@@ -1325,10 +1328,10 @@ QStringList Editor::listFromFile(const QString& fileName)
 
     while (!file.atEnd()) {
         QByteArray line = file.readLine();
-        if (!line.isEmpty())
+        if (!line.isEmpty()) {
             words << QString::fromUtf8(line.trimmed());
+        }
     }
-
     return words;
 }
 
@@ -1479,7 +1482,7 @@ void Editor::setContent()
                         wordText = wordText.left(wordText.size() - 1);
 
                     }
-                    QRegularExpression regex("([0-1][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])(\\.[0-9]+)?");
+                    static QRegularExpression regex("([0-1][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])(\\.[0-9]+)?");
                     bool match = regex.match(wordText).hasMatch();
                     if (match) {
                         continue;
@@ -1499,7 +1502,6 @@ void Editor::setContent()
                 }
             }
         }
-
         m_highlighter->setInvalidBlocks(invalidBlocks);
         m_highlighter->setTaggedBlocks(taggedBlocks);
         m_highlighter->setInvalidWords(invalidWords);

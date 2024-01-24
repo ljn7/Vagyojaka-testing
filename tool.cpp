@@ -1,5 +1,6 @@
 #include "tool.h"
 #include "./ui_tool.h"
+#include "about.h"
 #include "editor/utilities/keyboardshortcutguide.h"
 #include <QProgressBar>
 
@@ -18,7 +19,6 @@ Tool::Tool(QWidget *parent)
     , ui(new Ui::Tool)
 {
     ui->setupUi(this);
-
     player = new MediaPlayer(this);
     player->setVideoOutput(ui->m_videoWidget);
     m_audioOutput = new QAudioOutput(this);
@@ -242,6 +242,9 @@ void Tool::keyPressEvent(QKeyEvent *event)
             ui->m_editor->insertTimeStamp(player->elapsedTime());
         else if(ui->m_wordEditor->hasFocus())
             ui->m_wordEditor->insertTimeStamp(player->elapsedTime());
+    }
+    else if (event->key() == Qt::Key_Space && event->modifiers() == Qt::ControlModifier) {
+        player->togglePlayback();
     }
     else
         QMainWindow::keyPressEvent(event);
@@ -589,4 +592,13 @@ void Tool::on_fontComboBox_currentFontChanged(const QFont &f)
 
     //    if (fontSelected)
     setFontForElements();}
+
+
+void Tool::on_actionAbout_triggered()
+{
+    About* about = new About(this);
+    about->show();
+}
+
+
 

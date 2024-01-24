@@ -93,7 +93,6 @@ void PlayerControls::setState(QMediaPlayer::PlaybackState state)
 {
     if (state != m_playerState) {
         m_playerState = state;
-
         switch (state) {
         case QMediaPlayer::StoppedState:
             m_stopButton->setEnabled(false);

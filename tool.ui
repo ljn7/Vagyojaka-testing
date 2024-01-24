@@ -764,7 +764,8 @@
     <property name="title">
      <string>About</string>
     </property>
-    <addaction name="actionVersion_5_1_0"/>
+    <addaction name="actionAbout"/>
+    <addaction name="actionVersion"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
@@ -836,6 +837,9 @@
    <property name="shortcut">
     <string>Ctrl+Space</string>
    </property>
+   <property name="shortcutContext">
+    <enum>Qt::ApplicationShortcut</enum>
+   </property>
   </action>
   <action name="editor_splitLine">
    <property name="text">
@@ -875,9 +879,6 @@
    </property>
   </action>
   <action name="player_seekForward">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
    <property name="enabled">
     <bool>true</bool>
    </property>
@@ -1102,9 +1103,23 @@
     <string>Save as XML</string>
    </property>
   </action>
-  <action name="actionVersion_5_1_0">
+  <action name="actionAbout">
+   <property name="enabled">
+    <bool>true</bool>
+   </property>
    <property name="text">
-    <string>Version 3.1.1</string>
+    <string>About</string>
+   </property>
+  </action>
+  <action name="actionVersion">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Version 3.1.2</string>
+   </property>
+   <property name="toolTip">
+    <string>Version</string>
    </property>
   </action>
  </widget>

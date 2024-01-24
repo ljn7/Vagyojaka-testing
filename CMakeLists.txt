@@ -86,6 +86,7 @@ add_executable(
         ${EDITOR_UTILS_FORMS}
         ${EDITOR_UTILS_SOURCE}
         ${EDITOR_UTILS_HEADER}
+        about.h about.cpp about.ui
 
         # transcriptgenerator.h
         # transcriptgenerator.cpp

@@ -11,7 +11,7 @@ MediaPlayer::MediaPlayer(QWidget *parent)
         "*.mp4 *.m4v *.mp4v *.mpv4 *.hdmov *.mov *.3gp *.3gpp *.3g2 *.3gp2 *.mkv "
         "*.webm *.ogm *.ogv *.flv *.f4v *.wmv *.asf *.rmvb *.rm *.dv *.mxf *.dav)",
 
-        "Audio Files (*.mp3 *.ogg *.oga *.mka *.m4a *.aac *.flac *.wv *.mpc *.ape *.alac *.amr "
+        "Audio Files (*.mp3 *.ogg *.oga *.mka *.wav *.m4a *.aac *.flac *.wv *.mpc *.ape *.alac *.amr "
         "*.tta *.ac3 *.dts *.ra *.opus *.spx *.aif *.aiff *.aifc *.caf *.tak *.shr)",
 
         "All Files (*)"
@@ -108,9 +108,9 @@ QTime MediaPlayer::getTimeFromPosition(const qint64& position)
 //Qt6
 void MediaPlayer::togglePlayback()
 {
-    if (PlaybackState() == MediaPlayer::PausedState || PlaybackState() == MediaPlayer::StoppedState)
+    if (playbackState() == MediaPlayer::PausedState || playbackState() == MediaPlayer::StoppedState)
         play();
-    else if (PlaybackState() == MediaPlayer::PlayingState)
+    else if (playbackState() == MediaPlayer::PlayingState)
         pause();
 }
 

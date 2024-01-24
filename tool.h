@@ -64,6 +64,8 @@ private slots:
 
     void on_fontComboBox_currentFontChanged(const QFont &f);
 
+    void on_actionAbout_triggered();
+
 private:
     void setFontForElements();
     void setTransliterationLangCodes();

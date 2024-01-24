@@ -809,9 +809,11 @@ void Editor::transcriptSave()
             }
             mapper.write(QByteArray(cp.toUtf8()));
             mapper.close();
-            std::string makingexec="chmod +x "+mapperFileInfo.absoluteFilePath().replace(" ", "\\ ").toStdString();
-            int result = system(makingexec.c_str());
-            qInfo()<<result;
+#ifndef _WIN32
+            std::string makingexec = "chmod +x " + mapperFileInfo.absoluteFilePath().replace(" ", "\\ ").toStdString();
+            qInfo() << "Checking Windows";
+            system(makingexec.c_str());
+#endif
         }
         if(!QFile::exists("replacedTextDictonary.json")){
             QFile repDict("replacedTextDictonary.json");
@@ -832,10 +834,10 @@ void Editor::transcriptSave()
         QFile initialFile(fileBeforeSave);
         QFileInfo initialDictFileInfo(initialFile);
         int result;
-        std::string alignmentstr=" python3 " +mapperFileInfo.absoluteFilePath().replace(" ", "\\ ").toStdString()
-            +" -cae "+initialDictFileInfo.absoluteFilePath().replace(" ", "\\ ").toStdString()
-            +" "+finalFileInfo.absoluteFilePath().replace(" ", "\\ ").toStdString()
-            +" "+repDictFileInfo.absoluteFilePath().replace(" ", "\\ ").toStdString();
+        std::string alignmentstr=" python3 " + mapperFileInfo.absoluteFilePath().replace(" ", "\\ ").toStdString()
+            + " -cae "+initialDictFileInfo.absoluteFilePath().replace(" ", "\\ ").toStdString()
+            + " "+finalFileInfo.absoluteFilePath().replace(" ", "\\ ").toStdString()
+            + " "+repDictFileInfo.absoluteFilePath().replace(" ", "\\ ").toStdString();
 
         if(!realTimeDataSaver){
         	result = system(alignmentstr.c_str());
@@ -1801,9 +1803,10 @@ void Editor::jumpToHighlightedLine()
 
 void Editor::splitLine(const QTime& elapsedTime)
 {
+    qInfo() << "Split Line - - - - - -- - - - -- - \n";
 	auto cursor = textCursor();
-    if (cursor.blockNumber() != highlightedBlock)
-        return;
+    // if (cursor.blockNumber() != highlightedBlock)
+    //     return;
 
     int positionInBlock = cursor.positionInBlock();
     auto blockText = cursor.block().text();
@@ -1813,9 +1816,48 @@ void Editor::splitLine(const QTime& elapsedTime)
     auto cutWordRight = textAfterCursor.split(" ").first();
     int wordNumber = textBeforeCursor.count(" ");
 
-    if (m_blocks[highlightedBlock].speaker != "" || blockText.contains("[]:"))
+    // if (m_blocks[highlightedBlock].speaker != "" || blockText.contains("[]:"))
+    //     wordNumber--;
+    // if (wordNumber < 0 || wordNumber >= m_blocks[highlightedBlock].words.size())
+    //     return;
+
+    // if (textBeforeCursor.contains("]:"))
+    //     textBeforeCursor = textBeforeCursor.split("]:").last();
+    // if (textAfterCursor.contains("["))
+    //     textAfterCursor = textAfterCursor.split("[").first();
+
+    // auto timeStampOfCutWord = m_blocks[highlightedBlock].words[wordNumber].timeStamp;
+    // auto tagsOfCutWord = m_blocks[highlightedBlock].words[wordNumber].tagList;
+    // QVector<word> words;
+    // int sizeOfWordsAfter = m_blocks[highlightedBlock].words.size() - wordNumber - 1;
+
+    // if (cutWordRight != "")
+    //     words.append(makeWord(timeStampOfCutWord, cutWordRight, tagsOfCutWord));
+    // for (int i = 0; i < sizeOfWordsAfter; i++) {
+    //     words.append(m_blocks[highlightedBlock].words[wordNumber + 1]);
+    //     m_blocks[highlightedBlock].words.removeAt(wordNumber + 1);
+    // }
+
+    // if (cutWordLeft == "")
+    //     m_blocks[highlightedBlock].words.removeAt(wordNumber);
+    // else {
+    //     m_blocks[highlightedBlock].words[wordNumber].text = cutWordLeft;
+    //     m_blocks[highlightedBlock].words[wordNumber].timeStamp = elapsedTime;
+    // }
+
+    // block blockToInsert = {m_blocks[highlightedBlock].timeStamp,
+    //                        textAfterCursor.trimmed(),
+    //                        m_blocks[highlightedBlock].speaker,
+    //                        m_blocks[highlightedBlock].tagList,
+    //                        words};
+    // m_blocks.insert(highlightedBlock + 1, blockToInsert);
+
+    // m_blocks[highlightedBlock].text = textBeforeCursor.trimmed();
+    // m_blocks[highlightedBlock].timeStamp = elapsedTime;
+
+    if (m_blocks[cursor.blockNumber()].speaker != "" || blockText.contains("[]:"))
         wordNumber--;
-    if (wordNumber < 0 || wordNumber >= m_blocks[highlightedBlock].words.size())
+    if (wordNumber < 0 || wordNumber >= m_blocks[cursor.blockNumber()].words.size())
         return;
 
     if (textBeforeCursor.contains("]:"))
@@ -1823,40 +1865,40 @@ void Editor::splitLine(const QTime& elapsedTime)
     if (textAfterCursor.contains("["))
         textAfterCursor = textAfterCursor.split("[").first();
 
-    auto timeStampOfCutWord = m_blocks[highlightedBlock].words[wordNumber].timeStamp;
-    auto tagsOfCutWord = m_blocks[highlightedBlock].words[wordNumber].tagList;
+    auto timeStampOfCutWord = m_blocks[cursor.blockNumber()].words[wordNumber].timeStamp;
+    auto tagsOfCutWord = m_blocks[cursor.blockNumber()].words[wordNumber].tagList;
     QVector<word> words;
-    int sizeOfWordsAfter = m_blocks[highlightedBlock].words.size() - wordNumber - 1;
+    int sizeOfWordsAfter = m_blocks[cursor.blockNumber()].words.size() - wordNumber - 1;
 
     if (cutWordRight != "")
         words.append(makeWord(timeStampOfCutWord, cutWordRight, tagsOfCutWord));
     for (int i = 0; i < sizeOfWordsAfter; i++) {
-        words.append(m_blocks[highlightedBlock].words[wordNumber + 1]);
-        m_blocks[highlightedBlock].words.removeAt(wordNumber + 1);
+        words.append(m_blocks[cursor.blockNumber()].words[wordNumber + 1]);
+        m_blocks[cursor.blockNumber()].words.removeAt(wordNumber + 1);
     }
 
     if (cutWordLeft == "")
-        m_blocks[highlightedBlock].words.removeAt(wordNumber);
+        m_blocks[cursor.blockNumber()].words.removeAt(wordNumber);
     else {
-        m_blocks[highlightedBlock].words[wordNumber].text = cutWordLeft;
-        m_blocks[highlightedBlock].words[wordNumber].timeStamp = elapsedTime;
+        m_blocks[cursor.blockNumber()].words[wordNumber].text = cutWordLeft;
+        m_blocks[cursor.blockNumber()].words[wordNumber].timeStamp = elapsedTime;
     }
 
-    block blockToInsert = {m_blocks[highlightedBlock].timeStamp,
+    block blockToInsert = {m_blocks[cursor.blockNumber()].timeStamp,
                            textAfterCursor.trimmed(),
-                           m_blocks[highlightedBlock].speaker,
-                           m_blocks[highlightedBlock].tagList,
+                           m_blocks[cursor.blockNumber()].speaker,
+                           m_blocks[cursor.blockNumber()].tagList,
                            words};
-    m_blocks.insert(highlightedBlock + 1, blockToInsert);
+    m_blocks.insert(cursor.blockNumber() + 1, blockToInsert);
 
-    m_blocks[highlightedBlock].text = textBeforeCursor.trimmed();
-    m_blocks[highlightedBlock].timeStamp = elapsedTime;
+    m_blocks[cursor.blockNumber()].text = textBeforeCursor.trimmed();
+    m_blocks[cursor.blockNumber()].timeStamp = elapsedTime;
 
     setContent();
     updateWordEditor();
 
-    QTextCursor cursorx(this->document()->findBlockByNumber(highlightedBlock));
-    this->setTextCursor(cursorx);
+    // QTextCursor cursorx(this->document()->findBlockByNumber(highlightedBlock));
+    // this->setTextCursor(cursorx);
 
     qInfo() << "[Line Split]"
             << QString("line number: %1").arg(QString::number(highlightedBlock + 1))

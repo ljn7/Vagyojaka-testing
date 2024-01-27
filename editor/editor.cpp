@@ -1,4 +1,5 @@
 #include "editor.h"
+#include <iostream>
 #include <qclipboard.h>
 #include <QJsonDocument>
 #include <QJsonArray>
@@ -19,37 +20,6 @@
 #include <QDebug>
 #include <QUndoStack>
 #include<QPrinter>
-
-// New Includes
-#include <QNetworkAccessManager>
-#include <QNetworkReply>
-#include <QUrlQuery>
-#include <QJsonDocument>
-#include <QJsonObject>
-#include <QJsonArray>
-
-#include <QDialog>
-#include <QFormLayout>
-#include <QLabel>
-#include <QLineEdit>
-#include <QSet>
-
-//Qt6
-#include <QMediaRecorder>
-#include <QAudioFormat>
-#include <QAudioInput>
-// #include <QAudioProbe>
-// #include <QAudioRecorder>
-// #include <QAudioEncoderSettings>
-
-#include <QPushButton>
-#include <QHBoxLayout>
-#include <QApplication>
-
-#include <QAudioInput>
-#include <QBuffer>
-#include <QNetworkRequest>
-
 
 Editor::Editor(QWidget *parent)
     : TextEditor(parent),
@@ -80,20 +50,15 @@ Editor::Editor(QWidget *parent)
     connect(m_transliterationCompleter, QOverload<const QString &>::of(&QCompleter::activated),
             this, &Editor::insertTransliterationCompletion);
 
-
+    
     connect(m_saveTimer, &QTimer::timeout, this, [this](){
         if (m_autoSave && m_transcriptUrl.isValid())
             transcriptSave();
     });
     m_saveTimer->start(m_saveInterval * 1000);
 
-    m_blocks.append(fromEditor(0));
-
-    //Qt6
-    // m_audioRecorder = new QAudioRecorder();
-    // m_probe = new QAudioProbe();
-
-    //    undoStack =  new QUndoStack(this);
+    // m_blocks.append(fromEditor(0));
+//    undoStack =  new QUndoStack(this);
 }
 
 
@@ -125,7 +90,6 @@ void Editor::setMoveAlongTimeStamps()
 
 void Highlighter::highlightBlock(const QString& text)
 {
-
     if (invalidBlockNumbers.contains(currentBlock().blockNumber())) {
         QTextCharFormat format;
         format.setForeground(Qt::red);
@@ -504,66 +468,64 @@ void Editor::keyPressEvent(QKeyEvent *event)
             QString blockText = textCursor().block().text();
             QString textTillCursor = blockText.left(textCursor().positionInBlock());
 
-            //Qt6
-            // const bool containsSpeakerBraces = blockText.leftRef(blockText.indexOf(" ")).contains("]:");
             const bool containsSpeakerBraces = blockText.left(blockText.indexOf(" ")).contains("]:");
             const bool containsTimeStamp = blockText.trimmed() != "" && blockText.trimmed().back() == ']';
             bool isAWordUnderCursor = false;
             int wordNumber = 0;
 
-            if ((containsSpeakerBraces && textTillCursor.count(" ") > 0) || !containsSpeakerBraces) {
-                if (m_blocks.size() > textCursor().blockNumber() &&
-                    !(containsTimeStamp && textTillCursor.count(" ") == blockText.count(" "))) {
-                    isAWordUnderCursor = true;
+        if ((containsSpeakerBraces && textTillCursor.count(" ") > 0) || !containsSpeakerBraces) {
+            if (m_blocks.size() > textCursor().blockNumber() &&
+                !(containsTimeStamp && textTillCursor.count(" ") == blockText.count(" "))) {
+                isAWordUnderCursor = true;
 
-                    if (containsSpeakerBraces) {
-                        auto textWithoutSpeaker = textTillCursor.split("]:").last();
-                        wordNumber = textWithoutSpeaker.trimmed().count(" ");
-                    }
-                    else
-                        wordNumber = textTillCursor.trimmed().count(" ");
+                if (containsSpeakerBraces) {
+                    auto textWithoutSpeaker = textTillCursor.split("]:").last();
+                    wordNumber = textWithoutSpeaker.trimmed().count(" ");
                 }
+                else
+                    wordNumber = textTillCursor.trimmed().count(" ");
             }
-            if(m_blocks[textCursor().block().blockNumber()].words[wordNumber].text.size()>2){
-                QString text = m_blocks[textCursor().blockNumber()].words[wordNumber].text.toLower();
-                QString text2 = m_blocks[textCursor().blockNumber()].words[wordNumber].text;
-                text=text.trimmed();
-                text2=text.trimmed();
-                //            qInfo()<<text;
-                QString val;
-                QFile file;
-                file.setFileName("replacedTextDictonary.json");
-                file.open(QIODevice::ReadOnly | QIODevice::Text);
-                val = file.readAll();
-                file.close();
-                QJsonDocument d = QJsonDocument::fromJson(val.toUtf8());
-                QJsonObject sett2 = d.object();
-                QJsonArray value = sett2[text].toArray();
-                QStringList allSuggestions;
-                if(value.size()>0){
-                    for( auto i : value){
-                        allSuggestions<< i.toString();
-                    }
-                    //                qInfo()<<allSuggestions;
-                    QMenu *sugg=new QMenu;
-                    for(auto i:allSuggestions ){
-                        auto readmeJson = new QAction;
-                        readmeJson->setText(i);
-                        connect(readmeJson, &QAction::triggered, this,[this,i]()
-                                {
-                                    suggest(i);
-                                });
-                        sugg->addAction(readmeJson);
-                    }
-                    //                 sugg->setMaximumHeight(50);
-                    sugg->setStyleSheet("QMenu { menu-scrollable: 1; }");
-
-
-                    QPoint x; x.setX(QCursor::pos().rx()+2);x.setY(QCursor::pos().ry());
-                    sugg->exec(x);
-                    //                delete sugg;
+        }
+        if(m_blocks[textCursor().block().blockNumber()].words[wordNumber].text.size()>2){
+            QString text = m_blocks[textCursor().blockNumber()].words[wordNumber].text.toLower();
+            QString text2 = m_blocks[textCursor().blockNumber()].words[wordNumber].text;
+            text=text.trimmed();
+            text2=text.trimmed();
+//            qInfo()<<text;
+            QString val;
+            QFile file;
+            file.setFileName("replacedTextDictonary.json");
+            file.open(QIODevice::ReadOnly | QIODevice::Text);
+            val = file.readAll();
+            file.close();
+            QJsonDocument d = QJsonDocument::fromJson(val.toUtf8());
+            QJsonObject sett2 = d.object();
+            QJsonArray value = sett2[text].toArray();
+            QStringList allSuggestions;
+            if(value.size()>0){
+                for( auto i : value){
+                    allSuggestions<< i.toString();
                 }
+//                qInfo()<<allSuggestions;
+                QMenu *sugg=new QMenu;
+                for(auto i:allSuggestions ){
+                    auto readmeJson = new QAction;
+                    readmeJson->setText(i);
+                    connect(readmeJson, &QAction::triggered, this,[this,i]()
+                        {
+                            suggest(i);
+                        });
+                    sugg->addAction(readmeJson);
+                }
+//                 sugg->setMaximumHeight(50);
+                sugg->setStyleSheet("QMenu { menu-scrollable: 1; }");
+
+
+                QPoint x; x.setX(QCursor::pos().rx()+2);x.setY(QCursor::pos().ry());
+                sugg->exec(x);
+//                delete sugg;
             }
+        }
         }
         if(showTimeStamp)
             if (m_blocks[textCursor().blockNumber()].timeStamp.isValid()
@@ -631,8 +593,6 @@ void Editor::contextMenuEvent(QContextMenuEvent *event)
     QString blockText = textCursor().block().text();
     QString textTillCursor = blockText.left(textCursor().positionInBlock());
 
-    //Qt6
-    // const bool containsSpeakerBraces = blockText.leftRef(blockText.indexOf(" ")).contains("]:");
     const bool containsSpeakerBraces = blockText.left(blockText.indexOf(" ")).contains("]:");
     const bool containsTimeStamp = blockText.trimmed() != "" && blockText.trimmed().back() == ']';
     bool isAWordUnderCursor = false;
@@ -669,7 +629,7 @@ void Editor::contextMenuEvent(QContextMenuEvent *event)
         QString text2 = m_blocks[textCursor().blockNumber()].words[wordNumber].text;
         text=text.trimmed();
         text2=text.trimmed();
-        //        qInfo()<<text;
+//        qInfo()<<text;
         QString val;
         QFile file;
         file.setFileName("replacedTextDictonary.json");
@@ -752,7 +712,7 @@ void Editor::transcriptOpen()
         QFile transcriptFile(fileUrl->toLocalFile());
         QFileInfo filedir(transcriptFile);
         QString dirInString=filedir.dir().path();
-        QSettings().setValue("transcriptDir",dirInString);
+        QSettings().setValue("transcriptDir", dirInString);
         if (!transcriptFile.open(QIODevice::ReadOnly)) {
             emit message(transcriptFile.errorString());
             return;
@@ -765,7 +725,7 @@ void Editor::transcriptOpen()
         if (m_transcriptLang == "")
             m_transcriptLang = "english";
 
-        //        loadDictionary();
+        loadDictionary();
 
         setContent();
         //*********************Inserting into file********************************
@@ -830,6 +790,7 @@ void Editor::transcriptSave()
     outer<<x;
     final.close();
 
+        
     if(!QFile::exists("myalgn.py")){
         QFile mapper("myalign.py");
         QFileInfo mapperFileInfo(mapper);
@@ -842,49 +803,56 @@ void Editor::transcriptSave()
         QString cp=aligner.readAll();
         aligner.close();
 
-        if(!mapper.open(QIODevice::OpenModeFlag::WriteOnly|QIODevice::Truncate)){
-            QMessageBox::critical(this,"Error",mapper.errorString());
-            return;
+            if(!mapper.open(QIODevice::OpenModeFlag::WriteOnly|QIODevice::Truncate)){
+                QMessageBox::critical(this,"Error",mapper.errorString());
+                return;
+            }
+            mapper.write(QByteArray(cp.toUtf8()));
+            mapper.close();
+#ifndef _WIN32
+            std::string makingexec = "chmod +x " + mapperFileInfo.absoluteFilePath().replace(" ", "\\ ").toStdString();
+            qInfo() << "Checking Windows";
+            system(makingexec.c_str());
+#endif
         }
-        mapper.write(QByteArray(cp.toUtf8()));
-        mapper.close();
-        std::string makingexec="chmod +x "+mapperFileInfo.absoluteFilePath().replace(" ", "\\ ").toStdString();
-        int result = system(makingexec.c_str());
-        qInfo()<<result;
-    }
-    if(!QFile::exists("replacedTextDictonary.json")){
+        if(!QFile::exists("replacedTextDictonary.json")){
+            QFile repDict("replacedTextDictonary.json");
+            if(!repDict.open(QIODevice::OpenModeFlag::WriteOnly|QIODevice::Truncate)){
+                QMessageBox::critical(this,"Error",repDict.errorString());
+                return;
+            }
+            QString init="{}";
+            repDict.write(QByteArray(init.toUtf8()));
+            repDict.close();
+        }
+        QFile mapper("myalign.py");
+        QFileInfo mapperFileInfo(mapper);
         QFile repDict("replacedTextDictonary.json");
-        if(!repDict.open(QIODevice::OpenModeFlag::WriteOnly|QIODevice::Truncate)){
-            QMessageBox::critical(this,"Error",repDict.errorString());
-            return;
-        }
-        QString init="{}";
-        repDict.write(QByteArray(init.toUtf8()));
-        repDict.close();
-    }
-    QFile mapper("myalign.py");
-    QFileInfo mapperFileInfo(mapper);
-    QFile repDict("replacedTextDictonary.json");
-    QFileInfo repDictFileInfo(repDict);
-    QFile finalFile(fileAfterSave);
-    QFileInfo finalFileInfo(finalFile);
-    QFile initialFile(fileBeforeSave);
-    QFileInfo initialDictFileInfo(initialFile);
-    int result;
-    std::string alignmentstr=" python3 " +mapperFileInfo.absoluteFilePath().replace(" ", "\\ ").toStdString()
-                               +" -cae "+initialDictFileInfo.absoluteFilePath().replace(" ", "\\ ").toStdString()
-                               +" "+finalFileInfo.absoluteFilePath().replace(" ", "\\ ").toStdString()
-                               +" "+repDictFileInfo.absoluteFilePath().replace(" ", "\\ ").toStdString();
+        QFileInfo repDictFileInfo(repDict);
+        QFile finalFile(fileAfterSave);
+        QFileInfo finalFileInfo(finalFile);
+        QFile initialFile(fileBeforeSave);
+        QFileInfo initialDictFileInfo(initialFile);
+        int result;
+        std::string alignmentstr=" python3 " + mapperFileInfo.absoluteFilePath().replace(" ", "\\ ").toStdString()
+            + " -cae "+initialDictFileInfo.absoluteFilePath().replace(" ", "\\ ").toStdString()
+            + " "+finalFileInfo.absoluteFilePath().replace(" ", "\\ ").toStdString()
+            + " "+repDictFileInfo.absoluteFilePath().replace(" ", "\\ ").toStdString();
 
-    if(!realTimeDataSaver){
-        result = system(alignmentstr.c_str());
-    }
-    qInfo()<<result;
+        if(!realTimeDataSaver){
+        	result = system(alignmentstr.c_str());
+        }
+        qInfo()<<result;
 
 }
 
 void Editor::transcriptSaveAs()
 {
+
+    auto initialShowTimeStamp=showTimeStamp;
+    showTimeStamp=true;
+    setContent();
+
     QFileDialog fileDialog(this);
     fileDialog.setAcceptMode(QFileDialog::AcceptSave);
     fileDialog.setWindowTitle(tr("Save Transcript"));
@@ -904,10 +872,13 @@ void Editor::transcriptSaveAs()
                 emit message(file->errorString());
                 return;
             }
+            m_transcriptUrl = fileUrl;
             saveXml(file);
             emit message("File Saved " + fileUrl.toLocalFile());
         }
     }
+    showTimeStamp=initialShowTimeStamp;
+    setContent();
 }
 
 void Editor::transcriptClose()
@@ -1077,10 +1048,7 @@ block Editor::fromEditor(qint64 blockNumber) const
 
 void Editor::loadTranscriptData(QFile& file)
 {
-    countwords = 0;
-    speakercount = 0;
-    mySet.clear();
-    modset.clear();
+    qInfo()<<moveAlongTimeStamps;
     QXmlStreamReader reader(&file);
     m_transcriptLang = "";
     m_blocks.clear();
@@ -1135,9 +1103,6 @@ void Editor::loadTranscriptData(QFile& file)
 
                     auto blockText = QString("");
                     auto blockSpeaker = reader.attributes().value("speaker").toString();
-                    mySet.insert(blockSpeaker);
-                    modset.insert(blockSpeaker);
-                    speakercount+=1;
                     auto tagString = reader.attributes().value("tags").toString();
                     QStringList tagList;
                     if (tagString != "")
@@ -1156,7 +1121,6 @@ void Editor::loadTranscriptData(QFile& file)
                                 wordTagList = wordTagString.split(",");
 
                             blockText += (wordText + " ");
-                            countwords+=1;
                             line.words.append(makeWord(wordTimeStamp, wordText, wordTagList));
                         }
                         else
@@ -1172,7 +1136,6 @@ void Editor::loadTranscriptData(QFile& file)
         else
             reader.raiseError(QObject::tr("Incorrect file"));
     }
-    modifiedwords = countwords;
 }
 
 void Editor::saveXml(QFile* file)
@@ -1194,14 +1157,13 @@ void Editor::saveXml(QFile* file)
             QString timeStampString = timeStamp.toString("hh:mm:ss.zzz");
             auto speaker = a_block.speaker;
 
-            if (!a_block.tagList.isEmpty())
-                writer.writeAttribute("tags", a_block.tagList.join(","));
-
             writer.writeStartElement("line");
             writer.writeAttribute("timestamp", timeStampString);
             writer.writeAttribute("speaker", speaker);
-            //Qt6
-            // for (auto& a_word: qAsConst(a_block.words)) {
+
+            if (!a_block.tagList.isEmpty())
+                writer.writeAttribute("tags", a_block.tagList.join(","));
+
             for (auto& a_word: std::as_const(a_block.words)) {
                 writer.writeStartElement("word");
                 writer.writeAttribute("timestamp", a_word.timeStamp.toString("hh:mm:ss.zzz"));
@@ -1211,15 +1173,13 @@ void Editor::saveXml(QFile* file)
 
                 writer.writeCharacters(a_word.text);
                 writer.writeEndElement();
-
-                if(a_word.text.contains('.')==true)
+				if(a_word.text.contains('.')==true)
                 {
                     break;
                 }
             }
             writer.writeEndElement();
         }
-
     }
     writer.writeEndElement();
     file->close();
@@ -1266,8 +1226,6 @@ void Editor::helpJumpToPlayer()
     emit jumpToPlayer(timeToJump);
 }
 
-QStringList getGoogleSuggestions(const QString& word);
-
 void Editor::loadDictionary()
 {
     m_correctedWords.clear();
@@ -1275,23 +1233,20 @@ void Editor::loadDictionary()
     if(QFile::exists("Dictonaries/"+m_transcriptLang+"/"+m_transcriptLang+"combined.txt")){
         auto dictionaryFileName = "Dictonaries/"+m_transcriptLang+"/"+m_transcriptLang+"combined.txt";
         m_dictionary = listFromFile(dictionaryFileName);
-        //        qInfo()<<m_dictionary;
+//        qInfo()<<m_dictionary;
 
     }
     else{
         auto dictionaryFileName = QString(":/wordlists/%1.txt").arg(m_transcriptLang);
         m_dictionary = listFromFile(dictionaryFileName);
     }
-    //Qt6
-    // if(m_customDictonaryPath!=NULL){
     if(!m_customDictonaryPath.isNull()){
         auto customdictionaryFileName = QString(m_customDictonaryPath);
         auto wordsFromCustomDictonary=listFromFile(customdictionaryFileName);
-
-        for (auto& word : wordsFromCustomDictonary) {
+		for (auto& word : wordsFromCustomDictonary) {
             word = word.toLower();
         }
-
+        
         auto combined_dictionary=m_dictionary;
         combined_dictionary.append(wordsFromCustomDictonary);
         combined_dictionary.sort();
@@ -1320,9 +1275,10 @@ void Editor::loadDictionary()
         file2.close();
         auto combinedCustomdictionaryFileName = QString(a);
         m_dictionary=listFromFile(combinedCustomdictionaryFileName);
-        //         qInfo()<<a<<'\n';
+		//         qInfo()<<a<<'\n';
     }
-    // qInfo()<<m_dictionary<<'\n';
+    // if (m_transcriptLang == "hindi")
+    //     qInfo()<<m_dictionary<<'\n';
     auto correctedWordsList = listFromFile(QString("corrected_words_%1.txt").arg(m_transcriptLang));
     if (!correctedWordsList.isEmpty()) {
         std::copy(correctedWordsList.begin(),
@@ -1331,12 +1287,13 @@ void Editor::loadDictionary()
 
         for (auto& a_word: m_correctedWords) {
             m_dictionary.insert
-                (
-                    std::upper_bound(m_dictionary.begin(), m_dictionary.end(), a_word),
-                    a_word
-                    );
+            	(
+	                std::upper_bound(m_dictionary.begin(), m_dictionary.end(), a_word),
+	                a_word
+            		);
         }
     }
+    m_dictionary.sort();
     m_textCompleter->setModel(new QStringListModel(m_dictionary, m_textCompleter));
 
     if (!m_highlighter)
@@ -1351,57 +1308,16 @@ void Editor::loadDictionary()
             if (wordText != "" && m_punctuation.contains(wordText.back()))
                 wordText = wordText.left(wordText.size() - 1);
 
-            //            if (!std::binary_search(m_dictionary.begin(),
-            //                                    m_dictionary.end(),
-            //                                    wordText)
-            //                )
-            //                invalidWords.insert(i, j);
-            // Use Google Suggest API to get suggested corrections
-            QStringList suggestions = getGoogleSuggestions(wordText);
-            if (!suggestions.isEmpty()) {
-                // If suggestions are available, replace the invalid word with the first suggestion
-                m_blocks[i].words[j].text = suggestions.first();
-            } else {
-                // If no suggestions are available, consider the word as invalid
+            if (!std::binary_search(m_dictionary.begin(),
+                                    m_dictionary.end(),
+                                    wordText)
+                ) {
                 invalidWords.insert(i, j);
             }
         }
     }
     m_highlighter->setInvalidWords(invalidWords);
     m_highlighter->rehighlight();
-}
-
-QStringList Editor::getGoogleSuggestions(const QString& word)
-{
-    QString apiUrl = "https://suggestqueries.google.com/complete/search";
-    QNetworkAccessManager manager;
-    QNetworkRequest request(apiUrl);
-
-    QUrlQuery query;
-    query.addQueryItem("client", "firefox");
-    query.addQueryItem("q", word);
-    request.setUrl(QUrl(apiUrl + "?" + query.query()));
-
-    QNetworkReply* reply = manager.get(request);
-    QEventLoop loop;
-    connect(reply, SIGNAL(finished()), &loop, SLOT(quit()));
-    loop.exec();
-
-    QStringList suggestions;
-
-    if (reply->error() == QNetworkReply::NoError) {
-        QByteArray response = reply->readAll();
-        QJsonDocument jsonDoc = QJsonDocument::fromJson(response);
-        QJsonArray suggestionsArray = jsonDoc[1].toArray();
-
-        for (const QJsonValue& suggestion : suggestionsArray) {
-            suggestions.append(suggestion.toString());
-        }
-    }
-
-    reply->deleteLater();
-
-    return suggestions;
 }
 
 QStringList Editor::listFromFile(const QString& fileName)
@@ -1414,10 +1330,10 @@ QStringList Editor::listFromFile(const QString& fileName)
 
     while (!file.atEnd()) {
         QByteArray line = file.readLine();
-        if (!line.isEmpty())
+        if (!line.isEmpty()) {
             words << QString::fromUtf8(line.trimmed());
+        }
     }
-
     return words;
 }
 
@@ -1449,12 +1365,6 @@ void Editor::setContent()
 
         QString content_with_time_stamp("");
         QString content_without_time_stamp("");
-        QString content_without_speaker("");
-        for (auto& a_block: std::as_const(m_blocks)) {
-            auto blockText = a_block.text + " [" + a_block.timeStamp.toString("hh:mm:ss.zzz") + "]";
-            content_without_speaker.append(blockText + "\n");
-        }
-
         for (auto& a_block: std::as_const(m_blocks)) {
             auto blockText = "[" + a_block.speaker + "]: " + a_block.text + " [" + a_block.timeStamp.toString("hh:mm:ss.zzz") + "]";
             content_with_time_stamp.append(blockText + "\n");
@@ -1464,22 +1374,11 @@ void Editor::setContent()
             auto blockText = "[" + a_block.speaker + "]: " + a_block.text ;
             content_without_time_stamp.append(blockText + "\n");
         }
-
-        if(removespeakerbool){
-            setPlainText(content_without_speaker.trimmed());
-            removespeakerbool = false;
-        }
-        else if(showTimeStamp){
-            setPlainText(content_with_time_stamp.trimmed());
-            showTimeStamp = false;
-        }
-        else if(removetimebool){
-            qInfo()<<"Entered";
+        if(showTimeStamp){
+            setPlainText(content_with_time_stamp.trimmed());}
+         else{
             setPlainText(content_without_time_stamp.trimmed());
-        }
-        else{
-            setPlainText(content_without_time_stamp.trimmed());
-        }
+         }
 
         m_highlighter = new Highlighter(document());
 
@@ -1501,7 +1400,7 @@ void Editor::setContent()
                     if (wordText != "" && m_punctuation.contains(wordText.back()))
                         wordText = wordText.left(wordText.size() - 1);
 
-                    if (wordText != "" && wordText[0]=='\"'){
+                    if (wordText != "" && wordText[0] == '\"'){
 
                         QString text="";
                         for(int i=1;i<wordText.size();i++){
@@ -1509,11 +1408,11 @@ void Editor::setContent()
                         }
                         wordText=text;
                     }
-                    if (wordText != "" && wordText[wordText.size()-1]=='\"'){
+                    if (wordText != "" && wordText[wordText.size()-1] == '\"'){
                         wordText = wordText.left(wordText.size() - 1);
 
                     }
-                    if (wordText != "" && wordText[0]=='('){
+                    if (wordText != "" && wordText[0] == '('){
 
                         QString text="";
                         for(int i=1;i<wordText.size();i++){
@@ -1521,11 +1420,11 @@ void Editor::setContent()
                         }
                         wordText=text;
                     }
-                    if (wordText != "" && wordText[wordText.size()-1]==')'){
+                    if (wordText != "" && wordText[wordText.size()-1] == ')'){
                         wordText = wordText.left(wordText.size() - 1);
 
                     }
-                    if (wordText != "" && wordText[0]=='['){
+                    if (wordText != "" && wordText[0] == '['){
 
                         QString text="";
                         for(int i=1;i<wordText.size();i++){
@@ -1533,37 +1432,22 @@ void Editor::setContent()
                         }
                         wordText=text;
                     }
-                    if (wordText != "" && wordText[wordText.size()-1]==']'){
+                    if (wordText != "" && wordText[wordText.size()-1] == ']'){
                         wordText = wordText.left(wordText.size() - 1);
                         qInfo()<<wordText;
                     }
-                    if (wordText != "" && wordText[0]=='{'){
+                    if (wordText != "" && wordText[0] == '{'){
                         QString text="";
                         for(int i=1;i<wordText.size();i++){
                             text+=wordText[i];
                         }
                         wordText=text;
                     }
-                    if (wordText != "" &&wordText[wordText.size()-1]=='}'){
+                    if (wordText != "" &&wordText[wordText.size()-1] == '}'){
                         wordText = wordText.left(wordText.size() - 1);
 
                     }
-                    //Qt6
-                    if (wordText != "" && wordText[0] == QChar('\'')){
-
-                        QString text="";
-                        for(int i=1;i<wordText.size();i++){
-                            text+=wordText[i];
-                        }
-                        wordText=text;
-                    }
-                    //Qt6
-                    if (wordText != "" && wordText[wordText.size()-1] == QChar('\'')){
-                        wordText = wordText.left(wordText.size() - 1);
-
-                    }
-                    //Qt6
-                    if (wordText != "" && wordText[0] == QChar('<')){
+                    if (wordText != "" && wordText[0] == '\''){
 
                         QString text="";
                         for(int i=1;i<wordText.size();i++){
@@ -1571,33 +1455,38 @@ void Editor::setContent()
                         }
                         wordText=text;
                     }
-                    //Qt6
-                    if (wordText != "" && wordText[wordText.size()-1] == QChar('>')){
+                    if (wordText != "" && wordText[wordText.size()-1] == '\''){
                         wordText = wordText.left(wordText.size() - 1);
 
                     }
-                    //Qt6
-                    if (wordText != "" && wordText[wordText.size()-1] == QChar('?')){
+                    if (wordText != "" && wordText[0] == '<'){
+
+                        QString text="";
+                        for(int i=1;i<wordText.size();i++){
+                            text+=wordText[i];
+                        }
+                        wordText=text;
+                    }
+                    if (wordText != "" && wordText[wordText.size()-1] == '>'){
                         wordText = wordText.left(wordText.size() - 1);
 
                     }
-                    //Qt6
-                    if (wordText != "" && wordText[wordText.size()-1] == QChar('!')){
+
+                    if (wordText != "" && wordText[wordText.size()-1] == '?'){
                         wordText = wordText.left(wordText.size() - 1);
 
                     }
-                    //Qt6
-                    if (wordText != "" && wordText[wordText.size()-1] == QChar(',')){
+                    if (wordText != "" && wordText[wordText.size()-1] == '!'){
                         wordText = wordText.left(wordText.size() - 1);
 
                     }
-                    //Qt6
-                    // QRegExp regex("([0-1][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])(\\.[0-9]+)?");
-                    // bool match = regex.exactMatch(wordText);
-                    // if (match) {
-                    QRegularExpression regex("([0-1][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])(\\.[0-9]+)?");
-                    QRegularExpressionMatch match = regex.match(wordText);
-                    if (match.hasMatch()) {
+                    if (wordText != "" && wordText[wordText.size()-1] == ','){
+                        wordText = wordText.left(wordText.size() - 1);
+
+                    }
+                    static QRegularExpression regex("([0-1][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])(\\.[0-9]+)?");
+                    bool match = regex.match(wordText).hasMatch();
+                    if (match) {
                         continue;
                         // the string is a valid time in the format "HH:MM:SS.f"
                     }
@@ -1615,7 +1504,6 @@ void Editor::setContent()
                 }
             }
         }
-
         m_highlighter->setInvalidBlocks(invalidBlocks);
         m_highlighter->setTaggedBlocks(taggedBlocks);
         m_highlighter->setInvalidWords(invalidWords);
@@ -1665,7 +1553,7 @@ void Editor::contentChanged(int position, int charsRemoved, int charsAdded)
             }
         }
     }
-
+    
     auto currentBlockFromEditor = fromEditor(currentBlockNumber);
     auto& currentBlockFromData = m_blocks[currentBlockNumber];
 
@@ -1676,16 +1564,15 @@ void Editor::contentChanged(int position, int charsRemoved, int charsAdded)
                 << QString("final: %1").arg(currentBlockFromEditor.speaker);
 
         currentBlockFromData.speaker = currentBlockFromEditor.speaker;
-        modset.insert(currentBlockFromEditor.speaker);
     }
     if(showTimeStamp){
-        if (currentBlockFromData.timeStamp != currentBlockFromEditor.timeStamp) {
+    	if (currentBlockFromData.timeStamp != currentBlockFromEditor.timeStamp) {
 
-            currentBlockFromData.timeStamp = currentBlockFromEditor.timeStamp;
-            qInfo() << "[TimeStamp Changed]"
-                    << QString("line number: %1, %2").arg(QString::number(currentBlockNumber + 1), currentBlockFromEditor.timeStamp.toString("hh:mm:ss.zzz"));
+        	currentBlockFromData.timeStamp = currentBlockFromEditor.timeStamp;
+        	qInfo() << "[TimeStamp Changed]"
+                << QString("line number: %1, %2").arg(QString::number(currentBlockNumber + 1), currentBlockFromEditor.timeStamp.toString("hh:mm:ss.zzz"));
 
-        }
+    	}
     }
     if (currentBlockFromData.text != currentBlockFromEditor.text) {
         qInfo() << "[Text Changed]"
@@ -1699,12 +1586,7 @@ void Editor::contentChanged(int position, int charsRemoved, int charsAdded)
         auto& wordsFromEditor = currentBlockFromEditor.words;
         auto& wordsFromData = currentBlockFromData.words;
 
-
-
         int wordsDifference = wordsFromEditor.size() - wordsFromData.size();
-
-        modifiedwords = modifiedwords+wordsDifference;
-
         int diffStart{-1}, diffEnd{-1};
 
         for (int i = 0; i < wordsFromEditor.size() && i < wordsFromData.size(); i++)
@@ -1718,7 +1600,7 @@ void Editor::contentChanged(int position, int charsRemoved, int charsAdded)
         for (int i = 0; i <= diffStart; i++)
             if (i < wordsFromData.size()){
                 wordsFromEditor[i].timeStamp = wordsFromData[i].timeStamp;
-                //                wordsFromEditor[i].tagList = wordsFromData[i].tagList;
+				//                wordsFromEditor[i].tagList = wordsFromData[i].tagList;
             }
 
         if (!wordsDifference) {
@@ -1733,14 +1615,14 @@ void Editor::contentChanged(int position, int charsRemoved, int charsAdded)
             for (int i = wordsFromEditor.size() - 1, j = wordsFromData.size() - 1; j > diffStart; i--, j--)
                 if (wordsFromEditor[i].text == wordsFromData[j].text){
                     wordsFromEditor[i].timeStamp = wordsFromData[j].timeStamp;
-                    //                    wordsFromEditor[i].tagList = wordsFromData[j].tagList;
+					//                    wordsFromEditor[i].tagList = wordsFromData[j].tagList;
                 }
             for (int i=wordsFromData.size()-1;i>=0;i--){
                 if(!wordsFromData[i].tagList.empty()){
                     for (int j=wordsFromEditor.size()-1;j>=0;j--){
                         if (wordsFromEditor[j].text == wordsFromData[i].text){
                             if(wordsFromEditor[j].tagList.empty())
-                                wordsFromEditor[j].tagList = wordsFromData[i].tagList;
+                            	wordsFromEditor[j].tagList = wordsFromData[i].tagList;
                         }
                     }
                 }
@@ -1750,14 +1632,14 @@ void Editor::contentChanged(int position, int charsRemoved, int charsAdded)
             for (int i = wordsFromEditor.size() - 1, j = wordsFromData.size() - 1; i > diffStart; i--, j--)
                 if (wordsFromEditor[i].text == wordsFromData[j].text){
                     wordsFromEditor[i].timeStamp = wordsFromData[j].timeStamp;
-                    //                    wordsFromEditor[i].tagList = wordsFromData[j].tagList;
+//                    wordsFromEditor[i].tagList = wordsFromData[j].tagList;
                 }
             for (int i=wordsFromData.size()-1;i>=0;i--){
                 if(!wordsFromData[i].tagList.empty()){
                     for (int j=wordsFromEditor.size()-1;j>=0;j--){
                         if (wordsFromEditor[j].text == wordsFromData[i].text){
                             if(wordsFromEditor[j].tagList.empty())
-                                wordsFromEditor[j].tagList = wordsFromData[i].tagList;
+                            	wordsFromEditor[j].tagList = wordsFromData[i].tagList;
                         }
                     }
                 }
@@ -1797,7 +1679,7 @@ void Editor::contentChanged(int position, int charsRemoved, int charsAdded)
                 if (wordText != "" && m_punctuation.contains(wordText.back()))
                     wordText = wordText.left(wordText.size() - 1);
 
-                if (wordText != "" && wordText[0]=='\"'){
+                if (wordText != "" && wordText[0] == '\"'){
 
                     QString text="";
                     for(int i=1;i<wordText.size();i++){
@@ -1805,11 +1687,11 @@ void Editor::contentChanged(int position, int charsRemoved, int charsAdded)
                     }
                     wordText=text;
                 }
-                if (wordText != "" && wordText[wordText.size()-1]=='\"'){
+                if (wordText != "" && wordText[wordText.size()-1] == '\"'){
                     wordText = wordText.left(wordText.size() - 1);
 
                 }
-                if (wordText != "" && wordText[0]=='('){
+                if (wordText != "" && wordText[0] == '('){
 
                     QString text="";
                     for(int i=1;i<wordText.size();i++){
@@ -1818,11 +1700,11 @@ void Editor::contentChanged(int position, int charsRemoved, int charsAdded)
                     qInfo()<<text;
                     wordText=text;
                 }
-                if (wordText != "" && wordText[wordText.size()-1]==')'){
+                if (wordText != "" && wordText[wordText.size()-1] == ')'){
                     wordText = wordText.left(wordText.size() - 1);
 
                 }
-                if (wordText != "" && wordText[0]=='['){
+                if (wordText != "" && wordText[0] == '['){
 
                     QString text="";
                     for(int i=1;i<wordText.size();i++){
@@ -1830,35 +1712,22 @@ void Editor::contentChanged(int position, int charsRemoved, int charsAdded)
                     }
                     wordText=text;
                 }
-                if (wordText != "" && wordText[wordText.size()-1]==']'){
+                if (wordText != "" && wordText[wordText.size()-1] == ']'){
                     wordText = wordText.left(wordText.size() - 1);
 
                 }
-                if (wordText != "" && wordText[0]=='{'){
+                if (wordText != "" && wordText[0] == '{'){
                     QString text="";
                     for(int i=1;i<wordText.size();i++){
                         text+=wordText[i];
                     }
                     wordText=text;
                 }
-                if (wordText != "" &&wordText[wordText.size()-1]=='}'){
+                if (wordText != "" &&wordText[wordText.size()-1]== '}'){
                     wordText = wordText.left(wordText.size() - 1);
 
                 }
-                //Qt6
-                if (wordText != "" && wordText[0] == QChar('\'')){
-
-                    QString text="";
-                    for(int i=1;i<wordText.size();i++){
-                        text+=wordText[i];
-                    }
-                    wordText=text;
-                }
-                if (wordText != "" && wordText[wordText.size()-1] == QChar('\'')){
-                    wordText = wordText.left(wordText.size() - 1);
-
-                }
-                if (wordText != "" && wordText[0] == QChar('<')){
+                if (wordText != "" && wordText[0] == '\''){
 
                     QString text="";
                     for(int i=1;i<wordText.size();i++){
@@ -1866,24 +1735,35 @@ void Editor::contentChanged(int position, int charsRemoved, int charsAdded)
                     }
                     wordText=text;
                 }
-                if (wordText != "" && wordText[wordText.size()-1] == QChar('>')){
+                if (wordText != "" && wordText[wordText.size()-1] == '\''){
+                    wordText = wordText.left(wordText.size() - 1);
+
+                }
+                if (wordText != "" && wordText[0] == '<'){
+
+                    QString text="";
+                    for(int i=1;i<wordText.size();i++){
+                        text+=wordText[i];
+                    }
+                    wordText=text;
+                }
+                if (wordText != "" && wordText[wordText.size()-1] == '>'){
                     wordText = wordText.left(wordText.size() - 1);
 
                 }
 
-                if (wordText != "" && wordText[wordText.size()-1] == QChar('?')){
+                if (wordText != "" && wordText[wordText.size()-1] == '?'){
                     wordText = wordText.left(wordText.size() - 1);
 
                 }
-                if (wordText != "" && wordText[wordText.size()-1] == QChar('!')){
+                if (wordText != "" && wordText[wordText.size()-1] == '!'){
                     wordText = wordText.left(wordText.size() - 1);
 
                 }
-                if (wordText != "" && wordText[wordText.size()-1] == QChar(',')){
+                if (wordText != "" && wordText[wordText.size()-1] == ','){
                     wordText = wordText.left(wordText.size() - 1);
 
                 }
-                //Qt6
                 QRegularExpression regex("([0-1][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])(\\.[0-9]+)?");
                 bool match = regex.match(wordText).hasMatch();
                 if (match) {
@@ -1923,68 +1803,10 @@ void Editor::jumpToHighlightedLine()
 
 void Editor::splitLine(const QTime& elapsedTime)
 {
-    //    auto cursor = textCursor();
-    //    if (cursor.blockNumber() != highlightedBlock)
-    //        return;
-
-    //    int positionInBlock = cursor.positionInBlock();
-    //    auto blockText = cursor.block().text();
-    //    auto textBeforeCursor = blockText.left(positionInBlock);
-    //    auto textAfterCursor = blockText.right(blockText.size() - positionInBlock);
-    //    auto cutWordLeft = textBeforeCursor.split(" ").last();
-    //    auto cutWordRight = textAfterCursor.split(" ").first();
-    //    int wordNumber = textBeforeCursor.count(" ");
-
-    //    if (m_blocks[highlightedBlock].speaker != "" || blockText.contains("[]:"))
-    //        wordNumber--;
-    //    if (wordNumber < 0 || wordNumber >= m_blocks[highlightedBlock].words.size())
-    //        return;
-
-    //    if (textBeforeCursor.contains("]:"))
-    //        textBeforeCursor = textBeforeCursor.split("]:").last();
-    //    if (textAfterCursor.contains("["))
-    //        textAfterCursor = textAfterCursor.split("[").first();
-
-    //    auto timeStampOfCutWord = m_blocks[highlightedBlock].words[wordNumber].timeStamp;
-    //    auto tagsOfCutWord = m_blocks[highlightedBlock].words[wordNumber].tagList;
-    //    QVector<word> words;
-    //    int sizeOfWordsAfter = m_blocks[highlightedBlock].words.size() - wordNumber - 1;
-
-    //    if (cutWordRight != "")
-    //        words.append(makeWord(timeStampOfCutWord, cutWordRight, tagsOfCutWord));
-    //    for (int i = 0; i < sizeOfWordsAfter; i++) {
-    //        words.append(m_blocks[highlightedBlock].words[wordNumber + 1]);
-    //        m_blocks[highlightedBlock].words.removeAt(wordNumber + 1);
-    //    }
-
-    //    if (cutWordLeft == "")
-    //        m_blocks[highlightedBlock].words.removeAt(wordNumber);
-    //    else {
-    //        m_blocks[highlightedBlock].words[wordNumber].text = cutWordLeft;
-    //        m_blocks[highlightedBlock].words[wordNumber].timeStamp = elapsedTime;
-    //    }
-
-    //    block blockToInsert = {m_blocks[highlightedBlock].timeStamp,
-    //                           textAfterCursor.trimmed(),
-    //                           m_blocks[highlightedBlock].speaker,
-    //                           m_blocks[highlightedBlock].tagList,
-    //                           words};
-    //    m_blocks.insert(highlightedBlock + 1, blockToInsert);
-
-    //    m_blocks[highlightedBlock].text = textBeforeCursor.trimmed();
-    //    m_blocks[highlightedBlock].timeStamp = elapsedTime;
-
-    //    setContent();
-    //    updateWordEditor();
-
-    //    QTextCursor cursorx(this->document()->findBlockByNumber(highlightedBlock));
-    //    this->setTextCursor(cursorx);
-
-    //    qInfo() << "[Line Split]"
-    //            << QString("line number: %1").arg(QString::number(highlightedBlock + 1))
-    //            << QString("word number: %1, %2").arg(QString::number(wordNumber + 1), cutWordLeft + cutWordRight);
-
-    auto cursor = textCursor();
+    qInfo() << "Split Line - - - - - -- - - - -- - \n";
+	auto cursor = textCursor();
+    // if (cursor.blockNumber() != highlightedBlock)
+    //     return;
 
     int positionInBlock = cursor.positionInBlock();
     auto blockText = cursor.block().text();
@@ -1993,6 +1815,45 @@ void Editor::splitLine(const QTime& elapsedTime)
     auto cutWordLeft = textBeforeCursor.split(" ").last();
     auto cutWordRight = textAfterCursor.split(" ").first();
     int wordNumber = textBeforeCursor.count(" ");
+
+    // if (m_blocks[highlightedBlock].speaker != "" || blockText.contains("[]:"))
+    //     wordNumber--;
+    // if (wordNumber < 0 || wordNumber >= m_blocks[highlightedBlock].words.size())
+    //     return;
+
+    // if (textBeforeCursor.contains("]:"))
+    //     textBeforeCursor = textBeforeCursor.split("]:").last();
+    // if (textAfterCursor.contains("["))
+    //     textAfterCursor = textAfterCursor.split("[").first();
+
+    // auto timeStampOfCutWord = m_blocks[highlightedBlock].words[wordNumber].timeStamp;
+    // auto tagsOfCutWord = m_blocks[highlightedBlock].words[wordNumber].tagList;
+    // QVector<word> words;
+    // int sizeOfWordsAfter = m_blocks[highlightedBlock].words.size() - wordNumber - 1;
+
+    // if (cutWordRight != "")
+    //     words.append(makeWord(timeStampOfCutWord, cutWordRight, tagsOfCutWord));
+    // for (int i = 0; i < sizeOfWordsAfter; i++) {
+    //     words.append(m_blocks[highlightedBlock].words[wordNumber + 1]);
+    //     m_blocks[highlightedBlock].words.removeAt(wordNumber + 1);
+    // }
+
+    // if (cutWordLeft == "")
+    //     m_blocks[highlightedBlock].words.removeAt(wordNumber);
+    // else {
+    //     m_blocks[highlightedBlock].words[wordNumber].text = cutWordLeft;
+    //     m_blocks[highlightedBlock].words[wordNumber].timeStamp = elapsedTime;
+    // }
+
+    // block blockToInsert = {m_blocks[highlightedBlock].timeStamp,
+    //                        textAfterCursor.trimmed(),
+    //                        m_blocks[highlightedBlock].speaker,
+    //                        m_blocks[highlightedBlock].tagList,
+    //                        words};
+    // m_blocks.insert(highlightedBlock + 1, blockToInsert);
+
+    // m_blocks[highlightedBlock].text = textBeforeCursor.trimmed();
+    // m_blocks[highlightedBlock].timeStamp = elapsedTime;
 
     if (m_blocks[cursor.blockNumber()].speaker != "" || blockText.contains("[]:"))
         wordNumber--;
@@ -2036,6 +1897,9 @@ void Editor::splitLine(const QTime& elapsedTime)
     setContent();
     updateWordEditor();
 
+    // QTextCursor cursorx(this->document()->findBlockByNumber(highlightedBlock));
+    // this->setTextCursor(cursorx);
+
     qInfo() << "[Line Split]"
             << QString("line number: %1").arg(QString::number(highlightedBlock + 1))
             << QString("word number: %1, %2").arg(QString::number(wordNumber + 1), cutWordLeft + cutWordRight);
@@ -2066,7 +1930,7 @@ void Editor::mergeUp()
     qInfo() << "[Merge Up]"
             << QString("line number: %1, %2").arg(QString::number(previousBlockNumber + 1), QString::number(blockNumber + 1))
             << QString("final line: %1, %2").arg(QString::number(previousBlockNumber + 1), m_blocks[previousBlockNumber].text);
-    //    qInfo()<<(undoS);
+//    qInfo()<<(undoS);
     qDebug() << this->findChildren<QUndoStack*>();
 
 }
@@ -2124,7 +1988,7 @@ void Editor::createChangeSpeakerDialog()
             [&]() {
                 changeSpeaker(m_changeSpeaker->speaker(), m_changeSpeaker->replaceAll());
             }
-            );
+    		);
     m_changeSpeaker->show();
 }
 
@@ -2148,7 +2012,7 @@ void Editor::createTimePropagationDialog()
                               m_propagateTime->blockEnd(),
                               m_propagateTime->negateTime());
             }
-            );
+    	);
     m_propagateTime->show();
 }
 
@@ -2169,7 +2033,7 @@ void Editor::createTagSelectionDialog()
             [&]() {
                 selectTags(m_selectTag->tagList());
             }
-            );
+    	);
     m_selectTag->show();
 }
 
@@ -2288,7 +2152,7 @@ void Editor::wordWiseJump(const QString& jumpDirection)
                 }
         }
     }
-
+    
     if (jumpDirection == "right")
         timeToJump = highlightedBlockWords[wordToJump - 1].timeStamp;
 
@@ -2345,7 +2209,7 @@ void Editor::suggest(QString suggest)
 
     QTextCursor cursor = textCursor();
 
-    //        cursor.insertText(suggest);
+//        cursor.insertText(suggest);
 
     cursor.movePosition(QTextCursor::StartOfWord);
 
@@ -2404,23 +2268,17 @@ void Editor::saveAsPDF()
 
     auto pdfSaveLocation = QFileDialog::getSaveFileName(this, "Export PDF", QString("/"), "*.pdf");
     if(pdfSaveLocation!=""){
-        if (QFileInfo(pdfSaveLocation).suffix().isEmpty()) { pdfSaveLocation.append(".pdf"); }
-        qInfo()<<pdfSaveLocation;
+    if (QFileInfo(pdfSaveLocation).suffix().isEmpty()) { pdfSaveLocation.append(".pdf"); }
+    qInfo()<<pdfSaveLocation;
 
-        //Qt6
-
-        QPrinter printer(QPrinter::PrinterResolution);
-        // printer.setOutputFormat(QPrinter::PdfFormat);
-        // printer.setPaperSize(QPrinter::A4);
-        printer.setOutputFormat(QPrinter::PdfFormat);
-        printer.setPageSize(QPageSize::A4);
-        printer.setOutputFileName(pdfSaveLocation);
-        QTextDocument doc;
-        doc.setHtml(htmlpart);
-        // doc.setPageSize(printer.pageRect().size()); // This is necessary if you want to hide the page number
-        // Remaining
-        // doc.setPageSize(printer.pageRect()); // This is necessary if you want to hide the page number
-        doc.print(&printer);
+    QPrinter printer(QPrinter::PrinterResolution);
+    printer.setOutputFormat(QPrinter::PdfFormat);
+    printer.setPageSize(QPageSize::A4);
+    printer.setOutputFileName(pdfSaveLocation);
+    QTextDocument doc;
+    doc.setHtml(htmlpart);
+    //doc.setPageSize(printer.pageRect().size()); // This is necessary if you want to hide the page number
+    doc.print(&printer);
     }
 }
 
@@ -2594,25 +2452,25 @@ void Editor::markWordAsCorrect(int blockNumber, int wordNumber)
         return;
 
     if (std::binary_search(m_dictionary.begin(),
-                           m_dictionary.end(),
-                           textToInsert))
+           				   m_dictionary.end(),
+           				   textToInsert))
     {
         emit message("Word is already correct.");
         return;
     }
 
     m_dictionary.insert
-        (
+    	(
             std::upper_bound(m_dictionary.begin(), m_dictionary.end(), textToInsert),
             textToInsert
-            );
+    		);
 
     static_cast<QStringListModel*>(m_textCompleter->model())->setStringList(m_dictionary);
     m_correctedWords.insert(textToInsert);
 
     QMultiMap<int, int> invalidWords;
     for (int i = 0; i < m_blocks.size(); i++) {
-        //        qInfo()<<"\n \n m_blocks["<<i<<"].words : ";
+		//        qInfo()<<"\n \n m_blocks["<<i<<"].words : ";
         for (int j = 0; j < m_blocks[i].words.size(); j++) {
             auto wordText = m_blocks[i].words[j].text.toLower();
 
@@ -2723,235 +2581,24 @@ void Editor::sendRequest(const QString& input, const QString& langCode)
     });
 }
 
-void Editor::pushbutton(const QTime& elapsedTime)
+QList<QTime> Editor::getTimeStamps()
 {
-    //    player = new MediaPlayer(this);
-    //    const QTime elapsedTime = player->elapsedTime();
-    auto blockNumber = textCursor().blockNumber();
-    QTextBlock highlightedTb = this->document()->findBlockByNumber(blockNumber);
-    QString highlightedLine = highlightedTb.text();
-    QString timestamp = elapsedTime.toString("hh:mm:ss.zzz");
-    //    QString timestamp = m_blocks[blockNumber].timeStamp.toString("hh:mm:ss.zzz");
-    QString lineWithTimestamp = highlightedLine + "[" + timestamp + "] ";
-    lineWithTimestamp.remove(0, 12);
-    m_blocks[blockNumber].text = lineWithTimestamp;
-    dontUpdateWordEditor = true;
-    setContent();
-    QTextCursor cursor(document()->findBlockByNumber(blockNumber));
-    setTextCursor(cursor);
-    centerCursor();
-    dontUpdateWordEditor = false;
-}
 
-void Editor::removespeaker()
-{
-    auto blockNumber = textCursor().blockNumber();
-    removespeakerbool = true;
-    dontUpdateWordEditor = true;
-    setContent();
-    QTextCursor cursor(document()->findBlockByNumber(blockNumber));
-    setTextCursor(cursor);
-    centerCursor();
-    dontUpdateWordEditor = false;
-}
+    QList<QTime> timeStamps;
 
-void Editor::showwordcount(){
-    QDialog dialog(this);
-    QFormLayout form(&dialog);
-    form.addRow(new QLabel("Word Count", this));
-
-    QLineEdit *total_words = new QLineEdit(&dialog);
-    QLineEdit *speaker_count = new QLineEdit(&dialog);
-    QLineEdit *modified_words = new QLineEdit(&dialog);
-    QLineEdit *modified_speaker_count = new QLineEdit(&dialog);
-    QString str1 = QString::number(countwords);
-    QString str2 = QString::number(mySet.size());
-    QString str3 = QString::number(modifiedwords);
-    QString str4 = QString::number(modset.size()==1?modset.size():modset.size()-1);
-
-    total_words->setText(str1);
-    total_words->setReadOnly(true);
-    form.addRow("Total Words",total_words);
-    speaker_count->setText(str2);
-    speaker_count->setReadOnly(true);
-    form.addRow("Speaker Count",speaker_count);
-    modified_words->setText(str3);
-    modified_words->setReadOnly(true);
-    form.addRow("Modified count",modified_words);
-    modified_speaker_count->setText(str4);
-    modified_speaker_count->setReadOnly(true);
-    form.addRow("Modified Speaker count",modified_speaker_count);
-    dialog.exec();
-}
-
-void Editor::on_actionword_count_triggered()
-{
-    showwordcount();
-}
-
-void Editor::on_actionLink_triggered()
-{
-    QDialog dialog(this);
-    QFormLayout form(&dialog);      // Use a layout allowing to have a label next to each field
-    form.addRow(new QLabel("Enter the url and the placeholder", this));
-
-    //! Add the lineEdits with their respective labels
-    QLineEdit *link = new QLineEdit(&dialog);
-    QLineEdit *text = new QLineEdit(&dialog);
-    form.addRow("url", link);
-    form.addRow("title", text);
-
-    //! Add some standard buttons (Cancel/Ok) at the bottom of the dialog
-    QDialogButtonBox buttonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, Qt::Horizontal, &dialog);
-    form.addRow(&buttonBox);
-    QObject::connect(&buttonBox, SIGNAL(accepted()), &dialog, SLOT(accept()));
-    QObject::connect(&buttonBox, SIGNAL(rejected()), &dialog, SLOT(reject()));
-
-    //! Show the dialog as modal
-    if (dialog.exec() == QDialog::Accepted)
+    std::cerr << "Mblocks " <<  m_blocks.isEmpty();// << " " <<  m_blocks.size();
+    if (m_blocks.isEmpty())
     {
-
-        QTextCursor cursor = textCursor();
-        cursor.insertHtml("<a href=\"" + link->text() + "\">" + text->text() + "</a>");
-        auto blockNumber = textCursor().blockNumber();
-        QTextBlock highlightedTb = this->document()->findBlockByNumber(blockNumber);
-        QString highlightedLine = highlightedTb.text();
-        m_blocks[blockNumber].text = highlightedLine;
-        //        setContent();
-
+        std::cerr << "Mblocks " <<  m_blocks.size();
+       return timeStamps;
     }
+
+    timeStamps.append(m_blocks[0].timeStamp);
+
+    for (int i = 1; i < m_blocks.size(); i++) {
+        timeStamps.append(std::as_const(m_blocks[i]).timeStamp);
+    }
+
+    return timeStamps;
 }
 
-//void Editor::on_actionVoice_triggered()
-//{
-//    QDialog dialog;
-//    dialog.setWindowTitle("Recording Dialog");
-
-//    QLabel label("Start Recording", &dialog);
-//    QPushButton startButton("Start", &dialog);
-
-//    QHBoxLayout layout;
-//    layout.addWidget(&label);
-//    layout.addWidget(&startButton);
-//    dialog.setLayout(&layout);
-
-//    QObject::connect(&startButton, &QPushButton::clicked, [&label, &startButton]() {
-//        if (startButton.text() == "Start")
-//        {
-//            startButton.setText("Stop");
-//            label.setText("Recording");
-//        }
-//        else if (startButton.text() == "Stop")
-//        {
-//            startButton.setText("Start");
-//            label.setText("Start Recording");
-//        }
-//    });
-
-//    dialog.exec();
-//}
-
-// Qt6
-// Disabled temporarily
-// void Editor::on_actionVoice_triggered()
-// {
-//     QDialog dialog;
-//     dialog.setWindowTitle("Recording Dialog");
-
-//     QLabel label("Start Recording", &dialog);
-//     QPushButton startButton("Start", &dialog);
-
-//     QHBoxLayout layout;
-//     layout.addWidget(&label);
-//     layout.addWidget(&startButton);
-//     dialog.setLayout(&layout);
-
-//     // Declare QAudioFormat and QBuffer for audio capture
-//     QAudioFormat format;
-//     format.setSampleRate(44100);
-//     format.setChannelCount(1);
-//     //Qt6
-//     // format.setSampleSize(16);
-//     // format.setCodec("audio/pcm");
-//     // format.setByteOrder(QAudioFormat::LittleEndian);
-//     // format.setSampleFormat(QAudioFormat::SignedInt);
-//     format.setSampleFormat(QAudioFormat::Int16);
-
-//     QBuffer buffer;
-//     buffer.open(QIODevice::ReadWrite);
-
-//     // Connect the button click to the audio capture and conversion slot
-//     QObject::connect(&startButton, &QPushButton::clicked, [&label, &startButton, this, &buffer, format]() {
-//         if (startButton.text() == "Start")
-//         {
-//             // Start audio capture
-//             m_audioInput = new QAudioInput(format);
-//             m_audioInput->start(&buffer);
-
-//             startButton.setText("Stop");
-//             label.setText("Recording");
-//         }
-//         else if (startButton.text() == "Stop")
-//         {
-//             // Stop audio capture
-//             m_audioInput->stop();
-//             delete m_audioInput;
-//             m_audioInput = nullptr;
-
-//             startButton.setText("Start");
-//             label.setText("Start Recording");
-
-//             // Retrieve the audio data from the buffer
-//             m_audioData = buffer.buffer();
-
-//             // Code to send m_audioData to your custom API for speech-to-text conversion
-//             QNetworkAccessManager manager;
-//             QNetworkRequest request(QUrl("https://3.6.185.140:5555/transcript"));
-//             request.setHeader(QNetworkRequest::ContentTypeHeader, "application/octet-stream");
-//             QNetworkReply *reply = manager.post(request, m_audioData);
-//             qDebug() << reply->readAll();
-//             // Connect the signal to handle the API response
-//             QObject::connect(reply, &QNetworkReply::finished, [&reply]() {
-//                 qDebug() << "Entered";
-//                 if (reply->error() == QNetworkReply::NoError)
-//                 {
-//                     QString response = reply->readAll();
-//                     // Process the response, assuming it contains the converted text
-//                     qDebug() << "API Response: " << response;
-//                 }
-//                 else
-//                 {
-//                     qDebug() << "API Error: " << reply->errorString();
-//                 }
-
-//                 reply->deleteLater();
-//             });
-//         }
-//     });
-
-//     dialog.exec();
-// }
-void Editor:: removetimestamp()
-{
-    qInfo()<<"Hello";
-    auto blockNumber = textCursor().blockNumber();
-    removetimebool = true;
-    dontUpdateWordEditor = true;
-    setContent();
-    qInfo()<<"Again";
-    QTextCursor cursor(document()->findBlockByNumber(blockNumber));
-    setTextCursor(cursor);
-    centerCursor();
-    removetimebool = false;
-    dontUpdateWordEditor = false;
-}
-
-// void Editor:: showversion()
-// {
-//     QDialog dialog(this);
-//     QFormLayout form(&dialog);
-//     form.addRow(new QLabel("Vāgyojaka - Version 1.0.3\n"
-//                            "This framework is developed by IIT Bombay.\n"
-//                            "This work is licensed under Creative Commons Attribution-NonCommercial 4.0 International License", this));
-//     dialog.exec();
-// }

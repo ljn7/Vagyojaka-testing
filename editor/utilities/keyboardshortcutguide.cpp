@@ -9,11 +9,11 @@ KeyboardShortcutGuide::KeyboardShortcutGuide(QWidget *parent)
 {
     QDialog::setWindowTitle("Keyboard Shortcuts Guide");
 
-    int nWidth = 600;
-    int nHeight = 800;
+    int nWidth = 450;
+    int nHeight = 675;
     if (parent != NULL)
         setGeometry(parent->x() + parent->width()/2 - nWidth/2,
-                    parent->y() + parent->height()/2 - nHeight/2,
+                    parent->y() + parent->height()/3 - nHeight/3,
                     nWidth, nHeight);
     else
         resize(nWidth, nHeight);
@@ -121,6 +121,7 @@ void KeyboardShortcutGuide::fillDialog() {
     m_shortcutView->insertTopLevelItem(3, editing);
     m_shortcutView->insertTopLevelItem(4, mediaPlayer);
 
+    m_shortcutView->resizeColumnToContents(0);
     m_shortcutView->resizeColumnToContents(1);
     m_shortcutView->expandAll();
 }

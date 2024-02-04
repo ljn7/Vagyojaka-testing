@@ -1,9 +1,16 @@
 #ifndef GIT_H
 #define GIT_H
 
+#include "qstatusbar.h"
 #include <QObject>
 #include <QWidget>
 #include <git2.h>
+
+QT_BEGIN_NAMESPACE
+namespace Ui {
+class Git;
+}
+QT_END_NAMESPACE
 
 class Git : public QWidget
 {
@@ -18,7 +25,7 @@ public:
     void pull();
     void fetch();
     void refresh();
-
+    void push();
     ~Git();
 
 
@@ -27,7 +34,9 @@ signals:
 private:
     git_repository *repo = nullptr;
     QString repoPath;
-    bool doesRepositoryExist(const char *path);
+    QStatusBar *statusBar = nullptr;
+    Ui::Git *ui;
+    bool doesRepositoryExist(const char* path);
 };
 
 #endif // GIT_H

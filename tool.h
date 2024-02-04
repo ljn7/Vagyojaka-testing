@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QMainWindow>
+#include "git/git.h"
 #include "mediaplayer/mediaplayer.h"
 #include "editor/texteditor.h"
 #include<QThread>
@@ -64,10 +65,15 @@ private slots:
 
     void on_fontComboBox_currentFontChanged(const QFont &f);
 
-    void on_actionOpen_Gui_triggered();
+    void on_actionAbout_triggered();   
 
-    void on_actionAbout_triggered();
+    void on_actionInit_triggered();
 
+    void on_actionAdd_All_triggered();
+
+    void on_actionCommit_triggered();
+
+    void on_actionAdd_Remote_URL_triggered();
 
 private:
     void setFontForElements();
@@ -78,5 +84,6 @@ private:
     Ui::Tool *ui;
     QFont font;
     QMap<QString, QString> m_transliterationLang;
+    Git* git = nullptr;
 
 };

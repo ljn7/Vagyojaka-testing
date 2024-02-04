@@ -203,12 +203,15 @@ Tool::Tool(QWidget *parent)
 
     font = QFont( "Monospace", 10 );
     setFontForElements();
+    git = new Git();
+    git->init();
 }
 
 Tool::~Tool()
 {
     delete player;
     delete ui;
+    delete git;
 }
 
 void Tool::handleMediaPlayerError()
@@ -594,18 +597,36 @@ void Tool::on_fontComboBox_currentFontChanged(const QFont &f)
     font = f;
 
     //    if (fontSelected)
-    setFontForElements();}
-
-
-void Tool::on_actionOpen_Gui_triggered()
-{
-    Git* git = new Git();
-    git->init();
+    setFontForElements();
 }
 
 void Tool::on_actionAbout_triggered()
 {
     About* about = new About(this);
     about->show();
+}
+
+
+void Tool::on_actionInit_triggered()
+{
+    git->init();
+}
+
+
+void Tool::on_actionAdd_All_triggered()
+{
+    git->add();
+}
+
+
+void Tool::on_actionCommit_triggered()
+{
+    git->commit();
+}
+
+
+void Tool::on_actionAdd_Remote_URL_triggered()
+{
+    git->addRemoteUrl();
 }
 

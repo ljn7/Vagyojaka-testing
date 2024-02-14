@@ -13,8 +13,17 @@ set(CMAKE_AUTORCC ON)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
-set(CMAKE_PREFIX_PATH "D:/Qt/6.6.1/mingw_64" CACHE PATH "Initial cache" FORCE)
-set(CMAKE_PREFIX_PATH "${CMAKE_PREFIX_PATH};C:/vcpkg/installed/x64-mingw-dynamic/share")
+# For windows use vcpkg(place it in C: folder)
+# and install the libgit
+# using "vcpkg install libgit2 --triplet=x64_mingw_dynamic" command from cmd
+
+if(WIN32)
+    if(MINGW)
+        set(CMAKE_PREFIX_PATH "D:/Qt/6.6.1/mingw_64" CACHE PATH "Initial cache" FORCE)
+        set(CMAKE_PREFIX_PATH "${CMAKE_PREFIX_PATH};C:/vcpkg/installed/x64-mingw-dynamic/share")
+    endif()
+endif()
+
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/output)
 
 find_package(
@@ -107,8 +116,6 @@ target_link_libraries(
         Qt6::MultimediaWidgets
         Qt6::Network
         Qt6::PrintSupport
-        PRIVATE
-        unofficial::libgit2::libgit2
 )
 
 
@@ -116,7 +123,12 @@ find_package(libgit2)
 if (NOT libgit2_FOUND)
     if (WIN32 AND MINGW)
         find_package(unofficial-libgit2 CONFIG REQUIRED)
+        target_link_libraries(${PROJECT_NAME} PRIVATE unofficial::libgit2::libgit2)
+    elseif (LINUX OR UNIX)
+        message(FATAL_ERROR "libgit2 is required")
     endif()
+else ()
+    target_link_libraries(${PROJECT_NAME} PRIVATE libgit2::libgit2)
 endif()
 
 find_package(FFmpeg)
@@ -186,4 +198,10 @@ elseif (WIN32)
         # ${FFMPEG_SWRESAMPLE_LIBRARY} "\n"
         # ${FFMPEG_POSTPROC_LIBRARY} "\n"
     )
+else()
+    message(FATAL_ERROR "FFmpeg is required")
 endif()
+
+# include_directories("C:/Users/johnn/OneDrive/Desktop/New folder (3)/cppgit2/build/include")
+# find_library(CPPGIT2_LIBRARY cppgit2 REQUIRED HINTS "C:/Users/johnn/OneDrive/Desktop/New folder (3)/cppgit2/build/lib")
+# target_link_libraries(${PROJECT_NAME} PRIVATE ${CPPGIT2_LIBRARY})

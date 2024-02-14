@@ -630,3 +630,15 @@ void Tool::on_actionAdd_Remote_URL_triggered()
     git->addRemoteUrl();
 }
 
+
+void Tool::on_actionPush_triggered()
+{
+    git->push();
+}
+
+
+void Tool::on_actionPull_triggered()
+{
+    git->pull();
+}
+

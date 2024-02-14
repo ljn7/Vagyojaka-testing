@@ -75,6 +75,10 @@ private slots:
 
     void on_actionAdd_Remote_URL_triggered();
 
+    void on_actionPush_triggered();
+
+    void on_actionPull_triggered();
+
 private:
     void setFontForElements();
     void setTransliterationLangCodes();

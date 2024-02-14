@@ -27,6 +27,19 @@
 #define strcasecmp strcmpi
 #endif
 
+
+struct merge_options {
+
+
+    const char **heads;
+    size_t heads_count;
+
+    git_annotated_commit **annotated;
+    size_t annotated_count;
+
+    unsigned int no_commit : 1;
+};
+
 #define UNUSED(x) (void)(x)
 
 enum index_mode {

@@ -23,8 +23,6 @@ public:
     void commit();
     void addRemoteUrl();
     void pull();
-    void fetch();
-    void refresh();
     void push();
     ~Git();
 

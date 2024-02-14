@@ -13,7 +13,7 @@ set(CMAKE_AUTORCC ON)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
-# For windows use vcpkg(place it in C: folder)
+# For windows use vcpkg(place it in C: folder) and use MinGW compiler
 # and install the libgit
 # using "vcpkg install libgit2 --triplet=x64_mingw_dynamic" command from cmd
 

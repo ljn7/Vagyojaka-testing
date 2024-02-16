@@ -26,7 +26,8 @@ MediaSplitter::MediaSplitter(QWidget *parent,
 
     QUrl furl = QUrl::fromLocalFile(mediaFileName);
 
-    slash = (_WIN32)? ("/"): ("\\");
+    slash = "/";
+        // (_WIN32)? ("/"): ("\\");
     path = QFileInfo(mediaFileName).path();
     currentTimeInStr = QTime::currentTime().toString().replace(":", "-");
     fileNameWithoutExt = QFileInfo(furl.path()).baseName();

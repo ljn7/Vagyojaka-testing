@@ -118,20 +118,25 @@ target_link_libraries(
         Qt6::PrintSupport
 )
 
+if (LINUX)
+    find_package(PkgConfig REQUIRED)
+    pkg_check_modules(LIBGIT2 REQUIRED IMPORTED_TARGET libgit2)
+    target_link_libraries(${PROJECT_NAME} PRIVATE PkgConfig::LIBGIT2)
+endif()
 
-find_package(libgit2)
-if (NOT libgit2_FOUND)
+message(${LIBGIT2_FOUND})
+# find_package(libgit2)
+if (NOT LIBGIT2_FOUND)
     if (WIN32 AND MINGW)
         find_package(unofficial-libgit2 CONFIG REQUIRED)
         target_link_libraries(${PROJECT_NAME} PRIVATE unofficial::libgit2::libgit2)
     elseif (LINUX OR UNIX)
         message(FATAL_ERROR "libgit2 is required")
     endif()
-else ()
-    target_link_libraries(${PROJECT_NAME} PRIVATE libgit2::libgit2)
 endif()
 
 find_package(FFmpeg)
+
 
 if(FFMPEG_FOUND)
     message("FFmpeg found.")

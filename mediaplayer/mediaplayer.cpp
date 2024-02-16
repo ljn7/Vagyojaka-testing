@@ -75,7 +75,8 @@ void MediaPlayer::open()
         QFileInfo filedir(MediaFile);
         QString dirInString=filedir.dir().path();
         QSettings().setValue("mediaDir",dirInString);
-        QString slash = (_WIN32)? ("/"): ("\\");
+        QString slash = "/";
+            // (_WIN32)? ("/"): ("\\");
         m_mediaFileName = dirInString + slash + fileUrl->fileName();
         //Qt6
         // setMedia(*fileUrl);

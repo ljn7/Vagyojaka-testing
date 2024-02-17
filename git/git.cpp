@@ -1108,7 +1108,7 @@ static int create_merge_commit(git_repository *repo, git_index *index, struct me
     check_lg2(git_tree_lookup(&tree, repo, &tree_oid), "failed to lookup tree", NULL);
 
     /* Commit time ! */
-    err = git_commit_create(&commit_oid,
+    err = git_commit_create_v(&commit_oid,
                             repo, git_reference_name(head_ref),
                             sign, sign,
                             NULL, msg,

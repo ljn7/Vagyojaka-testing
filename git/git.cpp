@@ -1,6 +1,7 @@
 #include "git/addurldialog.h"
 #include "git/commitdialog.h"
 #include "git/credentialsdialog.h"
+#include "git/remotenamedialog.h"
 #include <git/git.h>
 #include <git/ui_git.h>
 #include <git2.h>
@@ -282,8 +283,15 @@ void Git::push()
     //     &refspec,
     //     1
     // };
+    QString remote_name = "";
+    RemoteNameDialog remoteNameDialog = RemoteNameDialog(this);
 
-    check_lg2(git_remote_lookup(&remote, repo, "origin" ), "Unable to lookup remote", nullptr);
+    if (remoteNameDialog.exec() == QDialog::Accepted) {
+        remote_name = remoteNameDialog.getRemoteName();
+    } else {
+        return;
+    }
+    check_lg2(git_remote_lookup(&remote, repo, strdup(remote_name.toStdString().c_str())), "Unable to lookup remote", nullptr);
 
     check_lg2(git_remote_init_callbacks(&callbacks, GIT_REMOTE_CALLBACKS_VERSION),
               "Error initializing remote callbacks", nullptr);
@@ -328,7 +336,16 @@ void Git::pull()
     const git_indexer_progress *stats;
     git_fetch_options fetch_opts = GIT_FETCH_OPTIONS_INIT;
 
-    if(check_lg2(git_remote_lookup(&remote, repo, "origin"), "Error Remote Lookup", nullptr)) {
+    QString remote_name = "";
+    RemoteNameDialog remoteNameDialog = RemoteNameDialog(this);
+
+    if (remoteNameDialog.exec() == QDialog::Accepted) {
+        remote_name = remoteNameDialog.getRemoteName();
+    } else {
+        return;
+    }
+
+    if(check_lg2(git_remote_lookup(&remote, repo, strdup(remote_name.toStdString().c_str())), "Error Remote Lookup", nullptr)) {
         return;
     }
 

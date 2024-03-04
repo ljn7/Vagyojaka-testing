@@ -10,10 +10,10 @@ KeyboardShortcutGuide::KeyboardShortcutGuide(QWidget *parent)
     QDialog::setWindowTitle("Keyboard Shortcuts Guide");
 
     int nWidth = 450;
-    int nHeight = 675;
+    int nHeight = 650;
     if (parent != NULL)
         setGeometry(parent->x() + parent->width()/2 - nWidth/2,
-                    parent->y() + parent->height()/3 - nHeight/3,
+                    parent->y() + parent->height()/4 - nHeight/4,
                     nWidth, nHeight);
     else
         resize(nWidth, nHeight);

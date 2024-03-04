@@ -702,17 +702,19 @@ void Editor::transcriptOpen()
     QFileDialog fileDialog(this);
     fileDialog.setAcceptMode(QFileDialog::AcceptOpen);
     fileDialog.setWindowTitle(tr("Open File"));
-    if(QSettings().value("transcriptDir").toString()=="")
+    QString iniPath = QApplication::applicationDirPath() + "/" + "config.ini";
+    QSettings settings(iniPath, QSettings::IniFormat);
+    if(settings.value("transcriptDir").toString()=="")
         fileDialog.setDirectory(QStandardPaths::standardLocations(QStandardPaths::DocumentsLocation).value(0, QDir::homePath()));
     else
-        fileDialog.setDirectory(QSettings().value("transcriptDir").toString());
+        fileDialog.setDirectory(settings.value("transcriptDir").toString());
     if (fileDialog.exec() == QDialog::Accepted) {
         QUrl *fileUrl = new QUrl(fileDialog.selectedUrls().constFirst());
         m_transcriptUrl = *fileUrl;
         QFile transcriptFile(fileUrl->toLocalFile());
         QFileInfo filedir(transcriptFile);
         QString dirInString=filedir.dir().path();
-        QSettings().setValue("transcriptDir", dirInString);
+        settings.setValue("transcriptDir", dirInString);
         if (!transcriptFile.open(QIODevice::ReadOnly)) {
             emit message(transcriptFile.errorString());
             return;

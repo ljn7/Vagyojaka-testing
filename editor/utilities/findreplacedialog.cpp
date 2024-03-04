@@ -74,9 +74,17 @@ void FindReplaceDialog::replace()
     QString replacementString = ui->text_replace->text();
     if (!m_Editor->textCursor().hasSelection())
         emit message("No selected words");
-    else if (replacementString != "" && m_Editor->textCursor().selectedText() == ui->text_find->text())
+    else if (replacementString != "")
     {
-        m_Editor->textCursor().insertText(replacementString);
+        if (m_Editor->textCursor().selectedText() == ui->text_find->text())
+            m_Editor->textCursor().insertText(replacementString);
+        //if case sensitive is off
+        else if (!ui->case_sensitive->isChecked()
+                 && m_Editor->textCursor().selectedText().toLower() == ui->text_find->text().toLower())
+            m_Editor->textCursor().insertText(replacementString);
+        else
+            return;
+
         emit message("Replced " + ui->text_find->text() + " with " + replacementString + ".");
     }
 }

@@ -118,7 +118,7 @@ target_link_libraries(
         Qt6::PrintSupport
 )
 
-if (LINUX)
+if (LINUX OR UNIX)
     find_package(PkgConfig REQUIRED)
     pkg_check_modules(LIBGIT2 REQUIRED IMPORTED_TARGET libgit2)
     target_link_libraries(${PROJECT_NAME} PRIVATE PkgConfig::LIBGIT2)
@@ -158,51 +158,49 @@ elseif (WIN32)
     FIND_PATH(FFMPEG_INCLUDE_DIR_AVCODEC NAMES libavcodec/avcodec.h HINTS ${FFMEPG_INCLUDE_DIR})
     FIND_PATH(FFMPEG_INCLUDE_DIR_AVFORMAT NAMES libavformat/avformat.h HINTS ${FFMEPG_INCLUDE_DIR})
     FIND_PATH(FFMPEG_INCLUDE_DIR_AVDEVICE NAMES libavdevice/avdevice.h HINTS ${FFMEPG_INCLUDE_DIR})
-    # FIND_PATH(FFMPEG_INCLUDE_DIR_AVFILTER NAMES libavfilter/avfilter.h HINTS ${FFMEPG_INCLUDE_DIR})
-    # FIND_PATH(FFMPEG_INCLUDE_DIR_SWSCALE NAMES libswscale/swscale.h HINTS ${FFMEPG_INCLUDE_DIR})
-    # FIND_PATH(FFMPEG_INCLUDE_DIR_SWRESAMPLE NAMES libswresample/swresample.h HINTS ${FFMEPG_INCLUDE_DIR})
-    # FIND_PATH(FFMPEG_INCLUDE_DIR_POSTPROC NAMES libpostproc/postprocess.h HINTS ${FFMEPG_INCLUDE_DIR})
 
     target_include_directories(${PROJECT_NAME} PRIVATE
         ${FFMPEG_INCLUDE_DIR_AVUTIL}
         ${FFMPEG_INCLUDE_DIR_AVCODEC}
         ${FFMPEG_INCLUDE_DIR_AVFORMAT}
         ${FFMPEG_INCLUDE_DIR_AVDEVICE}
-        # ${FFMPEG_INCLUDE_DIR_AVFILTER}
-        # ${FFMPEG_INCLUDE_DIR_SWSCALE}
-        # ${FFMPEG_INCLUDE_DIR_SWRESAMPLE}
-        # ${FFMPEG_INCLUDE_DIR_POSTPROC}
     )
 
     FIND_LIBRARY(FFMPEG_AVUTIL_LIBRARY NAMES avutil HINTS ${FFMEPG_LIB_DIR})
     FIND_LIBRARY(FFMPEG_AVCODEC_LIBRARY NAMES avcodec HINTS ${FFMEPG_LIB_DIR})
     FIND_LIBRARY(FFMPEG_AVFORMAT_LIBRARY NAMES avformat HINTS ${FFMEPG_LIB_DIR})
     FIND_LIBRARY(FFMPEG_AVDEVICE_LIBRARY NAMES avdevice HINTS ${FFMEPG_LIB_DIR})
-    # FIND_LIBRARY(FFMPEG_AVFILTER_LIBRARY NAMES avfilter HINTS ${FFMEPG_LIB_DIR})
-    # FIND_LIBRARY(FFMPEG_SWSCALE_LIBRARY NAMES swscale HINTS ${FFMEPG_LIB_DIR})
-    # FIND_LIBRARY(FFMPEG_SWRESAMPLE_LIBRARY NAMES swresample HINTS ${FFMEPG_LIB_DIR})
-    # FIND_LIBRARY(FFMPEG_POSTPROC_LIBRARY NAMES postproc HINTS ${FFMEPG_LIB_DIR})
 
     target_link_libraries(${PROJECT_NAME} PRIVATE
         ${FFMPEG_AVUTIL_LIBRARY}
         ${FFMPEG_AVCODEC_LIBRARY}
         ${FFMPEG_AVFORMAT_LIBRARY}
         ${FFMPEG_AVDEVICE_LIBRARY}
-        # ${FFMPEG_AVFILTER_LIBRARY}
-        # ${FFMPEG_SWSCALE_LIBRARY}
-        # ${FFMPEG_SWRESAMPLE_LIBRARY}
-        # ${FFMPEG_POSTPROC_LIBRARY}
     )
 
     message(${FFMPEG_AVUTIL_LIBRARY} "\n"
         ${FFMPEG_AVCODEC_LIBRARY} "\n"
         ${FFMPEG_AVFORMAT_LIBRARY} "\n"
         ${FFMPEG_AVDEVICE_LIBRARY} "\n"
-        # ${FFMPEG_AVFILTER_LIBRARY} "\n"
-        # ${FFMPEG_SWSCALE_LIBRARY} "\n"
-        # ${FFMPEG_SWRESAMPLE_LIBRARY} "\n"
-        # ${FFMPEG_POSTPROC_LIBRARY} "\n"
     )
+
+elseif(UNIX)
+    find_package(PkgConfig REQUIRED)
+    pkg_check_modules(FFMPEG REQUIRED IMPORTED_TARGET
+      libavcodec
+      libavformat
+      libavutil
+      libavdevice
+    )
+    if(FFMPEG_FOUND)
+        message(STATUS "FFMPEG found")
+        target_include_directories(${PROJECT_NAME} PRIVATE ${FFMPEG_INCLUDE_DIRS})
+        target_link_directories(${PROJECT_NAME} PRIVATE ${FFMPEG_LIBRARY_DIRS})
+        target_link_libraries(${PROJECT_NAME} PkgConfig::FFMPEG)
+    else()
+        message(FATAL_ERROR "FFmpeg is required")
+    endif()
+
 else()
     message(FATAL_ERROR "FFmpeg is required")
 endif()

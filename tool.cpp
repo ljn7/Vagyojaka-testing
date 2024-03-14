@@ -65,6 +65,12 @@ Tool::Tool(QWidget *parent)
     connect(m_audioOutput, &QAudioOutput::volumeChanged, ui->m_playerControls, &PlayerControls::setVolume);
     connect(m_audioOutput, &QAudioOutput::mutedChanged, ui->m_playerControls, &PlayerControls::setMuted);
     connect(player, &MediaPlayer::message, this->statusBar(), &QStatusBar::showMessage);
+    connect(player, &MediaPlayer::message, [this](const QString &text, int timeout = 0 ) {
+        this->ui->mediaFilenameLbl->setText(text);
+    });
+    connect(ui->m_editor, &Editor::message, [this](const QString& text, int timeout = 0) {
+        this->ui->transcriptFilenameLbl->setText(text);
+    });
     // Qt6
     // connect(player, QOverload<QMediaPlayer::Error>::of(&QMediaPlayer::error), this, &Tool::handleMediaPlayerError);
     connect(player, &MediaPlayer::errorChanged, this, &Tool::handleMediaPlayerError);

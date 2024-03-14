@@ -749,9 +749,9 @@ void Editor::transcriptOpen()
         //*********************************************************
 
         if (m_transcriptLang != "")
-            emit message("Opened transcript " + fileUrl->fileName() + " Language: " + m_transcriptLang);
+            emit message("Opened transcript: " + fileUrl->fileName() + " Language: " + m_transcriptLang);
         else
-            emit message("Opened transcript " + fileUrl->fileName());
+            emit message("Opened transcript: " + fileUrl->fileName());
 
         m_saveTimer->start(m_saveInterval * 1000);
     }

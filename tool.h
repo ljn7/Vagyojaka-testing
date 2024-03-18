@@ -23,6 +23,11 @@ QT_END_NAMESPACE
 
 protected:
     void keyPressEvent(QKeyEvent *event) override;
+    void dragEnterEvent(QDragEnterEvent *event) override;
+    void dropEvent(QDropEvent *event) override;
+    void dragMoveEvent(QDragMoveEvent *event) override;
+    // bool eventFilter(QObject *obj, QEvent *event) override;
+
 
 private slots:
     void handleMediaPlayerError();
@@ -82,6 +87,7 @@ private slots:
 private:
     void setFontForElements();
     void setTransliterationLangCodes();
+    bool isDroppedOnLayout(const QPoint &pos, QVBoxLayout *layout);
 
     MediaPlayer *player = nullptr;
     QAudioOutput *m_audioOutput = nullptr;

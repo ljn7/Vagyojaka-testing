@@ -211,6 +211,10 @@ Tool::Tool(QWidget *parent)
     setFontForElements();
     git = new Git();
     git->init();
+    setAcceptDrops(true);
+    // installEventFilter(this);
+    ui->m_editor->setAcceptDrops(false);
+    ui->m_videoWidget->setAcceptDrops(false);
 }
 
 Tool::~Tool()
@@ -648,3 +652,67 @@ void Tool::on_actionPull_triggered()
     git->pull();
 }
 
+
+// bool Tool::eventFilter(QObject *obj, QEvent *event)
+// {
+//     if (event->type() == QEvent::Drop) {
+//         QDropEvent *dropEvent = static_cast<QDropEvent*>(event);
+//         const QMimeData* mimeData = dropEvent->mimeData();
+//         if (mimeData->hasUrls()) {
+//             QList<QUrl> urls = mimeData->urls();
+//             // Check which layout the drop event occurred on
+//             if (obj == ui->playerLayout) {
+//                 std::cerr << "Files dropped on layout1" << std::endl;
+//                 // Handle drop event for layout1
+//             } else if (obj == ui->verticalLayout) {
+//                 std::cerr << "Files dropped on layout2:" << std::endl;
+//                 // Handle drop event for layout2
+//             }
+//             // Handle dropped files as needed
+//             std::cerr << "Files: \n";
+//             for (const QUrl& url : urls) {
+//                 std::cerr << url.toLocalFile().toStdString() << std::endl;
+//             }
+//         }
+//         return true;
+//     }
+//     return QMainWindow::eventFilter(obj, event);
+// }
+
+void Tool::dragEnterEvent(QDragEnterEvent *event) {
+    QDragEnterEvent* dragEnterEvent = static_cast<QDragEnterEvent*>(event);
+    if (dragEnterEvent->mimeData()->hasUrls()) {
+        dragEnterEvent->acceptProposedAction();
+    }
+}
+
+void Tool::dragMoveEvent(QDragMoveEvent *event) {
+    event->accept();
+    event->acceptProposedAction();
+}
+
+void Tool::dropEvent(QDropEvent *event) {
+    std::cerr << "Drop event";
+    const QMimeData *mimeData = event->mimeData();
+    if (mimeData->hasUrls()) {
+
+        if (ui->m_editor->geometry().contains(event->position().toPoint()) ||
+            ui->m_wordEditor->geometry().contains(event->position().toPoint())) {
+            std::cerr << "At VerticalLayout \n";
+        }
+        else if (ui->m_videoWidget->geometry().contains(event->position().toPoint()) ||
+            ui->m_playerControls->geometry().contains(event->position().toPoint())) {
+            std::cerr << "At PlayerLayout \n";
+        }
+
+    }
+}
+
+bool Tool::isDroppedOnLayout(const QPoint &pos, QVBoxLayout *layout) {
+    for (int i = 0; i < layout->count(); ++i) {
+        if (layout->itemAt(i)->geometry().contains(pos)) {
+            return true;
+        }
+    }
+    return false;
+}

@@ -33,6 +33,7 @@ public slots:
 
 signals:
     void message(QString text, int timeout = 5000);
+    void openMessage(QString text);
 
 private:
     static QTime getTimeFromPosition(const qint64& position);

@@ -710,50 +710,6 @@ void Editor::transcriptOpen()
         fileDialog.setDirectory(settings->value("transcriptDir").toString());
     if (fileDialog.exec() == QDialog::Accepted) {
         loadTranscriptFromUrl(new QUrl(fileDialog.selectedUrls().constFirst()));
-        // m_transcriptUrl = *fileUrl;
-        // QFile transcriptFile(fileUrl->toLocalFile());
-        // QFileInfo filedir(transcriptFile);
-        // QString dirInString=filedir.dir().path();
-        // settings.setValue("transcriptDir", dirInString);
-        // if (!transcriptFile.open(QIODevice::ReadOnly)) {
-        //     emit message(transcriptFile.errorString());
-        //     return;
-        // }
-
-        // m_saveTimer->stop();
-
-        // loadTranscriptData(transcriptFile);
-
-        // if (m_transcriptLang == "")
-        //     m_transcriptLang = "english";
-
-        // loadDictionary();
-
-        // setContent();
-        // //*********************Inserting into file********************************
-        // QFile initial(fileBeforeSave);
-        // if(!initial.open(QIODevice::OpenModeFlag::WriteOnly)){
-        //     QMessageBox::critical(this,"Error",initial.errorString());
-        //     return;
-        // }
-        // QString x("");
-        // for (auto& a_block: std::as_const(m_blocks)) {
-        //     auto blockText =  a_block.text + " " ;
-        //     x.append(blockText + "\n");
-        // }
-
-        // QTextStream out(&initial);
-        // out <<x;
-        // initial.close();
-
-        // //*********************************************************
-
-        // if (m_transcriptLang != "")
-        //     emit message("Opened transcript: " + fileUrl->fileName() + " Language: " + m_transcriptLang);
-        // else
-        //     emit message("Opened transcript: " + fileUrl->fileName());
-
-        // m_saveTimer->start(m_saveInterval * 1000);
     }
 }
 

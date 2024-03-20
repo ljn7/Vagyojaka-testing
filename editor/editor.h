@@ -49,6 +49,8 @@ class Editor : public TextEditor
      bool timestampVisibility();
     QList<QTime> getTimeStamps();
     friend class Highlighter;
+    void loadTranscriptFromUrl(QUrl* fileUrl);
+
 //    QUndoStack *undoStack=nullptr;
 protected:
     void mousePressEvent(QMouseEvent *e) override;
@@ -113,7 +115,7 @@ private:
     static QTime getTime(const QString& text);
     static word makeWord(const QTime& t, const QString& s, const QStringList& tagList);
     QCompleter* makeCompleter();
-
+    QSettings* settings;
 
     void saveXml(QFile* file);
     void helpJumpToPlayer();

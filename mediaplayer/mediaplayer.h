@@ -22,6 +22,7 @@ public:
     QString getPositionInfo();
     QStringList supportedFormats;
     // QAudioOutput *m_audioOutput;
+    void loadMediaFromUrl(QUrl *fileUrl);
 
 public slots:
     void open();
@@ -36,5 +37,6 @@ signals:
 private:
     static QTime getTimeFromPosition(const qint64& position);
     QString m_mediaFileName;
+    QSettings* settings;
 
 };

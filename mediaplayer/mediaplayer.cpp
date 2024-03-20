@@ -17,6 +17,8 @@ MediaPlayer::MediaPlayer(QWidget *parent)
 
         "All Files (*)"
     };
+    QString iniPath = QApplication::applicationDirPath() + "/" + "config.ini";
+    settings = new QSettings(iniPath, QSettings::IniFormat);
 }
 
 QTime MediaPlayer::elapsedTime()
@@ -53,6 +55,22 @@ QString MediaPlayer::getPositionInfo()
     return elapsedTime().toString(format) + " / " + durationTime().toString(format);
 }
 
+void MediaPlayer::loadMediaFromUrl(QUrl *fileUrl)
+{
+    QFile MediaFile(fileUrl->toLocalFile());
+    QFileInfo filedir(MediaFile);
+    QString dirInString=filedir.dir().path();
+    settings->setValue("mediaDir",dirInString);
+    QString slash = "/";
+        // (_WIN32)? ("/"): ("\\");
+    m_mediaFileName = dirInString + slash + fileUrl->fileName();
+    //Qt6
+    // setMedia(*fileUrl);
+    setSource(*fileUrl);
+    emit message("Opened file " + fileUrl->fileName());
+    play();
+}
+
 void MediaPlayer::open()
 {
     QFileDialog fileDialog;
@@ -64,29 +82,16 @@ void MediaPlayer::open()
     //     fileDialog.setMimeTypeFilters(supportedMimeTypes);
 
     // fileDialog.setMimeTypeFilters(supportedFormats);
-    QString iniPath = QApplication::applicationDirPath() + "/" + "config.ini";
-    QSettings settings(iniPath, QSettings::IniFormat);
+
 
     fileDialog.setNameFilters(supportedFormats);
-    if(settings.value("mediaDir").toString()=="")
+    if(settings->value("mediaDir").toString()=="")
         fileDialog.setDirectory(QStandardPaths::standardLocations(QStandardPaths::MoviesLocation).value(0, QDir::homePath()));
     else
-        fileDialog.setDirectory(settings.value("mediaDir").toString());
+        fileDialog.setDirectory(settings->value("mediaDir").toString());
     if (fileDialog.exec() == QDialog::Accepted) {
         QUrl *fileUrl = new QUrl(fileDialog.selectedUrls().constFirst());
-
-        QFile MediaFile(fileUrl->toLocalFile());
-        QFileInfo filedir(MediaFile);
-        QString dirInString=filedir.dir().path();
-        settings.setValue("mediaDir",dirInString);
-        QString slash = "/";
-            // (_WIN32)? ("/"): ("\\");
-        m_mediaFileName = dirInString + slash + fileUrl->fileName();
-        //Qt6
-        // setMedia(*fileUrl);
-        setSource(*fileUrl);
-        emit message("Opened file " + fileUrl->fileName());
-        play();
+        loadMediaFromUrl(fileUrl);
     }
 }
 

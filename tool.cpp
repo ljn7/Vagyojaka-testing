@@ -206,7 +206,7 @@ Tool::Tool(QWidget *parent)
     connect(ui->slider_position, &QSlider::sliderMoved, player, &MediaPlayer::setPosition);
 
     connect(ui->m_playerControls, &PlayerControls::splitClick, this, &Tool::createMediaSplitter);
-
+    connect(ui->m_videoWidget, &VideoWidget::droppedFile, player, &MediaPlayer::loadMediaFromUrl);
     font = QFont( "Monospace", 10 );
     setFontForElements();
     git = new Git();
@@ -214,7 +214,7 @@ Tool::Tool(QWidget *parent)
     setAcceptDrops(true);
     // installEventFilter(this);
     ui->m_editor->setAcceptDrops(false);
-    ui->m_videoWidget->setAcceptDrops(false);
+
 }
 
 Tool::~Tool()
@@ -695,15 +695,19 @@ void Tool::dropEvent(QDropEvent *event) {
     std::cerr << "Drop event";
     const QMimeData *mimeData = event->mimeData();
     if (mimeData->hasUrls()) {
+        QUrl* url = new QUrl(mimeData->urls().first());
+        QString filePath = url->toLocalFile();
+        QFileInfo fileInfo(filePath);
+        QString extension = fileInfo.suffix().toLower();
 
-        if (ui->m_editor->geometry().contains(event->position().toPoint()) ||
-            ui->m_wordEditor->geometry().contains(event->position().toPoint())) {
-            std::cerr << "At VerticalLayout \n";
+        if (extension == "xml") {
+            ui->m_editor->loadTranscriptFromUrl(url);
         }
-        else if (ui->m_videoWidget->geometry().contains(event->position().toPoint()) ||
-            ui->m_playerControls->geometry().contains(event->position().toPoint())) {
-            std::cerr << "At PlayerLayout \n";
+        else {
+            player->loadMediaFromUrl(url);
         }
+        event->acceptProposedAction();
+
 
     }
 }

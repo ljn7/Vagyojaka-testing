@@ -752,7 +752,7 @@ void Editor::transcriptOpen()
             emit message("Opened transcript: " + fileUrl->fileName() + " Language: " + m_transcriptLang);
         else
             emit message("Opened transcript: " + fileUrl->fileName());
-
+        emit openMessage(fileUrl->fileName());
         m_saveTimer->start(m_saveInterval * 1000);
     }
 }

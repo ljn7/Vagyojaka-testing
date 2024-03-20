@@ -25,6 +25,7 @@ public slots:
 
 signals:
     void message(const QString& text, int timeout = 5000);
+    void openMessage(const QString& text);
 
 protected:
     void resizeEvent(QResizeEvent *event) override;

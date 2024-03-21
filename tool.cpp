@@ -26,7 +26,7 @@ Tool::Tool(QWidget *parent)
     player->setVideoOutput(ui->m_videoWidget);
     m_audioOutput = new QAudioOutput(this);
     player->setAudioOutput(m_audioOutput);
-    
+
     ui->splitter_tool->setCollapsible(0, false);
     ui->splitter_tool->setCollapsible(1, false);
     ui->splitter_tool->setSizes(QList<int>({static_cast<int>(0.15 * sizeHint().height()),

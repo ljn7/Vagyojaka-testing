@@ -65,13 +65,17 @@ Tool::Tool(QWidget *parent)
     connect(m_audioOutput, &QAudioOutput::volumeChanged, ui->m_playerControls, &PlayerControls::setVolume);
     connect(m_audioOutput, &QAudioOutput::mutedChanged, ui->m_playerControls, &PlayerControls::setMuted);
     connect(player, &MediaPlayer::message, this->statusBar(), &QStatusBar::showMessage);
+
     connect(player, &MediaPlayer::openMessage, [this](const QString& text) {
-        QString message = text;
-        if (text.size() > 30)
-            message = text.left(30) + "...";
-        this->ui->mediaFilenameLbl->setText("Media: " + message);
-    });
+            this->ui->mediaFilenameLbl->setText(text);
+            QString message = text;
+            if (text.size() > 30)
+                message = text.left(30) + "...";
+            this->ui->mediaFilenameLbl->setText("Media: " + message);
+        });
+
     connect(ui->m_editor, &Editor::openMessage, [this](const QString& text) {
+        this->ui->transcriptFilenameLbl->setText(text);
         QString message = text;
         if (text.size() > 30)
             message = text.left(30) + "...";

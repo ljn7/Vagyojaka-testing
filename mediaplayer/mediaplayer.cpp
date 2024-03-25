@@ -68,6 +68,7 @@ void MediaPlayer::loadMediaFromUrl(QUrl *fileUrl)
     // setMedia(*fileUrl);
     setSource(*fileUrl);
     emit message("Opened file " + fileUrl->fileName());
+    emit openMessage(fileUrl->fileName());
     play();
 }
 

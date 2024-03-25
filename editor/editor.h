@@ -61,6 +61,7 @@ signals:
     void jumpToPlayer(const QTime& time);
     void refreshTagList(const QStringList& tagList);
     void replyCame();
+    void openMessage(const QString& text);
 
 public slots:
     void transcriptOpen();

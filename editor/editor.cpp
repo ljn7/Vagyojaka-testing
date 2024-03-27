@@ -89,7 +89,7 @@ void Editor::setMoveAlongTimeStamps()
 }
 
 
-
+// Current Edit
 void Highlighter::highlightBlock(const QString& text)
 {
     if (invalidBlockNumbers.contains(currentBlock().blockNumber())) {
@@ -153,6 +153,40 @@ void Highlighter::highlightBlock(const QString& text)
 
         QTextCharFormat format;
         format.setForeground(Qt::blue);
+        //to remove highlight of timestamp
+        /*if(Editor::showTimeStamp){
+            qInfo()<<"changed to true";
+            for (int i = 0; i < words.size() -1 ; i++) {
+                if (!invalidWordNumbers.contains(i))
+                    continue;
+                for (int j = 0; j < i; j++) start += (words[j].size() + 1);
+                int count = words[i].size();
+                setFormat(start + 1, count, format);
+                start = speakerEnd;
+            }
+        }else*/ {
+            for (int i = 0; i < words.size() ; i++) {
+                if (!invalidWordNumbers.contains(i))
+                    continue;
+                for (int j = 0; j < i; j++) start += (words[j].size() + 1);
+                int count = words[i].size();
+                setFormat(start + 1, count, format);
+                start = speakerEnd;
+            }}
+    }
+    if (!editedWords.isEmpty()) {
+        auto invalidWordNumbers = editedWords.values(currentBlock().blockNumber());
+        auto speakerEnd = 0;
+        auto speakerMatch = QRegularExpression(R"(\[.*]:)").match(text);
+        if (speakerMatch.hasMatch())
+            speakerEnd = speakerMatch.capturedEnd();
+
+        auto words = text.mid(speakerEnd + 1).split(" ");
+
+        int start = speakerEnd;
+
+        QTextCharFormat format;
+        format.setBackground(Qt::yellow);
         //to remove highlight of timestamp
         /*if(Editor::showTimeStamp){
             qInfo()<<"changed to true";
@@ -267,7 +301,7 @@ void Highlighter::highlightBlock(const QString& text)
 
             QTextCharFormat format1;
             format1.setForeground(Qt::black);
-            format1. setFontWeight(QFont::Bold);
+            format1.setFontWeight(QFont::Bold);
             format1.setFontUnderline(true);
             format1.setUnderlineColor(Qt::red);
             format1.setUnderlineStyle(QTextCharFormat::SpellCheckUnderline);
@@ -946,9 +980,9 @@ QTime Editor::getTime(const QString& text)
     }
 }
 
-word Editor::makeWord(const QTime& t, const QString& s, const QStringList& tagList)
+word Editor::makeWord(const QTime& t, const QString& s, const QStringList& tagList, const QString& isEdited)
 {
-    word w = {t, s, tagList};
+    word w = {t, s, tagList, isEdited};
     return w;
 }
 
@@ -1045,8 +1079,9 @@ block Editor::fromEditor(qint64 blockNumber) const
         text = text.trimmed();
 
     auto list = text.split(" ");
+    //checking
     for (auto& m_word: std::as_const(list)) {
-        words.append(makeWord(QTime(), m_word, QStringList()));
+        words.append(makeWord(QTime(), m_word, QStringList(), "true"));
     }
 
     block b = {timeStamp, text, speaker, QStringList(), words};
@@ -1120,6 +1155,7 @@ void Editor::loadTranscriptData(QFile& file)
                         //Qt6
                         // if(reader.name() == "word")
                         if(reader.name() == QString("word")){
+                            QString isEditedStr = reader.attributes().value("isEdited").toString();
                             auto wordTimeStamp  = getTime(reader.attributes().value("timestamp").toString());
                             auto wordTagString  = reader.attributes().value("tags").toString();
                             auto wordText       = reader.readElementText();
@@ -1128,7 +1164,7 @@ void Editor::loadTranscriptData(QFile& file)
                                 wordTagList = wordTagString.split(",");
 
                             blockText += (wordText + " ");
-                            line.words.append(makeWord(wordTimeStamp, wordText, wordTagList));
+                            line.words.append(makeWord(wordTimeStamp, wordText, wordTagList, isEditedStr.toLower()));
                         }
                         else
                             reader.skipCurrentElement();
@@ -1174,6 +1210,7 @@ void Editor::saveXml(QFile* file)
             for (auto& a_word: std::as_const(a_block.words)) {
                 writer.writeStartElement("word");
                 writer.writeAttribute("timestamp", a_word.timeStamp.toString("hh:mm:ss.zzz"));
+                writer.writeAttribute("isEdited", (a_word.isEdited == "true") ? "true": "false");
 
                 if (!a_word.tagList.isEmpty())
                     writer.writeAttribute("tags", a_word.tagList.join(","));
@@ -1393,6 +1430,7 @@ void Editor::setContent()
         QList<int> taggedBlocks;
         QMultiMap<int, int> invalidWords;
         QMultiMap<int, int>  taggedWords;
+        QMultiMap<int, int> editedWords;
         for (int i = 0; i < m_blocks.size(); i++) {
             if (m_blocks[i].timeStamp.isNull())
                 invalidBlocks.append(i);
@@ -1403,6 +1441,11 @@ void Editor::setContent()
 
                 for (int j = 0; j < m_blocks[i].words.size(); j++) {
                     auto wordText = m_blocks[i].words[j].text.toLower();
+                    // auto isWordEdited = m_blocks[i].words[j].isEdited;
+
+                    // if (isWordEdited == "true") {
+                    //     editedWords.insert(i, j);
+                    // }
 
                     if (wordText != "" && m_punctuation.contains(wordText.back()))
                         wordText = wordText.left(wordText.size() - 1);
@@ -1508,6 +1551,9 @@ void Editor::setContent()
                     if(!m_blocks[i].words[j].tagList.empty()){
                         taggedWords.insert(i,j);
                     }
+                    if(m_blocks[i].words[j].isEdited == "true") {
+                        editedWords.insert(i, j);
+                    }
                 }
             }
         }
@@ -1517,7 +1563,7 @@ void Editor::setContent()
         m_highlighter->setTaggedWords(taggedWords);
         m_highlighter->setBlockToHighlight(highlightedBlock);
         m_highlighter->setWordToHighlight(highlightedWord);
-
+        m_highlighter->setEditedWords(editedWords);
         settingContent = false;
     }
 }
@@ -1596,10 +1642,17 @@ void Editor::contentChanged(int position, int charsRemoved, int charsAdded)
         int wordsDifference = wordsFromEditor.size() - wordsFromData.size();
         int diffStart{-1}, diffEnd{-1};
 
+        bool flag = true;
         for (int i = 0; i < wordsFromEditor.size() && i < wordsFromData.size(); i++)
-            if (wordsFromEditor[i].text != wordsFromData[i].text) {
+            if (flag && wordsFromEditor[i].text != wordsFromData[i].text) {
+                std::cerr << "WordsFromEditor: " << wordsFromEditor[i].text.toStdString()
+                          << " -- WordsFromData: " << wordsFromData[i].text.toStdString() << std::endl;
+                wordsFromEditor[i].isEdited = "true";
                 diffStart = i;
-                break;
+                flag = false;
+                // break; //added flag instead of breaking
+            } else {
+                wordsFromEditor[i].isEdited = wordsFromData[i].isEdited;
             }
 
         if (diffStart == -1)
@@ -1673,6 +1726,8 @@ void Editor::contentChanged(int position, int charsRemoved, int charsAdded)
     QList<int> taggedBlocks;
     QMultiMap<int, int> invalidWords;
     QMultiMap<int, int>  taggedWords;
+    QMultiMap<int, int> editedWords;
+
     for (int i = 0; i < m_blocks.size(); i++) {
         if (m_blocks[i].timeStamp.isNull())
             invalidBlocks.append(i);
@@ -1682,7 +1737,12 @@ void Editor::contentChanged(int position, int charsRemoved, int charsAdded)
         else {
             for (int j = 0; j < m_blocks[i].words.size(); j++) {
                 auto wordText = m_blocks[i].words[j].text.toLower();
+                auto isWordEdited = m_blocks[i].words[j].isEdited == "true";
 
+                if (isWordEdited) {
+                    std::cerr << "i: " << i << " j: " << j << std::endl;
+                    editedWords.insert(i, j);
+                }
                 if (wordText != "" && m_punctuation.contains(wordText.back()))
                     wordText = wordText.left(wordText.size() - 1);
 
@@ -1771,7 +1831,7 @@ void Editor::contentChanged(int position, int charsRemoved, int charsAdded)
                     wordText = wordText.left(wordText.size() - 1);
 
                 }
-                QRegularExpression regex("([0-1][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])(\\.[0-9]+)?");
+                static QRegularExpression regex("([0-1][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])(\\.[0-9]+)?");
                 bool match = regex.match(wordText).hasMatch();
                 if (match) {
                     continue;
@@ -1790,10 +1850,12 @@ void Editor::contentChanged(int position, int charsRemoved, int charsAdded)
 
         }
     }
+
     m_highlighter->setInvalidBlocks(invalidBlocks);
     m_highlighter->setTaggedBlocks(taggedBlocks);
     m_highlighter->setInvalidWords(invalidWords);
     m_highlighter->setTaggedWords(taggedWords);
+    m_highlighter->setEditedWords(editedWords);
     updateWordEditor();
     if(realTimeDataSaver){
         transcriptSave();
@@ -1877,8 +1939,9 @@ void Editor::splitLine(const QTime& elapsedTime)
     QVector<word> words;
     int sizeOfWordsAfter = m_blocks[cursor.blockNumber()].words.size() - wordNumber - 1;
 
+    //checking
     if (cutWordRight != "")
-        words.append(makeWord(timeStampOfCutWord, cutWordRight, tagsOfCutWord));
+        words.append(makeWord(timeStampOfCutWord, cutWordRight, tagsOfCutWord, "true"));
     for (int i = 0; i < sizeOfWordsAfter; i++) {
         words.append(m_blocks[cursor.blockNumber()].words[wordNumber + 1]);
         m_blocks[cursor.blockNumber()].words.removeAt(wordNumber + 1);

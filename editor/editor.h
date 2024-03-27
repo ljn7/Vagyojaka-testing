@@ -114,7 +114,7 @@ private slots:
 
 private:
     static QTime getTime(const QString& text);
-    static word makeWord(const QTime& t, const QString& s, const QStringList& tagList);
+    static word makeWord(const QTime& t, const QString& s, const QStringList& tagList, const QString& isEdited);
     QCompleter* makeCompleter();
     QSettings* settings;
 
@@ -208,6 +208,10 @@ class Highlighter : public QSyntaxHighlighter
         taggedWords = taggedWordsMap;
         rehighlight();
     }
+    void setEditedWords(const QMultiMap<int, int>& editedWordsMap) {
+        editedWords = editedWordsMap;
+        rehighlight();
+    }
     void clearInvalidBlocks()
     {
         invalidBlockNumbers.clear();
@@ -224,4 +228,5 @@ private:
 
     QMultiMap<int, int> invalidWords;
     QMultiMap<int, int> taggedWords;
+    QMultiMap<int, int> editedWords;
 };

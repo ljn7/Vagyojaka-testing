@@ -8,10 +8,16 @@ struct word
     QTime timeStamp;
     QString text;
     QStringList tagList;
+    QString isEdited;
+
+    word(QTime timeStamp, QString text, QStringList tagList, QString isEdited = "false")
+        : timeStamp(timeStamp), text(text), tagList(tagList), isEdited(isEdited) {}
+
+    word() : timeStamp(), text(), tagList(), isEdited("false") {}
 
     inline bool operator==(word w) const
     {
-        if (w.timeStamp == timeStamp && w.text == text)
+        if (w.timeStamp == timeStamp && w.text == text && w.isEdited == isEdited)
             return true;
         return false;
     }

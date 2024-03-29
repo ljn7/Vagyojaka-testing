@@ -1647,7 +1647,6 @@ void Editor::contentChanged(int position, int charsRemoved, int charsAdded)
             if (flag && wordsFromEditor[i].text != wordsFromData[i].text) {
                 std::cerr << "WordsFromEditor: " << wordsFromEditor[i].text.toStdString()
                           << " -- WordsFromData: " << wordsFromData[i].text.toStdString() << std::endl;
-                wordsFromEditor[i].isEdited = "true";
                 diffStart = i;
                 flag = false;
                 // break; //added flag instead of breaking
@@ -1664,6 +1663,7 @@ void Editor::contentChanged(int position, int charsRemoved, int charsAdded)
             }
 
         if (!wordsDifference) {
+            wordsFromEditor[diffStart].isEdited = "true";
             for (int i = diffStart; i < wordsFromEditor.size(); i++){
                 wordsFromEditor[i].timeStamp = wordsFromData[i].timeStamp;
                 wordsFromEditor[i].tagList = wordsFromData[i].tagList;
@@ -1672,11 +1672,24 @@ void Editor::contentChanged(int position, int charsRemoved, int charsAdded)
 
         if (wordsDifference > 0) {
             qInfo()<<"exceeds";
-            for (int i = wordsFromEditor.size() - 1, j = wordsFromData.size() - 1; j > diffStart; i--, j--)
+
+            for (int i = 0, j = 0; i < wordsFromData.size() && j < wordsFromEditor.size();) {
+                if (wordsFromData[i].text != wordsFromEditor[j].text) {
+                    wordsFromEditor[j].isEdited = "true";
+                    j++;
+                } else {
+                    wordsFromEditor[j].isEdited = wordsFromData[i].isEdited;
+                    i++;
+                    j++;
+                }
+            }
+            for (int i = wordsFromEditor.size() - 1, j = wordsFromData.size() - 1; j > diffStart; i--, j--) {
                 if (wordsFromEditor[i].text == wordsFromData[j].text){
                     wordsFromEditor[i].timeStamp = wordsFromData[j].timeStamp;
 					//                    wordsFromEditor[i].tagList = wordsFromData[j].tagList;
                 }
+            }
+
             for (int i=wordsFromData.size()-1;i>=0;i--){
                 if(!wordsFromData[i].tagList.empty()){
                     for (int j=wordsFromEditor.size()-1;j>=0;j--){

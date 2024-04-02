@@ -1673,14 +1673,27 @@ void Editor::contentChanged(int position, int charsRemoved, int charsAdded)
         if (wordsDifference > 0) {
             qInfo()<<"exceeds";
 
+            int counter = 0;
             for (int i = 0, j = 0; i < wordsFromData.size() && j < wordsFromEditor.size();) {
-                if (wordsFromData[i].text != wordsFromEditor[j].text) {
+                if (wordsFromData[i].text != wordsFromEditor[j].text && counter < 2) {
+                    std::cerr << "---- If ----" << std::endl;
+                    std::cerr << i << " Data: "<< wordsFromData[i].text.toStdString()
+                              << " " << j << " --- Editor :" << wordsFromEditor[j].text.toStdString()
+                              << std::endl;
                     wordsFromEditor[j].isEdited = "true";
+                    counter++;
+                    if (counter == 2)
+                        i++;
                     j++;
                 } else {
+                    std::cerr << "---- Else -----" << std::endl;
+                    std::cerr << i << " Data: "<< wordsFromData[i].text.toStdString()
+                              << " " << j << " --- Editor :" << wordsFromEditor[j].text.toStdString()
+                              << std::endl;
                     wordsFromEditor[j].isEdited = wordsFromData[i].isEdited;
                     i++;
                     j++;
+
                 }
             }
             for (int i = wordsFromEditor.size() - 1, j = wordsFromData.size() - 1; j > diffStart; i--, j--) {
@@ -1753,7 +1766,7 @@ void Editor::contentChanged(int position, int charsRemoved, int charsAdded)
                 auto isWordEdited = m_blocks[i].words[j].isEdited == "true";
 
                 if (isWordEdited) {
-                    std::cerr << "i: " << i << " j: " << j << std::endl;
+                    // std::cerr << "i: " << i << " j: " << j << std::endl;
                     editedWords.insert(i, j);
                 }
                 if (wordText != "" && m_punctuation.contains(wordText.back()))

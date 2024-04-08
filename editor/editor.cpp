@@ -27,7 +27,8 @@ Editor::Editor(QWidget *parent)
     m_dictionary(listFromFile(":/wordlists/english.txt")), m_transcriptLang("english"),
     timeStampExp(QRegularExpression(R"(\[(\d?\d:)?[0-5]?\d:[0-5]?\d(\.\d\d?\d?)?])")),
     speakerExp(QRegularExpression(R"(\[.*]:)")),
-    m_saveTimer(new QTimer(this))
+    m_saveTimer(new QTimer(this)),
+    isContentChanged(false)
 {
     connect(this->document(), &QTextDocument::contentsChange, this, &Editor::contentChanged);
     connect(this, &Editor::cursorPositionChanged, this, &Editor::updateWordEditor);
@@ -1010,6 +1011,8 @@ void Editor::loadTranscriptFromUrl(QUrl *fileUrl)
     emit openMessage(fileUrl->fileName());
 
     m_saveTimer->start(m_saveInterval * 1000);
+    // if(fileUrl->fileName().size() > 0)
+    //     isContentChanged = false;
 }
 
 block Editor::fromEditor(qint64 blockNumber) const
@@ -1139,6 +1142,7 @@ void Editor::loadTranscriptData(QFile& file)
                 else
                     reader.skipCurrentElement();
             }
+            isContentChanged = false;
         }
         else
             reader.raiseError(QObject::tr("Incorrect file"));
@@ -1191,6 +1195,7 @@ void Editor::saveXml(QFile* file)
     writer.writeEndElement();
     file->close();
     delete file;
+    isContentChanged = false;
 }
 
 void Editor::helpJumpToPlayer()
@@ -1535,9 +1540,10 @@ void Editor::contentChanged(int position, int charsRemoved, int charsAdded)
     else if (m_blocks.isEmpty()) { // If block data is empty (i.e. no file opened) just fill them from editor
         for (int i = 0; i < document()->blockCount(); i++)
             m_blocks.append(fromEditor(i));
+
+        isContentChanged = true;
         return;
     }
-
     delete m_highlighter;
     m_highlighter = new Highlighter(this->document());
 
@@ -1797,6 +1803,9 @@ void Editor::contentChanged(int position, int charsRemoved, int charsAdded)
     updateWordEditor();
     if(realTimeDataSaver){
         transcriptSave();
+        isContentChanged = false;
+    } else {
+        isContentChanged = true;
     }
 }
 
@@ -1906,7 +1915,7 @@ void Editor::splitLine(const QTime& elapsedTime)
 
     // QTextCursor cursorx(this->document()->findBlockByNumber(highlightedBlock));
     // this->setTextCursor(cursorx);
-
+    isContentChanged = true;
     qInfo() << "[Line Split]"
             << QString("line number: %1").arg(QString::number(highlightedBlock + 1))
             << QString("word number: %1, %2").arg(QString::number(wordNumber + 1), cutWordLeft + cutWordRight);
@@ -2275,17 +2284,17 @@ void Editor::saveAsPDF()
 
     auto pdfSaveLocation = QFileDialog::getSaveFileName(this, "Export PDF", QString("/"), "*.pdf");
     if(pdfSaveLocation!=""){
-    if (QFileInfo(pdfSaveLocation).suffix().isEmpty()) { pdfSaveLocation.append(".pdf"); }
-    qInfo()<<pdfSaveLocation;
+        if (QFileInfo(pdfSaveLocation).suffix().isEmpty()) { pdfSaveLocation.append(".pdf"); }
+        qInfo()<<pdfSaveLocation;
 
-    QPrinter printer(QPrinter::PrinterResolution);
-    printer.setOutputFormat(QPrinter::PdfFormat);
-    printer.setPageSize(QPageSize::A4);
-    printer.setOutputFileName(pdfSaveLocation);
-    QTextDocument doc;
-    doc.setHtml(htmlpart);
-    //doc.setPageSize(printer.pageRect().size()); // This is necessary if you want to hide the page number
-    doc.print(&printer);
+        QPrinter printer(QPrinter::PrinterResolution);
+        printer.setOutputFormat(QPrinter::PdfFormat);
+        printer.setPageSize(QPageSize::A4);
+        printer.setOutputFileName(pdfSaveLocation);
+        QTextDocument doc;
+        doc.setHtml(htmlpart);
+        //doc.setPageSize(printer.pageRect().size()); // This is necessary if you want to hide the page number
+        doc.print(&printer);
     }
 }
 
@@ -2609,3 +2618,6 @@ QList<QTime> Editor::getTimeStamps()
     return timeStamps;
 }
 
+bool Editor::isContentEmpty() {
+    return toPlainText().isEmpty();
+}

@@ -157,7 +157,8 @@ private:
     int lastHighlightedBlock=-1;
     bool moveAlongTimeStamps=true;
 public:
-
+    bool isContentChanged = false;
+    bool isContentEmpty();
 };
 
 

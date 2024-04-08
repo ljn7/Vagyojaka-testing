@@ -730,3 +730,21 @@ bool Tool::isDroppedOnLayout(const QPoint &pos, QVBoxLayout *layout) {
     }
     return false;
 }
+
+void Tool::closeEvent(QCloseEvent *event)  // show prompt when user wants to close app
+{
+    event->ignore();
+    if (!this->ui->m_editor->isContentEmpty() && this->ui->m_editor->isContentChanged) {
+        auto messageBoxReply = CustomMessageBox::question(this, "Close Confirmation", "Do you want to save the XML before closing?", QMessageBox::Yes | QMessageBox::No);
+        if (QMessageBox::Yes == messageBoxReply)
+        {
+            this->ui->m_editor->transcriptSave();
+            event->accept();
+        } else if (QMessageBox::No == messageBoxReply) {
+            event->accept();
+        }
+    } else {
+        event->accept();
+    }
+
+}

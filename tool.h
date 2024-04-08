@@ -9,6 +9,7 @@
 #include "./transcriptgenerator.h"
 #include "mediaplayer/utilities/mediasplitter.h"
 #include "qmainwindow.h"
+#include "qmessagebox.h"
 QT_BEGIN_NAMESPACE
     namespace Ui { class Tool; }
 QT_END_NAMESPACE
@@ -26,6 +27,7 @@ protected:
     void dragEnterEvent(QDragEnterEvent *event) override;
     void dropEvent(QDropEvent *event) override;
     void dragMoveEvent(QDragMoveEvent *event) override;
+    void closeEvent(QCloseEvent* event) override;
     // bool eventFilter(QObject *obj, QEvent *event) override;
 
 
@@ -96,4 +98,14 @@ private:
     QMap<QString, QString> m_transliterationLang;
     Git* git = nullptr;
 
+};
+
+class CustomMessageBox : public QMessageBox {
+public:
+    CustomMessageBox(QWidget *parent = nullptr) : QMessageBox(parent) {}
+
+protected:
+    void closeEvent(QCloseEvent *event) override {
+        event->ignore();
+    }
 };

@@ -9,6 +9,8 @@
 #include "./transcriptgenerator.h"
 #include "mediaplayer/utilities/mediasplitter.h"
 #include "qmainwindow.h"
+#include "qtablewidget.h"
+#include "tts/ttsrow.h"
 QT_BEGIN_NAMESPACE
     namespace Ui { class Tool; }
 QT_END_NAMESPACE
@@ -84,10 +86,13 @@ private slots:
 
     void on_actionPull_triggered();
 
+    void on_actionOpen_triggered();
+
 private:
     void setFontForElements();
     void setTransliterationLangCodes();
     bool isDroppedOnLayout(const QPoint &pos, QVBoxLayout *layout);
+    QVector<TTSRow> parseXML(const QUrl& fileUrl);
 
     MediaPlayer *player = nullptr;
     QAudioOutput *m_audioOutput = nullptr;
@@ -95,5 +100,8 @@ private:
     QFont font;
     QMap<QString, QString> m_transliterationLang;
     Git* git = nullptr;
+    QTableWidget* tableWidget;
+
+
 
 };

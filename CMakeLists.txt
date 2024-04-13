@@ -104,6 +104,10 @@ add_executable(
         ${GIT_FORMS}
         ${GIT_SOURCE}
         ${GIT_HEADER}
+        tts/texttospeech.h tts/texttospeech.cpp tts/texttospeech.ui
+        tts/ttsrow.h
+        audioplayer/audioplayerwidget.h
+
 )
 
 target_link_libraries(

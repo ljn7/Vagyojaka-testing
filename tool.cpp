@@ -1,7 +1,9 @@
 #include "tool.h"
 #include "./ui_tool.h"
 #include "about.h"
+#include "audioplayer/audioplayerwidget.h"
 #include "editor/utilities/keyboardshortcutguide.h"
+#include "tts/ttsrow.h"
 #include <QProgressBar>
 
 #include <QFontDialog>
@@ -224,6 +226,26 @@ Tool::Tool(QWidget *parent)
     setAcceptDrops(true);
     // installEventFilter(this);
     ui->m_editor->setAcceptDrops(false);
+    tableWidget = ui->tableWidget;
+    for(int row = 0; row < tableWidget->rowCount(); ++row) {
+        for(int col = 0; col < tableWidget->columnCount(); ++col) {
+            QTableWidgetItem *item = tableWidget->item(row, col);
+            if (item) {
+                item->setFlags(item->flags() | Qt::ItemIsSelectable | Qt::ItemIsEditable | Qt::ItemIsEnabled);
+                item->setText(item->text().trimmed());
+            }
+
+        }
+    }
+    tableWidget->resizeRowsToContents();
+    tableWidget->resizeColumnsToContents();
+    QObject::connect(tableWidget, &QTableWidget::cellChanged, [=]() {
+        if (tableWidget) {
+            tableWidget->resizeColumnsToContents();
+            tableWidget->resizeRowsToContents();
+
+        }
+    });
 
 }
 
@@ -729,4 +751,85 @@ bool Tool::isDroppedOnLayout(const QPoint &pos, QVBoxLayout *layout) {
         }
     }
     return false;
+}
+
+void Tool::on_actionOpen_triggered()
+{
+    QFileDialog fileDialog(this);
+    fileDialog.setAcceptMode(QFileDialog::AcceptOpen);
+    fileDialog.setWindowTitle(tr("Open File"));
+    if (fileDialog.exec() == QDialog::Accepted) {
+        QUrl fileUrl = fileDialog.selectedUrls().constFirst();
+        QFile file(fileUrl.toLocalFile());
+        QVector<TTSRow> rows = parseXML(fileUrl);
+
+        tableWidget->setRowCount(rows.size());
+        for (int i = 0; i < rows.size(); ++i) {
+            const TTSRow& row = rows[i];
+            tableWidget->setCellWidget(i, 0, new AudioPlayerWidget("file-" + QString::number(i) + ".mp3"));
+            tableWidget->setItem(i, 1, new QTableWidgetItem(row.words));
+            tableWidget->setItem(i, 2, new QTableWidgetItem(row.not_pronunced_properly_1));
+            tableWidget->setItem(i, 3, new QTableWidgetItem(QString::number(row.sound_quality_1)));
+            tableWidget->setItem(i, 4, new QTableWidgetItem(QString::number(row.tts_quality)));
+            // tableWidget->setItem(i, 5, new QTableWidgetItem(QString::number(row.new_tts_quality_1)));
+            // tableWidget->setItem(i, 6, new QTableWidgetItem(row.new_tts_words_not_pronunced_properly_1));
+            // tableWidget->setItem(i, 7, new QTableWidgetItem(QString::number(row.new_tts_sound_quality_1)));
+            // tableWidget->setItem(i, 9, new QTableWidgetItem(QString::number(row.new_tts_quality_2)));
+            // tableWidget->setItem(i, 10, new QTableWidgetItem(row.new_tts_words_not_pronunced_properly_2));
+            // tableWidget->setItem(i, 11, new QTableWidgetItem(QString::number(row.new_tts_sound_quality_2)));
+        }
+    }
+}
+QVector<TTSRow> Tool::parseXML(const QUrl& fileUrl) {
+    QVector<TTSRow> rows;
+
+    QFile file(fileUrl.toLocalFile());
+    if (!file.open(QIODevice::ReadOnly)) {
+        qDebug() << "Failed to open file" << file.errorString();
+        return rows;
+    }
+
+    QXmlStreamReader xmlReader(&file);
+    while (!xmlReader.atEnd() && !xmlReader.hasError()) {
+        if (xmlReader.isStartElement() && xmlReader.name() == QString("row")) {
+            TTSRow row;
+            while (!(xmlReader.isEndElement() && xmlReader.name() == QString("row"))) {
+                xmlReader.readNext();
+                if (xmlReader.isStartElement()) {
+                    QStringView elementName = xmlReader.name();
+                    xmlReader.readNext();
+                    QStringView text = xmlReader.text();
+                    if (elementName.toString() == QString("words")) {
+                        row.words = text.toString();
+                    } else if (elementName.toString() == QString("not-pronunced-properly-1")) {
+                        row.not_pronunced_properly_1 = text.toString();
+                    } else if (elementName.toString() == QString("sound-quality-1")) {
+                        row.sound_quality_1 = text.toInt();
+                    } else if (elementName.toString() == QString("tts-quality")) {
+                        row.tts_quality = text.toInt();
+                    } /*else if (elementName.toString() == QString("new-tts-quality-1")) {
+                        row.new_tts_quality_1 = text.toInt();
+                    } else if (elementName.toString() == QString("new-tts-words-not-pronunced-properly-1")) {
+                        row.new_tts_words_not_pronunced_properly_1 = text.toString();
+                    } else if (elementName.toString() == QString("new-tts-sound-quality-1")) {
+                        row.new_tts_sound_quality_1 = text.toInt();
+                    } else if (elementName.toString() == QString("new-tts-quality-2")) {
+                        row.new_tts_quality_2 = text.toInt();
+                    } else if (elementName.toString() == QString("new-tts-words-not-pronunced-properly-2")) {
+                        row.new_tts_words_not_pronunced_properly_2 = text.toString();
+                    } else if (elementName.toString() == QString("new-tts-sound-quality-2")) {
+                        row.new_tts_sound_quality_2 = text.toInt();
+                    }*/
+                }
+            }
+            rows.append(row);
+        }
+        xmlReader.readNext();
+    }
+    file.close();
+    if (xmlReader.hasError()) {
+        qDebug() << "XML error:" << xmlReader.errorString();
+    }
+
+    return rows;
 }

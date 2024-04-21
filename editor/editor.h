@@ -51,6 +51,8 @@ class Editor : public TextEditor
     friend class Highlighter;
     void loadTranscriptFromUrl(QUrl* fileUrl);
 
+    void showWaveform();
+
 //    QUndoStack *undoStack=nullptr;
 protected:
     void mousePressEvent(QMouseEvent *e) override;
@@ -62,6 +64,8 @@ signals:
     void refreshTagList(const QStringList& tagList);
     void replyCame();
     void openMessage(const QString& text);
+
+    void sendBlockTime(QVector<QTime> timeArray);
 
 public slots:
     void transcriptOpen();
@@ -93,6 +97,8 @@ public slots:
     void realTimeDataSavingToggle();
     void saveAsPDF();
     void saveAsTXT();
+
+    void updateTimeStamp(int block_num, QTime endTime);
 
 private slots:
     void contentChanged(int position, int charsRemoved, int charsAdded);
@@ -129,7 +135,7 @@ private:
     bool m_transliterate{false}, m_autoSave{false};
 
 
-    QString m_transcriptLang, m_punctuation{",.!;:"};
+    QString m_transcriptLang, m_punctuation{",.!;:?"};
 
     Highlighter* m_highlighter = nullptr;
     qint64 highlightedBlock = -1, highlightedWord = -1;

@@ -685,6 +685,21 @@
         </item>
        </layout>
       </widget>
+      <widget class="QWidget" name="tab_3">
+       <attribute name="title">
+        <string>Waveform</string>
+       </attribute>
+       <widget class="AudioWaveForm" name="widget" native="true">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>70</y>
+          <width>711</width>
+          <height>271</height>
+         </rect>
+        </property>
+       </widget>
+      </widget>
      </widget>
     </item>
    </layout>
@@ -695,7 +710,7 @@
      <x>0</x>
      <y>0</y>
      <width>800</width>
-     <height>21</height>
+     <height>25</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -743,6 +758,7 @@
     <addaction name="separator"/>
     <addaction name="Add_Custom_Dictonary"/>
     <addaction name="Show_Time_Stamps"/>
+    <addaction name="actionShow_Waveform"/>
     <addaction name="Real_Time_Data_Saver"/>
     <addaction name="move_along_timestamps"/>
    </widget>
@@ -1188,6 +1204,11 @@
     <string>Pull</string>
    </property>
   </action>
+  <action name="actionShow_Waveform">
+   <property name="text">
+    <string>Show Waveform</string>
+   </property>
+  </action>
  </widget>
  <customwidgets>
   <customwidget>
@@ -1217,6 +1238,12 @@
    <class>WordEditor</class>
    <extends>QTableWidget</extends>
    <header>editor/wordeditor.h</header>
+  </customwidget>
+  <customwidget>
+   <class>AudioWaveForm</class>
+   <extends>QWidget</extends>
+   <header>audiowaveform.h</header>
+   <container>1</container>
   </customwidget>
  </customwidgets>
  <resources>

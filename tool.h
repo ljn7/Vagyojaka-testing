@@ -9,6 +9,8 @@
 #include "./transcriptgenerator.h"
 #include "mediaplayer/utilities/mediasplitter.h"
 #include "qmainwindow.h"
+
+#include"audiowaveform.h"
 QT_BEGIN_NAMESPACE
     namespace Ui { class Tool; }
 QT_END_NAMESPACE
@@ -83,6 +85,8 @@ private slots:
     void on_actionPush_triggered();
 
     void on_actionPull_triggered();
+
+    void on_actionShow_Waveform_triggered();
 
 private:
     void setFontForElements();

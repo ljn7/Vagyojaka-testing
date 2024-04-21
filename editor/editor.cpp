@@ -2609,3 +2609,26 @@ QList<QTime> Editor::getTimeStamps()
     return timeStamps;
 }
 
+void Editor::updateTimeStamp(int block_num, QTime endTime){
+    m_blocks[block_num].timeStamp = endTime;
+    //qInfo()<<"number of words in block "<<block_num<<" is "<<m_blocks[block_num].words.size()<<"\n";
+    m_blocks[block_num].words[m_blocks[block_num].words.size() - 1].timeStamp = endTime;
+    /*for(int i = 0; i < m_blocks.size(); ++i)
+    {
+        qInfo()<<"timestamp of block "<<i+1<<" is: "<<m_blocks[i].timeStamp<<"\n";
+    }*/
+}
+
+void Editor::showWaveform()
+{
+    //waveform
+    QVector<QTime> timevec;
+    QTime t;
+    for(int i = 0; i < m_blocks.size(); ++i)
+    {
+        t = m_blocks[i].timeStamp;
+        timevec.append(t);
+    }
+
+    emit sendBlockTime(timevec);
+}

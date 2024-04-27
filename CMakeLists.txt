@@ -107,6 +107,7 @@ add_executable(
         tts/texttospeech.h tts/texttospeech.cpp tts/texttospeech.ui
         tts/ttsrow.h
         audioplayer/audioplayerwidget.h
+        audioplayer/audioplayerwidget.cpp
 
 )
 

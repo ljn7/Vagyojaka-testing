@@ -456,6 +456,11 @@
       <property name="enabled">
        <bool>true</bool>
       </property>
+      <property name="font">
+       <font>
+        <bold>true</bold>
+       </font>
+      </property>
       <property name="tabPosition">
        <enum>QTabWidget::West</enum>
       </property>
@@ -693,7 +698,7 @@
         </size>
        </property>
        <attribute name="title">
-        <string>TTS-Marker</string>
+        <string>TTS Annotator</string>
        </attribute>
        <layout class="QHBoxLayout" name="horizontalLayout_5">
         <item>
@@ -769,7 +774,7 @@
             </column>
             <column>
              <property name="text">
-              <string>Words (Not Pronunced Properly)</string>
+              <string>Not Pronunced Properly</string>
              </property>
              <property name="font">
               <font>
@@ -798,6 +803,31 @@
              </property>
             </column>
            </widget>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayout_7">
+            <item>
+             <widget class="QPushButton" name="InsertRowButton">
+              <property name="text">
+               <string>Insert a row</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="deleteRowButton">
+              <property name="text">
+               <string>Remove selected row</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="saveTableButton">
+              <property name="text">
+               <string>Save </string>
+              </property>
+             </widget>
+            </item>
+           </layout>
           </item>
          </layout>
         </item>

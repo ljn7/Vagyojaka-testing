@@ -19,9 +19,10 @@ QT_END_NAMESPACE
 {
     Q_OBJECT
 
-        public:
-                 explicit Tool(QWidget *parent = nullptr);
+public:
+    explicit Tool(QWidget *parent = nullptr);
     ~Tool() final;
+
 
 protected:
     void keyPressEvent(QKeyEvent *event) override;
@@ -29,6 +30,7 @@ protected:
     void dropEvent(QDropEvent *event) override;
     void dragMoveEvent(QDragMoveEvent *event) override;
     // bool eventFilter(QObject *obj, QEvent *event) override;
+    void resizeEvent(QResizeEvent *event) override;
 
 
 private slots:
@@ -87,6 +89,12 @@ private slots:
     void on_actionPull_triggered();
 
     void on_actionOpen_triggered();
+
+    void on_InsertRowButton_clicked();
+
+    void on_deleteRowButton_clicked();
+
+    void on_saveTableButton_clicked();
 
 private:
     void setFontForElements();

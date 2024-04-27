@@ -1120,7 +1120,8 @@ static int create_merge_commit(git_repository *repo, git_index *index, struct me
     git_repository_state_cleanup(repo);
 
 cleanup:
-    free(parents);
+    if (parents)
+        free(parents);
     return err;
 }
 

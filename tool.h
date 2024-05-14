@@ -12,15 +12,15 @@
 
 #include"audiowaveform.h"
 QT_BEGIN_NAMESPACE
-    namespace Ui { class Tool; }
+namespace Ui { class Tool; }
 QT_END_NAMESPACE
 
-    class Tool final : public QMainWindow
+class Tool final : public QMainWindow
 {
     Q_OBJECT
 
-        public:
-                 explicit Tool(QWidget *parent = nullptr);
+public:
+    explicit Tool(QWidget *parent = nullptr);
     ~Tool() final;
 
 protected:
@@ -72,7 +72,7 @@ private slots:
 
     void on_fontComboBox_currentFontChanged(const QFont &f);
 
-    void on_actionAbout_triggered();   
+    void on_actionAbout_triggered();
 
     void on_actionInit_triggered();
 

@@ -55,9 +55,30 @@ QString MediaPlayer::getPositionInfo()
     return elapsedTime().toString(format) + " / " + durationTime().toString(format);
 }
 
+bool MediaPlayer::isAudioFile(const QString& filePath) {
+    QFileInfo fileInfo(filePath);
+    QStringList audioExtensions = {"mp3", "wav", "ogg", "flac", "aac", "m4a"}; // Add more audio extensions as needed
+
+    return audioExtensions.contains(fileInfo.suffix().toLower());
+}
+
+bool MediaPlayer::isVideoFile(const QString& filePath) {
+    QFileInfo fileInfo(filePath);
+    QStringList videoExtensions = {"mp4", "avi", "mkv", "mov", "wmv"}; // Add more video extensions as needed
+
+    return videoExtensions.contains(fileInfo.suffix().toLower());
+}
+
 void MediaPlayer::loadMediaFromUrl(QUrl *fileUrl)
 {
     QFile MediaFile(fileUrl->toLocalFile());
+    if(!MediaFile.open(QIODevice::ReadOnly))
+    {
+        qInfo()<<"Not open for readonly\n";
+    }
+    p = new QMediaPlayer(this);
+    QString filepath;
+    filepath = filedir.absoluteFilePath();
     QFileInfo filedir(MediaFile);
     QString dirInString=filedir.dir().path();
     settings->setValue("mediaDir",dirInString);
@@ -67,6 +88,72 @@ void MediaPlayer::loadMediaFromUrl(QUrl *fileUrl)
     //Qt6
     // setMedia(*fileUrl);
     setSource(*fileUrl);
+
+    //waveform
+    QByteArray audioData;
+
+    if(isAudioFile(filepath)){
+        qInfo()<<"File id audio file\n";
+        audioData = MediaFile.readAll();
+    }
+    else
+    {
+        qInfo()<<"File is video file\n";
+        QString ffmpegPath = "ffmpeg";
+        // #ifdef Q_OS_WIN
+        //             ffmpegPath = QCoreApplication::applicationDirPath() + "/ffmpeg";
+        // #endif
+        QProcess ffmpegProcess;
+        QStringList ffmpegArgs = {"-i", filepath, "-vn", "-f", "wav", "-"};
+        ffmpegProcess.start(ffmpegPath, ffmpegArgs);
+
+        if (ffmpegProcess.waitForStarted() && ffmpegProcess.waitForFinished()) {
+            audioData += ffmpegProcess.readAllStandardOutput();
+        } else {
+            qWarning() << "FFmpeg process failed:" << ffmpegProcess.errorString();
+        }
+    }
+
+    audioBuffer.open(QIODevice::ReadWrite);
+
+    audioBuffer.write(audioData);
+    audioBuffer.close();
+
+    p->setSource(*fileUrl);
+
+
+    connect(p, &QMediaPlayer::durationChanged, [this]() {
+        qint64 tot_duration = p->duration();
+        qInfo()<<"size of buffer is: "<<audioBuffer.size();
+        AVFormatContext* formatContext = avformat_alloc_context();
+        qint64 sampleRate = 0;
+        if (avformat_open_input(&formatContext, strdup(m_mediaFileName.toStdString().c_str()), nullptr, nullptr) == 0) {
+            if (avformat_find_stream_info(formatContext, nullptr) >= 0) {
+                int audioStreamIndex = -1;
+                for (unsigned int i = 0; i < formatContext->nb_streams; ++i) {
+                    if (formatContext->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_AUDIO) {
+                        audioStreamIndex = i;
+                        break;
+                    }
+                }
+
+                if (audioStreamIndex != -1) {
+                    sampleRate = formatContext->streams[audioStreamIndex]->codecpar->sample_rate;
+                    qDebug() << "Sample Rate:" << sampleRate;
+                } else {
+                    qWarning() << "No audio stream found.";
+                }
+            } else {
+                qWarning() << "Failed to find stream information.";
+            }
+
+            avformat_close_input(&formatContext);
+        }
+        qint64 duration = p->duration();
+        if(sampleRate)
+            emit sendSampleRate(sampleRate, audioBuffer, duration);
+    });
+    //=======================
     emit message("Opened file " + fileUrl->fileName());
     emit openMessage(fileUrl->fileName());
     play();

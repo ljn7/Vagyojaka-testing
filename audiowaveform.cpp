@@ -380,119 +380,119 @@ void AudioWaveForm::deselectLines(QVector<QCPItemLine *> & lines, int index, int
 
 void AudioWaveForm::onMouseMove(QMouseEvent *event) {
     if(linesAvailable == 1){
-    for(int i = 0; i < num_of_blocks; ++i) {
-        if (startLine[i]->selected() || endLine[i]->selected()) {
-            double x = waveWidget->xAxis->pixelToCoord(event->pos().x());
+        for(int i = 0; i < num_of_blocks; ++i) {
+            if (startLine[i]->selected() || endLine[i]->selected()) {
+                double x = waveWidget->xAxis->pixelToCoord(event->pos().x());
 
-            if(startLine[i]->selected()){
-            // Check if there's a next endLine and a previous endLine
-            if (i + 1 < num_of_blocks && i - 1 >= 0) {
-                double nextEndX = endLine[i]->start->coords().x();
-                double prevEndX = endLine[i - 1]->start->coords().x();
+                if(startLine[i]->selected()){
+                    // Check if there's a next endLine and a previous endLine
+                    if (i + 1 < num_of_blocks && i - 1 >= 0) {
+                        double nextEndX = endLine[i]->start->coords().x();
+                        double prevEndX = endLine[i - 1]->start->coords().x();
 
-                // Limit the movement of startLine[i] between nextEndX and prevEndX
-                if (x >= prevEndX && x <= nextEndX) {
-                    if (startLine[i]->selected()) {
-                        startLine[i]->start->setCoords(x, -1);
-                        startLine[i]->end->setCoords(x, 1);
-                        startCoords[i] = startLine[i]->start->coords().x();
-                        updateUtterances(i);
-                        QTime a(0,0,0);
-                        a = a.addSecs(int(x));
-                        updateTime(i, a);
+                        // Limit the movement of startLine[i] between nextEndX and prevEndX
+                        if (x >= prevEndX && x <= nextEndX) {
+                            if (startLine[i]->selected()) {
+                                startLine[i]->start->setCoords(x, -1);
+                                startLine[i]->end->setCoords(x, 1);
+                                startCoords[i] = startLine[i]->start->coords().x();
+                                updateUtterances(i);
+                                QTime a(0,0,0);
+                                a = a.addSecs(int(x));
+                                updateTime(i, a);
+                            }
+                        }
+                    }
+
+                    // Check if there's only a next endLine
+                    else if (i + 1 < num_of_blocks) {
+                        double nextEndX = endLine[i]->start->coords().x();
+
+                        // Limit the movement of startLine[i] before nextEndX
+                        if (x <= nextEndX) {
+                            if (startLine[i]->selected()) {
+                                startLine[i]->start->setCoords(x, -1);
+                                startLine[i]->end->setCoords(x, 1);
+                                startCoords[i] = startLine[i]->start->coords().x();
+                                updateUtterances(i);
+                            }
+                        }
+                    }
+
+                    // Check if there's only a previous endLine
+                    else if (i - 1 >= 0) {
+                        double prevEndX = endLine[i - 1]->start->coords().x();
+
+                        // Limit the movement of startLine[i] after prevEndX
+                        if (x >= prevEndX) {
+                            if (startLine[i]->selected()) {
+                                startLine[i]->start->setCoords(x, -1);
+                                startLine[i]->end->setCoords(x, 1);
+                                startCoords[i] = startLine[i]->start->coords().x();
+                                updateUtterances(i);
+                            }
+                        }
                     }
                 }
-            }
+                else if(endLine[i]->selected())
+                {
+                    if (i + 1 < num_of_blocks && i - 1 >= 0) {
+                        double nextEndX = startLine[i+1]->start->coords().x();
+                        double prevEndX = startLine[i]->start->coords().x();
 
-            // Check if there's only a next endLine
-            else if (i + 1 < num_of_blocks) {
-                double nextEndX = endLine[i]->start->coords().x();
+                        // Limit the movement of startLine[i] between nextEndX and prevEndX
+                        if (x >= prevEndX && x <= nextEndX) {
+                            if (endLine[i]->selected()) {
+                                endLine[i]->start->setCoords(x, -1);
+                                endLine[i]->end->setCoords(x, 1);
+                                endCoords[i] = endLine[i]->start->coords().x();
+                                updateUtterances(i);
 
-                // Limit the movement of startLine[i] before nextEndX
-                if (x <= nextEndX) {
-                    if (startLine[i]->selected()) {
-                        startLine[i]->start->setCoords(x, -1);
-                        startLine[i]->end->setCoords(x, 1);
-                        startCoords[i] = startLine[i]->start->coords().x();
-                        updateUtterances(i);
+                                QTime a(0,0,0);
+                                a = a.addSecs(int(x));
+                                updateTime(i, a);
+                            }
+                        }
                     }
-                }
-            }
 
-            // Check if there's only a previous endLine
-            else if (i - 1 >= 0) {
-                double prevEndX = endLine[i - 1]->start->coords().x();
+                    // Check if there's only a next endLine
+                    else if (i + 1 < num_of_blocks) {
+                        double nextEndX = startLine[i+1]->start->coords().x();
 
-                // Limit the movement of startLine[i] after prevEndX
-                if (x >= prevEndX) {
-                    if (startLine[i]->selected()) {
-                        startLine[i]->start->setCoords(x, -1);
-                        startLine[i]->end->setCoords(x, 1);
-                        startCoords[i] = startLine[i]->start->coords().x();
-                        updateUtterances(i);
+                        // Limit the movement of startLine[i] before nextEndX
+                        if (x <= nextEndX) {
+                            if (endLine[i]->selected()) {
+                                endLine[i]->start->setCoords(x, -1);
+                                endLine[i]->end->setCoords(x, 1);
+                                endCoords[i] = endLine[i]->start->coords().x();
+                                updateUtterances(i);
+                            }
+                        }
                     }
-                }
-            }
-            }
-            else if(endLine[i]->selected())
-            {
-                if (i + 1 < num_of_blocks && i - 1 >= 0) {
-                    double nextEndX = startLine[i+1]->start->coords().x();
-                    double prevEndX = startLine[i]->start->coords().x();
 
-                    // Limit the movement of startLine[i] between nextEndX and prevEndX
-                    if (x >= prevEndX && x <= nextEndX) {
-                        if (endLine[i]->selected()) {
-                            endLine[i]->start->setCoords(x, -1);
-                            endLine[i]->end->setCoords(x, 1);
-                            endCoords[i] = endLine[i]->start->coords().x();
-                            updateUtterances(i);
+                    // Check if there's only a previous endLine
+                    else if (i - 1 >= 0) {
+                        double prevEndX = startLine[i]->start->coords().x();
 
-                            QTime a(0,0,0);
-                            a = a.addSecs(int(x));
-                            updateTime(i, a);
+                        // Limit the movement of startLine[i] after prevEndX
+                        if (x >= prevEndX) {
+                            if (endLine[i]->selected()) {
+                                endLine[i]->start->setCoords(x, -1);
+                                endLine[i]->end->setCoords(x, 1);
+                                endCoords[i] = endLine[i]->start->coords().x();
+                                updateUtterances(i);
+
+                                QTime a(0,0,0);
+                                a = a.addSecs(int(x));
+                                updateTime(i, a);
+                            }
                         }
                     }
                 }
 
-                // Check if there's only a next endLine
-                else if (i + 1 < num_of_blocks) {
-                    double nextEndX = startLine[i+1]->start->coords().x();
-
-                    // Limit the movement of startLine[i] before nextEndX
-                    if (x <= nextEndX) {
-                        if (endLine[i]->selected()) {
-                            endLine[i]->start->setCoords(x, -1);
-                            endLine[i]->end->setCoords(x, 1);
-                            endCoords[i] = endLine[i]->start->coords().x();
-                            updateUtterances(i);
-                        }
-                    }
-                }
-
-                // Check if there's only a previous endLine
-                else if (i - 1 >= 0) {
-                    double prevEndX = startLine[i]->start->coords().x();
-
-                    // Limit the movement of startLine[i] after prevEndX
-                    if (x >= prevEndX) {
-                        if (endLine[i]->selected()) {
-                            endLine[i]->start->setCoords(x, -1);
-                            endLine[i]->end->setCoords(x, 1);
-                            endCoords[i] = endLine[i]->start->coords().x();
-                            updateUtterances(i);
-
-                            QTime a(0,0,0);
-                            a = a.addSecs(int(x));
-                            updateTime(i, a);
-                        }
-                    }
-                }
+                waveWidget->replot();
             }
-
-            waveWidget->replot();
         }
-    }
     }
 }
 

@@ -809,7 +809,7 @@ static int update_cb(const char *refname, const git_oid *a, const git_oid *b, vo
 {
     char a_str[GIT_OID_SHA1_HEXSIZE+1], b_str[GIT_OID_SHA1_HEXSIZE+1];
     (void)data;
-    
+
     git_oid_fmt(b_str, b);
     b_str[GIT_OID_SHA1_HEXSIZE] = '\0';
 

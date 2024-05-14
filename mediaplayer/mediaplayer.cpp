@@ -78,7 +78,8 @@ void MediaPlayer::loadMediaFromUrl(QUrl *fileUrl)
     }
     p = new QMediaPlayer(this);
     QString filepath;
-    filepath = filedir.absoluteFilePath();
+
+    filepath = fileUrl->toLocalFile();
     QFileInfo filedir(MediaFile);
     QString dirInString=filedir.dir().path();
     settings->setValue("mediaDir",dirInString);

@@ -27,8 +27,8 @@ class Editor : public TextEditor
 {
     Q_OBJECT
 
-        public:
-                 explicit Editor(QWidget *parent = nullptr);
+public:
+    explicit Editor(QWidget *parent = nullptr);
 
     void setWordEditor(WordEditor* wordEditor)
     {
@@ -43,17 +43,17 @@ class Editor : public TextEditor
     void setShowTimeStamp();
     QVector<block> m_blocks;
     QUrl m_transcriptUrl;
-     bool showTimeStamp=false;
+    bool showTimeStamp=false;
     void loadTranscriptData(QFile& file);
     void setContent();
-     bool timestampVisibility();
+    bool timestampVisibility();
     QList<QTime> getTimeStamps();
     friend class Highlighter;
     void loadTranscriptFromUrl(QUrl* fileUrl);
 
     void showWaveform();
 
-//    QUndoStack *undoStack=nullptr;
+    //    QUndoStack *undoStack=nullptr;
 protected:
     void mousePressEvent(QMouseEvent *e) override;
     void keyPressEvent(QKeyEvent *event) override;
@@ -172,8 +172,8 @@ public:
 class Highlighter : public QSyntaxHighlighter
 {
     Q_OBJECT
-        public:
-                 explicit Highlighter(QTextDocument *parent = nullptr) : QSyntaxHighlighter(parent) {};
+public:
+    explicit Highlighter(QTextDocument *parent = nullptr) : QSyntaxHighlighter(parent) {};
 
     void clearHighlight()
     {

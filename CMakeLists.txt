@@ -117,6 +117,9 @@ target_link_libraries(
         Qt6::Network
         Qt6::PrintSupport
 )
+target_compile_options(${PROJECT_NAME} PRIVATE
+    -Wa,-mbig-obj
+)
 
 if (LINUX OR UNIX)
     find_package(PkgConfig REQUIRED)
@@ -135,17 +138,19 @@ if (NOT LIBGIT2_FOUND)
     endif()
 endif()
 
-find_package(FFmpeg)
+# find_package(FFmpeg)
 
 
-if(FFMPEG_FOUND)
-    message("FFmpeg found.")
-    message("FFmpeg include directories: ${FFMPEG_INCLUDE_DIRS}")
-    message("FFmpeg libraries: ${FFMPEG_LIBRARIES}")
-    target_include_directories(${PROJECT_NAME} PRIVATE ${FFMPEG_INCLUDE_DIRS})
-    target_link_libraries(${PROJECT_NAME} PRIVATE ${FFMPEG_LIBRARIES})
-
-elseif (WIN32)
+# if(FFMPEG_FOUND)
+#     message("FFmpeg found.")
+#     message("FFmpeg include directories: ${FFMPEG_INCLUDE_DIRS}")
+#     message("FFmpeg libraries: ${FFMPEG_LIBRARIES}")
+#     target_include_directories(${PROJECT_NAME} PRIVATE ${FFMPEG_INCLUDE_DIRS})
+#     target_link_libraries(${PROJECT_NAME} PRIVATE ${FFMPEG_LIBRARIES})
+find_package(FFTW3 CONFIG REQUIRED)
+target_link_libraries(${PROJECT_NAME} PRIVATE FFTW3::fftw3)
+# elseif (WIN32)
+if (WIN32)
     if (CMAKE_SIZEOF_VOID_P EQUAL 4)
         set(FFMEPG_INCLUDE_DIR C:/ffmpeg_x86/include)
         set(FFMEPG_LIB_DIR C:/ffmpeg_x86/lib)

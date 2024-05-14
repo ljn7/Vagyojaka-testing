@@ -85,6 +85,17 @@ Tool::Tool(QWidget *parent)
     // connect(player, QOverload<QMediaPlayer::Error>::of(&QMediaPlayer::error), this, &Tool::handleMediaPlayerError);
     connect(player, &MediaPlayer::errorChanged, this, &Tool::handleMediaPlayerError);
 
+    //Waveofrm
+    connect(player, &MediaPlayer::sendBuffer, ui->widget, &AudioWaveForm::processBuffer);
+
+    connect(player, &MediaPlayer::sendDuration, ui->widget, &AudioWaveForm::getDuration);
+
+    connect(ui->m_editor, &Editor::sendBlockTime, ui->widget, &AudioWaveForm::getTimeArray);
+
+    connect(ui->widget, &AudioWaveForm::updateTime, ui->m_editor, &Editor::updateTimeStamp);
+
+    connect(player, &MediaPlayer::sendSampleRate, ui->widget, &AudioWaveForm::getSampleRate);
+
     // Connect components dependent on Player's position change to player
     connect(player, &QMediaPlayer::positionChanged, this,
             [&]()
@@ -729,4 +740,9 @@ bool Tool::isDroppedOnLayout(const QPoint &pos, QVBoxLayout *layout) {
         }
     }
     return false;
+}
+
+void Tool::on_actionShow_Waveform_triggered()
+{
+    ui->m_editor->showWaveform();
 }

@@ -27,8 +27,8 @@ class Editor : public TextEditor
 {
     Q_OBJECT
 
-        public:
-                 explicit Editor(QWidget *parent = nullptr);
+public:
+    explicit Editor(QWidget *parent = nullptr);
 
     void setWordEditor(WordEditor* wordEditor)
     {
@@ -43,15 +43,17 @@ class Editor : public TextEditor
     void setShowTimeStamp();
     QVector<block> m_blocks;
     QUrl m_transcriptUrl;
-     bool showTimeStamp=false;
+    bool showTimeStamp=false;
     void loadTranscriptData(QFile& file);
     void setContent();
-     bool timestampVisibility();
+    bool timestampVisibility();
     QList<QTime> getTimeStamps();
     friend class Highlighter;
     void loadTranscriptFromUrl(QUrl* fileUrl);
 
-//    QUndoStack *undoStack=nullptr;
+    void showWaveform();
+
+    //    QUndoStack *undoStack=nullptr;
 protected:
     void mousePressEvent(QMouseEvent *e) override;
     void keyPressEvent(QKeyEvent *event) override;
@@ -62,6 +64,8 @@ signals:
     void refreshTagList(const QStringList& tagList);
     void replyCame();
     void openMessage(const QString& text);
+
+    void sendBlockTime(QVector<QTime> timeArray);
 
 public slots:
     void transcriptOpen();
@@ -93,6 +97,8 @@ public slots:
     void realTimeDataSavingToggle();
     void saveAsPDF();
     void saveAsTXT();
+
+    void updateTimeStamp(int block_num, QTime endTime);
 
 private slots:
     void contentChanged(int position, int charsRemoved, int charsAdded);
@@ -129,7 +135,7 @@ private:
     bool m_transliterate{false}, m_autoSave{false};
 
 
-    QString m_transcriptLang, m_punctuation{",.!;:"};
+    QString m_transcriptLang, m_punctuation{",.!;:?"};
 
     Highlighter* m_highlighter = nullptr;
     qint64 highlightedBlock = -1, highlightedWord = -1;
@@ -166,8 +172,8 @@ public:
 class Highlighter : public QSyntaxHighlighter
 {
     Q_OBJECT
-        public:
-                 explicit Highlighter(QTextDocument *parent = nullptr) : QSyntaxHighlighter(parent) {};
+public:
+    explicit Highlighter(QTextDocument *parent = nullptr) : QSyntaxHighlighter(parent) {};
 
     void clearHighlight()
     {

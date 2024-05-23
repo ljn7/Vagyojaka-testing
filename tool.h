@@ -9,13 +9,15 @@
 #include "./transcriptgenerator.h"
 #include "mediaplayer/utilities/mediasplitter.h"
 #include "qmainwindow.h"
+
+#include"audiowaveform.h"
 #include "qtablewidget.h"
 #include "tts/ttsrow.h"
 QT_BEGIN_NAMESPACE
-    namespace Ui { class Tool; }
+namespace Ui { class Tool; }
 QT_END_NAMESPACE
 
-    class Tool final : public QMainWindow
+class Tool final : public QMainWindow
 {
     Q_OBJECT
 
@@ -74,7 +76,7 @@ private slots:
 
     void on_fontComboBox_currentFontChanged(const QFont &f);
 
-    void on_actionAbout_triggered();   
+    void on_actionAbout_triggered();
 
     void on_actionInit_triggered();
 
@@ -87,6 +89,8 @@ private slots:
     void on_actionPush_triggered();
 
     void on_actionPull_triggered();
+
+    void on_actionShow_Waveform_triggered();
 
     void on_actionOpen_triggered();
 
@@ -111,5 +115,7 @@ private:
     QTableWidget* tableWidget;
 
 
+
+    void onTabChanged(int index);
 
 };

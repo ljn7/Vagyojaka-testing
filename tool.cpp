@@ -69,23 +69,34 @@ Tool::Tool(QWidget *parent)
     connect(player, &MediaPlayer::message, this->statusBar(), &QStatusBar::showMessage);
 
     connect(player, &MediaPlayer::openMessage, [this](const QString& text) {
-            this->ui->mediaFilenameLbl->setText(text);
-            QString message = text;
-            if (text.size() > 30)
-                message = text.left(30) + "...";
-            this->ui->mediaFilenameLbl->setText("Media: " + message);
-        });
+        this->ui->mediaFilenameLbl->setText(text);
+        QString message = text;
+        if (text.size() > 30)
+            message = text.left(30) + "...";
+        this->ui->mediaFilenameLbl->setText("           Media: " + message);
+    });
 
     connect(ui->m_editor, &Editor::openMessage, [this](const QString& text) {
         this->ui->transcriptFilenameLbl->setText(text);
         QString message = text;
         if (text.size() > 30)
             message = text.left(30) + "...";
-        this->ui->transcriptFilenameLbl->setText("Transcript: " + message);
+        this->ui->transcriptFilenameLbl->setText("Transcript: " + message + "           ");
     });
     // Qt6
     // connect(player, QOverload<QMediaPlayer::Error>::of(&QMediaPlayer::error), this, &Tool::handleMediaPlayerError);
     connect(player, &MediaPlayer::errorChanged, this, &Tool::handleMediaPlayerError);
+
+    //Waveofrm
+    connect(player, &MediaPlayer::sendBuffer, ui->widget, &AudioWaveForm::processBuffer);
+
+    connect(player, &MediaPlayer::sendDuration, ui->widget, &AudioWaveForm::getDuration);
+
+    connect(ui->m_editor, &Editor::sendBlockTime, ui->widget, &AudioWaveForm::getTimeArray);
+
+    connect(ui->widget, &AudioWaveForm::updateTime, ui->m_editor, &Editor::updateTimeStamp);
+
+    connect(player, &MediaPlayer::sendSampleRate, ui->widget, &AudioWaveForm::getSampleRate);
 
     // Connect components dependent on Player's position change to player
     connect(player, &QMediaPlayer::positionChanged, this,
@@ -247,6 +258,8 @@ Tool::Tool(QWidget *parent)
 
         }
     });
+
+    connect(ui->tabWidget, &QTabWidget::currentChanged, this, &Tool::onTabChanged);
 
 }
 
@@ -753,6 +766,22 @@ bool Tool::isDroppedOnLayout(const QPoint &pos, QVBoxLayout *layout) {
     }
     return false;
 }
+
+void Tool::on_actionShow_Waveform_triggered()
+{
+    ui->m_editor->showWaveform();
+}
+
+void Tool::onTabChanged(int index) {
+    if (index == 2) {  // Tab 2 index
+        ui->mediaFilenameLbl->hide();
+        ui->transcriptFilenameLbl->hide();
+    } else {
+        ui->mediaFilenameLbl->show();
+        ui->transcriptFilenameLbl->show();
+    }
+}
+
 int count = 0;
 void Tool::on_actionOpen_triggered()
 {

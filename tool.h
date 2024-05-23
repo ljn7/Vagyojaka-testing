@@ -100,4 +100,6 @@ private:
     QMap<QString, QString> m_transliterationLang;
     Git* git = nullptr;
 
+    void onTabChanged(int index);
+
 };

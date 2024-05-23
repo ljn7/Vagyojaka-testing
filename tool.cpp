@@ -71,7 +71,7 @@ Tool::Tool(QWidget *parent)
         QString message = text;
         if (text.size() > 30)
             message = text.left(30) + "...";
-        this->ui->mediaFilenameLbl->setText("Media: " + message);
+        this->ui->mediaFilenameLbl->setText("           Media: " + message);
     });
 
     connect(ui->m_editor, &Editor::openMessage, [this](const QString& text) {
@@ -79,7 +79,7 @@ Tool::Tool(QWidget *parent)
         QString message = text;
         if (text.size() > 30)
             message = text.left(30) + "...";
-        this->ui->transcriptFilenameLbl->setText("Transcript: " + message);
+        this->ui->transcriptFilenameLbl->setText("Transcript: " + message + "           ");
     });
     // Qt6
     // connect(player, QOverload<QMediaPlayer::Error>::of(&QMediaPlayer::error), this, &Tool::handleMediaPlayerError);
@@ -235,6 +235,8 @@ Tool::Tool(QWidget *parent)
     setAcceptDrops(true);
     // installEventFilter(this);
     ui->m_editor->setAcceptDrops(false);
+
+    connect(ui->tabWidget, &QTabWidget::currentChanged, this, &Tool::onTabChanged);
 
 }
 
@@ -745,4 +747,14 @@ bool Tool::isDroppedOnLayout(const QPoint &pos, QVBoxLayout *layout) {
 void Tool::on_actionShow_Waveform_triggered()
 {
     ui->m_editor->showWaveform();
+}
+
+void Tool::onTabChanged(int index) {
+    if (index == 2) {  // Tab 2 index
+        ui->mediaFilenameLbl->hide();
+        ui->transcriptFilenameLbl->hide();
+    } else {
+        ui->mediaFilenameLbl->show();
+        ui->transcriptFilenameLbl->show();
+    }
 }

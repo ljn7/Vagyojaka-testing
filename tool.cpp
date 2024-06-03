@@ -773,7 +773,7 @@ void Tool::on_actionShow_Waveform_triggered()
 }
 
 void Tool::onTabChanged(int index) {
-    if (index == 2) {  // Tab 2 index
+    if (index > 0) {  // Tab 2 index
         ui->mediaFilenameLbl->hide();
         ui->transcriptFilenameLbl->hide();
     } else {

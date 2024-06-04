@@ -758,3 +758,10 @@ void Tool::onTabChanged(int index) {
         ui->transcriptFilenameLbl->show();
     }
 }
+
+// To prevent auto updates on timestamps
+void Tool::on_actionSave_Timestamps_triggered()
+{
+    ui->widget->updateTimestampsToggle();
+}
+

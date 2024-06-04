@@ -66,6 +66,8 @@ AudioWaveForm::~AudioWaveForm()
     fftw_destroy_plan(mFftPlan);
 }
 
+
+
 void AudioWaveForm::getSampleRate(qint64 sampleRate, QBuffer& audioBuffer, qint64 totalDuration)
 {
     this->sample_rate = sampleRate;
@@ -399,7 +401,8 @@ void AudioWaveForm::onMouseMove(QMouseEvent *event) {
                                 updateUtterances(i);
                                 QTime a(0,0,0);
                                 a = a.addSecs(int(x));
-                                updateTime(i, a);
+                                if (updateTimestamps)
+                                    updateTime(i, a);
                             }
                         }
                     }
@@ -450,7 +453,8 @@ void AudioWaveForm::onMouseMove(QMouseEvent *event) {
 
                                 QTime a(0,0,0);
                                 a = a.addSecs(int(x));
-                                updateTime(i, a);
+                                if (updateTimestamps)
+                                    updateTime(i, a);
                             }
                         }
                     }
@@ -484,7 +488,8 @@ void AudioWaveForm::onMouseMove(QMouseEvent *event) {
 
                                 QTime a(0,0,0);
                                 a = a.addSecs(int(x));
-                                updateTime(i, a);
+                                if (updateTimestamps)
+                                    updateTime(i, a);
                             }
                         }
                     }
@@ -496,3 +501,11 @@ void AudioWaveForm::onMouseMove(QMouseEvent *event) {
     }
 }
 
+
+void AudioWaveForm::updateTimestampsToggle()
+{
+    if (updateTimestamps)
+        updateTimestamps = false;
+    else
+        updateTimestamps = true;
+}

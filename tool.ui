@@ -758,7 +758,6 @@
     <addaction name="separator"/>
     <addaction name="Add_Custom_Dictonary"/>
     <addaction name="Show_Time_Stamps"/>
-    <addaction name="actionShow_Waveform"/>
     <addaction name="Real_Time_Data_Saver"/>
     <addaction name="move_along_timestamps"/>
    </widget>
@@ -818,11 +817,20 @@
     <addaction name="actionAbout"/>
     <addaction name="actionVersion"/>
    </widget>
+   <widget class="QMenu" name="menuWaveform">
+    <property name="title">
+     <string>Waveform</string>
+    </property>
+    <addaction name="actionShow_Waveform"/>
+    <addaction name="separator"/>
+    <addaction name="actionSave_Timestamps"/>
+   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
    <addaction name="menuView"/>
    <addaction name="menuMedia_Player"/>
    <addaction name="menuEditor"/>
+   <addaction name="menuWaveform"/>
    <addaction name="menuTranslation"/>
    <addaction name="menuGit"/>
    <addaction name="menuHelp"/>
@@ -1207,6 +1215,14 @@
   <action name="actionShow_Waveform">
    <property name="text">
     <string>Show Waveform</string>
+   </property>
+  </action>
+  <action name="actionSave_Timestamps">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Save Timestamps Automatically</string>
    </property>
   </action>
  </widget>

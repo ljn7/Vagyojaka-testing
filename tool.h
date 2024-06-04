@@ -88,6 +88,8 @@ private slots:
 
     void on_actionShow_Waveform_triggered();
 
+    void on_actionSave_Timestamps_triggered();
+
 private:
     void setFontForElements();
     void setTransliterationLangCodes();

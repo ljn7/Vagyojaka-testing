@@ -945,3 +945,10 @@ void Tool::on_saveTableButton_clicked()
 
 }
 
+
+// To prevent auto updates on timestamps
+void Tool::on_actionSave_Timestamps_triggered()
+{
+    ui->widget->updateTimestampsToggle();
+}
+

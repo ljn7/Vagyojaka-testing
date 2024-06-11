@@ -100,6 +100,8 @@ private slots:
 
     void on_saveTableButton_clicked();
 
+    void on_actionSave_Timestamps_triggered();
+
 private:
     void setFontForElements();
     void setTransliterationLangCodes();

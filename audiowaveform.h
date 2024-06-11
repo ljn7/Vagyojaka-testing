@@ -28,6 +28,7 @@ class AudioWaveForm : public QWidget
 public:
     explicit AudioWaveForm(QWidget *parent = nullptr);
     ~AudioWaveForm();
+    void updateTimestampsToggle();
 
 public slots:
     void getDuration(qint64 total_time);
@@ -81,6 +82,7 @@ private:
     QVector<QCPItemText*> utteranceNumbers;
     QVector<double> startCoords;
     QVector<double> endCoords;
+    bool updateTimestamps = false;
 };
 
 #endif // AUDIOWAVEFORM_H

@@ -98,6 +98,18 @@ Tool::Tool(QWidget *parent)
 
     connect(player, &MediaPlayer::sendSampleRate, ui->widget, &AudioWaveForm::getSampleRate);
 
+
+
+    connect(player, &MediaPlayer::sendingSampleRateStatus, this, [&](bool status) {
+        isSendingSampleRateSuccess = status;
+        connectWaveformAndMediaplayer();
+    });
+
+    connect(ui->widget, &AudioWaveForm::samplingStatus, this, [&](bool status) {
+        isSamplingSuccess = status;
+        connectWaveformAndMediaplayer();
+    });
+
     // Connect components dependent on Player's position change to player
     connect(player, &QMediaPlayer::positionChanged, this,
             [&]()
@@ -270,6 +282,17 @@ Tool::~Tool()
     delete git;
 }
 
+void Tool::connectWaveformAndMediaplayer()
+{
+    if (isSendingSampleRateSuccess && isSamplingSuccess) {
+        connect(player, &QMediaPlayer::positionChanged, ui->widget, &AudioWaveForm::setPlayerPosition);
+        connect(ui->widget, &AudioWaveForm::positionChanged, player, &QMediaPlayer::setPosition);
+    } else {
+        disconnect(player, &QMediaPlayer::positionChanged, ui->widget, &AudioWaveForm::setPlayerPosition);
+        disconnect(ui->widget, &AudioWaveForm::positionChanged, player, &QMediaPlayer::setPosition);
+    }
+}
+
 void Tool::handleMediaPlayerError()
 {
     if (player->error() == QMediaPlayer::NoError)
@@ -330,7 +353,6 @@ void Tool::createMediaSplitter() {
     }
 
     QList<QTime> timeStamps = ui->m_editor->getTimeStamps();
-    std::cerr << "TimeStamps" << timeStamps.isEmpty() << " Size: " << timeStamps.size() << std::endl;
 
     if (timeStamps.isEmpty() || timeStamps.size() <= 0) {
         this->statusBar()->showMessage("Please select a transcription file", 5000);
@@ -708,16 +730,12 @@ void Tool::on_actionPull_triggered()
 //             QList<QUrl> urls = mimeData->urls();
 //             // Check which layout the drop event occurred on
 //             if (obj == ui->playerLayout) {
-//                 std::cerr << "Files dropped on layout1" << std::endl;
 //                 // Handle drop event for layout1
 //             } else if (obj == ui->verticalLayout) {
-//                 std::cerr << "Files dropped on layout2:" << std::endl;
 //                 // Handle drop event for layout2
 //             }
 //             // Handle dropped files as needed
-//             std::cerr << "Files: \n";
 //             for (const QUrl& url : urls) {
-//                 std::cerr << url.toLocalFile().toStdString() << std::endl;
 //             }
 //         }
 //         return true;
@@ -738,7 +756,6 @@ void Tool::dragMoveEvent(QDragMoveEvent *event) {
 }
 
 void Tool::dropEvent(QDropEvent *event) {
-    std::cerr << "Drop event";
     const QMimeData *mimeData = event->mimeData();
     if (mimeData->hasUrls()) {
         QUrl* url = new QUrl(mimeData->urls().first());
@@ -790,22 +807,18 @@ void Tool::on_actionOpen_triggered()
     fileDialog.setAcceptMode(QFileDialog::AcceptOpen);
     fileDialog.setWindowTitle(tr("Open File"));
 
-    std::cerr << "Count: " << count++ << std::endl;
-    std::cerr << "1--------------------1 : " << count++ << std::endl;
+
     if (fileDialog.exec() == QDialog::Accepted) {
         QUrl fileUrl = fileDialog.selectedUrls().constFirst();
         QFile file(fileUrl.toLocalFile());
         QString xmlDirectory = QFileInfo(fileUrl.toLocalFile()).path();
         QVector<TTSRow> rows = parseXML(fileUrl);
-        std::cerr << "2--------------------2 : " << count++ << std::endl;
         tableWidget->setRowCount(0);
 
         for (int i = 0; i < rows.size(); ++i) {
-            std::cerr << "3--------------------3 : " << count++ << std::endl;
             const TTSRow& row = rows[i];
             tableWidget->insertRow(tableWidget->rowCount());
             std::unique_ptr<AudioPlayerWidget> audioPlayer(new AudioPlayerWidget(xmlDirectory + "/file-" + QString::number(i) + ".mp3"));
-            std::cerr << xmlDirectory.toStdString() << std::endl;
             tableWidget->setCellWidget(i, 0, audioPlayer.release());
             tableWidget->setItem(i, 1, new QTableWidgetItem(row.words));
             tableWidget->setItem(i, 2, new QTableWidgetItem(row.not_pronunced_properly_1));
@@ -828,7 +841,6 @@ void Tool::on_actionOpen_triggered()
             // comboBox1->setMaximumWidth(50); // Adjust maximum width
             tableWidget->setCellWidget(i, 3, comboBox1.release());
 
-            std::cerr << "4--------------------4 : " << count++ << std::endl;
 
             std::unique_ptr<QComboBox> comboBox2(new QComboBox(this));
             comboBox2->addItem("1");
@@ -841,8 +853,7 @@ void Tool::on_actionOpen_triggered()
             comboBox2->setFont(QFont(comboBox2->font().family(), 8)); // Set font size
             // comboBox2->setMaximumWidth(50); // Adjust maximum width
             tableWidget->setCellWidget(i, 4, comboBox2.release());
-            std::cerr << "5--------------------5 : " << count++ << std::endl;
-            std::cerr << "6--------------------6 : " << count++ << std::endl;
+
         }
     }
     // tableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);

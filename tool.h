@@ -25,6 +25,7 @@ public:
     explicit Tool(QWidget *parent = nullptr);
     ~Tool() final;
 
+public slots:
 
 protected:
     void keyPressEvent(QKeyEvent *event) override;
@@ -101,7 +102,7 @@ private slots:
     void on_saveTableButton_clicked();
 
     void on_actionSave_Timestamps_triggered();
-
+    void connectWaveformAndMediaplayer();
 private:
     void setFontForElements();
     void setTransliterationLangCodes();
@@ -115,7 +116,8 @@ private:
     QMap<QString, QString> m_transliterationLang;
     Git* git = nullptr;
     QTableWidget* tableWidget;
-
+    bool isSendingSampleRateSuccess = false;
+    bool isSamplingSuccess = false;
 
 
     void onTabChanged(int index);

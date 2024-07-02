@@ -6,9 +6,7 @@
 #include <QToolButton>
 #include <QComboBox>
 #include <QAudio>
-#include<iostream>
 
-#include"mediaplayer/mediaplayer.h"
 
 //---------------------------- ---
 #define AUDIBLE_RANGE_START 20
@@ -21,41 +19,44 @@ AudioWaveForm::AudioWaveForm(QWidget *parent)
 {
     ui->setupUi(this);
 
-    waveWidget = new QCustomPlot(this);
+    // waveWidget = new QCustomPlot(this);
+    // waveWidget = ui->widget;
+    waveWidget = ui->widget;
 
     //horizontalScrollBar = new QScrollBar(Qt::Horizontal, this);
     //connect(horizontalScrollBar, &QScrollBar::valueChanged, this, &AudioWaveForm::onScrollBarValueChanged);
-
+    // waveWidget->clearGraphs();
+    waveWidget->addGraph();
     waveWidget->yAxis->setRange(-1.0, 1.0);
     waveWidget->xAxis->setRange(0, 8);
-    waveWidget->clearGraphs();
-    waveWidget->addGraph();
+
     waveWidget->yAxis->setVisible(false);
     waveWidget->xAxis->setVisible(true);
-
 
     waveWidget->graph()->setPen(QPen(Qt::black));
 
     waveWidget->setVisible(false);
     waveWidget->graph()->setVisible(true);
+    waveWidget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    // waveWidget->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
+    waveWidget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    // waveWidget->setMinimumSize(0, 100);
 
-    waveWidget->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
-    waveWidget->setMinimumSize(0, 100);
+    // QBoxLayout *layout2 = new QVBoxLayout;
 
-    QBoxLayout *layout2 = new QVBoxLayout;
+    // ui->layout->addWidget(waveWidget);
 
-    layout2->addWidget(waveWidget);
     //layout2->addWidget(horizontalScrollBar);
 
-    setLayout(layout2);
+    // setLayout(layout2);
 
     waveWidget->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom |/* QCP::iSelectPlottables |*/ QCP::iSelectItems | QCP::iRangeZoom);
-
     connect(waveWidget, SIGNAL(mousePress(QMouseEvent*)), this, SLOT(onMousePress(QMouseEvent*)));
+
     connect(waveWidget, SIGNAL(mouseMove(QMouseEvent*)), this, SLOT(onMouseMove(QMouseEvent*)));
+    connect(waveWidget, SIGNAL(mouseRelease(QMouseEvent*)), this, SLOT(onMouseRelease(QMouseEvent*)));
 
-    waveWidget->setVisible(false);
-
+    waveWidget->setVisible(true);
 }
 
 AudioWaveForm::~AudioWaveForm()
@@ -70,17 +71,31 @@ AudioWaveForm::~AudioWaveForm()
 
 void AudioWaveForm::getSampleRate(qint64 sampleRate, QBuffer& audioBuffer, qint64 totalDuration)
 {
+
+    emit samplingStatus(false);
+
+    if (audioBuffer.size() < 0)
+        return;
+
+    waveWidget->graph(0)->data()->clear();
+    waveWidget->replot();
+    mSamples.clear();
+    mIndices.clear();
+
     this->sample_rate = sampleRate;
     this->total_dur = totalDuration;
-    std::cerr << "total_duration: " << total_dur << std::endl;
     this->num_sam = sample_rate * (total_dur/1000);
     // factor = num_sam / NUM_SAMPLES;
     qInfo()<<"sample_rate is: :"<<this->sample_rate<<"\n";
-    std::cerr<<"sample_rate is: "<<this->sample_rate;
     //qInfo()<<"total duration is: "<<total_dur<<"\n";
     //qInfo()<<"num samples is: "<<num_sam<<"\n";
 
-    mInputBuffer.open(QIODevice::ReadWrite);
+
+    // mInputBuffer.
+    // mInputBuffer.open(QIODevice::ReadWrite);
+    mInputBuffer.open(QIODevice::WriteOnly | QIODevice::Truncate);
+    mInputBuffer.buffer().clear();
+    mInputBuffer.seek(0);
     audioBuffer.open(QIODevice::ReadOnly);
 
     while (!audioBuffer.atEnd()) {
@@ -130,6 +145,27 @@ void AudioWaveForm::processBuffer(QBuffer& audioBuffer)
     processAudioIn();
 }
 
+void AudioWaveForm::setPlayerPosition(qint64 position)
+{
+
+    double currentTimeSec = position / 1000.0;
+    if (playLine)
+    {
+        playLine->start->setCoords(currentTimeSec, -1);
+        playLine->end->setCoords(currentTimeSec, 1);
+    }
+
+    else
+    {
+        playLine = new QCPItemLine(waveWidget);
+        playLine->start->setCoords(currentTimeSec, -1);
+        playLine->end->setCoords(currentTimeSec, 1);
+        playLine->setPen(QPen(Qt::blue));
+    }
+
+    waveWidget->replot();
+}
+
 void AudioWaveForm::processAudioIn()
 {
     //qInfo()<<"processing audio\n";
@@ -161,7 +197,7 @@ void AudioWaveForm::processAudioIn()
     mInputBuffer.buffer().clear();
     mInputBuffer.seek(0);
     mInputBuffer.close();
-    //samplesUpdated();
+    samplesUpdated();
 }
 
 void AudioWaveForm::getTimeArray(QVector<QTime> timeArray)
@@ -177,13 +213,13 @@ void AudioWaveForm::getTimeArray(QVector<QTime> timeArray)
         totalSeconds = 0;
     }
     num_of_blocks = endTime.size();
-
     plotLines(1);
 
 
 }
 void AudioWaveForm::plotLines(int n)
 {
+
     if(!startLine.isEmpty())
     {
         for(int i = 0; i < startLine.size(); ++i)
@@ -193,6 +229,7 @@ void AudioWaveForm::plotLines(int n)
         startLine.clear();
         waveWidget->replot();
     }
+
     if(!endLine.isEmpty())
     {
         for(int i = 0; i < endLine.size(); ++i)
@@ -203,10 +240,13 @@ void AudioWaveForm::plotLines(int n)
         waveWidget->replot();
     }
 
+
     //qInfo()<<"plotting lines\n";
     int s = 0;
     startLine.clear();
     endLine.clear();
+    waveWidget->replot();
+    waveWidget->update();
     for(int i = 0; i < num_of_blocks; ++i)
     {
         QCPItemLine* newbeginline = new QCPItemLine(waveWidget);
@@ -215,9 +255,10 @@ void AudioWaveForm::plotLines(int n)
         endLine.append(newendline);
 
         startLine[i]->start->setCoords(s, -1);
-        if(i == 0){
-            startLine[0]->setSelectable(false);
-        }
+        // start line selectable
+        // if(i == 0){
+        //     startLine[0]->setSelectable(false);
+        // }
         startLine[i]->end->setCoords(s, 1);
         startLine[i]->setPen(QPen(Qt::green));
         endLine[i]->start->setCoords(blocktime[i], -1);
@@ -230,7 +271,6 @@ void AudioWaveForm::plotLines(int n)
     startCoords.clear();
     endCoords.clear();
     //}
-
     for(int i = 0; i < num_of_blocks; ++i)
     {
         double startcoordinate = startLine[i]->start->coords().x();
@@ -259,6 +299,7 @@ void AudioWaveForm::setUtteranceNumber(int n)
         waveWidget->replot();
     }
 
+    const QColor color = QColor("red");
     //qInfo()<<"setting utterance number\n";
     int s = 0;
     for(int i = 0; i < num_of_blocks; ++i)
@@ -266,21 +307,30 @@ void AudioWaveForm::setUtteranceNumber(int n)
         QCPItemText* utteranceNumberText = new QCPItemText(waveWidget);
         utteranceNumberText->setPositionAlignment(Qt::AlignTop | Qt::AlignHCenter);
         utteranceNumberText->position->setType(QCPItemPosition::ptPlotCoords);
-        utteranceNumberText->position->setCoords(s + (blocktime[i] - s) / 2.0, 1.1); // Adjust the vertical position
-
+        utteranceNumberText->position->setCoords(s + (blocktime[i] - s) / 2.0, 0); // Adjust the vertical position
+        utteranceNumberText->setColor(color);
         utteranceNumberText->setText(QString::number(i + 1)); // Display utterance number
-        utteranceNumberText->setFont(QFont(font().family(), 8)); // Adjust font size if needed
+        // utteranceNumberText->setFont(QFont(font().family(), 15)); // Adjust font size if needed
+
+        QFont font;
+        font.setFamily(this->font().family()); // Use the same font family
+        font.setPointSize(13); // Adjust font size if needed
+        font.setBold(true);
+        font.setWeight(QFont::Black);
+        utteranceNumberText->setFont(font);
 
         // Add text item to the vector
         utteranceNumbers.append(utteranceNumberText);
 
         s = blocktime[i]+1;
     }
+
     waveWidget->replot();
     linesAvailable = 1;
 
     if(n == 1)
         samplesUpdated();
+
 }
 
 void AudioWaveForm::updateUtterances(int index)
@@ -300,6 +350,9 @@ void AudioWaveForm::samplesUpdated()
 {
 
     //qInfo()<<"Updating samples\n";
+    if (mSamples.isEmpty())
+        return;
+
     int n = mSamples.length();
     if (n > /*96000*/ num_sam) mSamples = mSamples.mid(n - (num_sam), -1);
     memcpy(mFftIn, mSamples.data(), num_sam * sizeof(double));
@@ -322,6 +375,10 @@ void AudioWaveForm::samplesUpdated()
     waveWidget->xAxis->rescale();
     waveWidget->replot();
     waveWidget->setVisible(true);
+
+
+    emit samplingStatus(true);
+
 }
 
 // Slot to handle line movement
@@ -368,6 +425,24 @@ void AudioWaveForm::onMousePress(QMouseEvent *event) {
     }
     //qInfo()<<flag1<<"\n";
 
+    // if (playLine)
+    // {
+    //     if(playLine->selectTest(event->pos(), false) >= 0) {
+    //         playLine->setSelected(!playLine->selected());
+    //     }
+    //     // double x = waveWidget->xAxis->pixelToCoord(event->pos().x());
+
+    //     // // Check if the click is near the playLine
+    //     // if (std::fabs(x - playLine->start->key()) < 0.1)
+    //     // {
+    //     //     dragging = true;
+    //     //     lastMouseX = x;
+    //     //     waveWidget->setCursor(Qt::ClosedHandCursor); // Change cursor to indicate dragging
+    //     // }
+    // }
+
+    dragging = true;
+    lastMouseX = waveWidget->xAxis->pixelToCoord(event->pos().x());
 }
 
 void AudioWaveForm::deselectLines(QVector<QCPItemLine *> & lines, int index, int num_of_lines)
@@ -499,6 +574,33 @@ void AudioWaveForm::onMouseMove(QMouseEvent *event) {
             }
         }
     }
+
+    // if (playLine && playLine->selected())
+    // {
+    //     double x = waveWidget->xAxis->pixelToCoord(event->pos().x());
+    //     double nextEndX = playLine->start->coords().x();
+    //     double prevEndX = playLine->start->coords().x();
+
+    //     playLine->start->setCoords(x, -1);
+    //     playLine->end->setCoords(x, 1);
+    //     waveWidget->replot();
+
+    // }
+
+    if (dragging && playLine)
+    {
+        double currentMouseX = waveWidget->xAxis->pixelToCoord(event->pos().x());
+        double deltaX = currentMouseX - lastMouseX;
+
+        playLine->start->setCoords(playLine->start->coords().x() + deltaX, playLine->start->coords().y());
+        playLine->end->setCoords(playLine->end->coords().x() + deltaX, playLine->end->coords().y());
+        waveWidget->replot();
+
+        lastMouseX = currentMouseX;
+
+        qint64 position = static_cast<qint64>(playLine->start->coords().x() * 1000);
+        emit positionChanged(position);
+    }
 }
 
 
@@ -509,3 +611,19 @@ void AudioWaveForm::updateTimestampsToggle()
     else
         updateTimestamps = true;
 }
+
+void AudioWaveForm::onMouseRelease(QMouseEvent *event)
+{
+    dragging = false;
+    if (playLine)
+    {
+        qint64 position = static_cast<qint64>(playLine->start->coords().x() * 1000);
+        emit positionChanged(position);
+    }
+}
+
+// void AudioWaveForm::resizeEvent(QResizeEvent *event)
+// {
+//     QWidget::resizeEvent(event);
+//     // waveWidget->resize(this->size());
+// }

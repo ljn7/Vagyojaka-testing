@@ -172,8 +172,6 @@ void Git::commit()
 
         author_name = dialog.getUsername();
         author_email = dialog.getEmail();
-        std::cerr << "\nName: " << author_name.toStdString().c_str();
-        std::cerr << "\nEmail: " << author_email.toStdString().c_str();
     } else {
 
     }
@@ -186,8 +184,7 @@ void Git::commit()
         committer_name = dialog2.getUsername();
         committer_email =  dialog2.getEmail();
         commit_message = dialog2.getCommitMessage();
-        std::cerr << "\nName: " << committer_name.toStdString();
-        std::cerr << "\nEmail: " << committer_email.toStdString();
+
     } else {
 
     }
@@ -318,14 +315,11 @@ void Git::push()
         &refspec,
         1
     };
-    // std::cerr << "Reference Spec: " << refspec;
 
     if(check_lg2(git_remote_push(remote, &refspecs, &options), "Error pushing", NULL)) {
-        std::cerr << "Error Pushing";
         return;
     }
 
-    std::cerr << "Pushed";
 
 }
 
@@ -572,7 +566,6 @@ int print_matched_cb(const char *path, const char *matched_pathspec, void *paylo
 
     if ((status & GIT_STATUS_WT_MODIFIED) || (status & GIT_STATUS_WT_NEW)) {
         // printf("add '%s'\n", path);
-        std::cerr << "add " << "'" << path << "'\n";
         ret = 0;
     } else {
         ret = 1;

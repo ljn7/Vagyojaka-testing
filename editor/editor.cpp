@@ -788,6 +788,7 @@ void Editor::transcriptSave()
         QFileInfo mapperFileInfo(mapper);
         QFile aligner(":/alignment.py");
         if(!aligner.open(QIODevice::OpenModeFlag::ReadOnly)){
+            qDebug() << "From myAlgn - 1";
             QMessageBox::critical(this,"Error",aligner.errorString());
             return;
         }
@@ -795,7 +796,8 @@ void Editor::transcriptSave()
         QString cp=aligner.readAll();
         aligner.close();
 
-        if(!mapper.open(QIODevice::OpenModeFlag::WriteOnly|QIODevice::Truncate)){
+        if(!mapper.open(QIODevice::OpenModeFlag::WriteOnly | QIODevice::Truncate)){
+            qDebug() << "From myAlgn - 2";
             QMessageBox::critical(this,"Error",mapper.errorString());
             return;
         }
@@ -810,6 +812,7 @@ void Editor::transcriptSave()
     if(!QFile::exists("replacedTextDictonary.json")){
         QFile repDict("replacedTextDictonary.json");
         if(!repDict.open(QIODevice::OpenModeFlag::WriteOnly|QIODevice::Truncate)){
+            qDebug() << "From replacedTextDictonary - 1";
             QMessageBox::critical(this,"Error",repDict.errorString());
             return;
         }
@@ -961,6 +964,7 @@ void Editor::addCustomDictonary()
     m_customDictonaryPath=temp;
     QFile file(m_customDictonaryPath);
     if(!file.open(QIODevice::ReadOnly)){
+        qDebug() << "From addCustomDictonary - 1";
         QMessageBox::critical(this,"Error",file.errorString());
         return;
     }
@@ -1005,6 +1009,7 @@ void Editor::loadTranscriptFromUrl(QUrl *fileUrl)
     QString dirInString=filedir.dir().path();
     settings->setValue("transcriptDir", dirInString);
     if (!transcriptFile.open(QIODevice::ReadOnly)) {
+        qDebug() << "From loadTranscriptFromUrl - 1";
         emit message(transcriptFile.errorString());
         return;
     }
@@ -1021,7 +1026,8 @@ void Editor::loadTranscriptFromUrl(QUrl *fileUrl)
     setContent();
     //*********************Inserting into file********************************
     QFile initial(fileBeforeSave);
-    if(!initial.open(QIODevice::OpenModeFlag::WriteOnly)){
+    if(!initial.open(QIODevice::OpenModeFlag::ReadWrite)){
+        qDebug() << "From inserting into file - 1";
         QMessageBox::critical(this,"Error",initial.errorString());
         return;
     }
@@ -1306,6 +1312,7 @@ void Editor::loadDictionary()
 
         QFile file2(dir.absolutePath());
         if(!file2.open(QIODevice::OpenModeFlag::WriteOnly|QIODevice::Truncate)){
+            qDebug() << "From Dictionary - 1";
             QMessageBox::critical(this,"Error",file2.errorString());
             return;
         }
@@ -1645,8 +1652,6 @@ void Editor::contentChanged(int position, int charsRemoved, int charsAdded)
         bool flag = true;
         for (int i = 0; i < wordsFromEditor.size() && i < wordsFromData.size(); i++)
             if (flag && wordsFromEditor[i].text != wordsFromData[i].text) {
-                std::cerr << "WordsFromEditor: " << wordsFromEditor[i].text.toStdString()
-                          << " -- WordsFromData: " << wordsFromData[i].text.toStdString() << std::endl;
                 diffStart = i;
                 flag = false;
                 // break; //added flag instead of breaking
@@ -1676,20 +1681,14 @@ void Editor::contentChanged(int position, int charsRemoved, int charsAdded)
             int counter = 0;
             for (int i = 0, j = 0; i < wordsFromData.size() && j < wordsFromEditor.size();) {
                 if (wordsFromData[i].text != wordsFromEditor[j].text && counter < 2) {
-                    std::cerr << "---- If ----" << std::endl;
-                    std::cerr << i << " Data: "<< wordsFromData[i].text.toStdString()
-                              << " " << j << " --- Editor :" << wordsFromEditor[j].text.toStdString()
-                              << std::endl;
+
                     wordsFromEditor[j].isEdited = "true";
                     counter++;
                     if (counter == 2)
                         i++;
                     j++;
                 } else {
-                    std::cerr << "---- Else -----" << std::endl;
-                    std::cerr << i << " Data: "<< wordsFromData[i].text.toStdString()
-                              << " " << j << " --- Editor :" << wordsFromEditor[j].text.toStdString()
-                              << std::endl;
+
                     wordsFromEditor[j].isEdited = wordsFromData[i].isEdited;
                     i++;
                     j++;
@@ -1766,7 +1765,6 @@ void Editor::contentChanged(int position, int charsRemoved, int charsAdded)
                 auto isWordEdited = m_blocks[i].words[j].isEdited == "true";
 
                 if (isWordEdited) {
-                    // std::cerr << "i: " << i << " j: " << j << std::endl;
                     editedWords.insert(i, j);
                 }
                 if (wordText != "" && m_punctuation.contains(wordText.back()))
@@ -2331,6 +2329,7 @@ void Editor::saveAsPDF()
 
     QFile final("pdf.txt");
     if(!final.open(QIODevice::OpenModeFlag::WriteOnly)){
+        qDebug() << "From PDF - 1";
         QMessageBox::critical(this,"Error",final.errorString());
         return;
     }
@@ -2400,6 +2399,7 @@ void Editor::saveAsTXT()    // save the transcript as a text file
             out << txtContent;
             txtFile.close();
         } else {
+            qDebug() << "from txtSaveLocation";
             QMessageBox::critical(this, "Error", txtFile.errorString());
         }
     }
@@ -2682,10 +2682,8 @@ QList<QTime> Editor::getTimeStamps()
 
     QList<QTime> timeStamps;
 
-    std::cerr << "Mblocks " <<  m_blocks.isEmpty();// << " " <<  m_blocks.size();
     if (m_blocks.isEmpty())
     {
-        std::cerr << "Mblocks " <<  m_blocks.size();
         return timeStamps;
     }
 
@@ -2710,6 +2708,8 @@ void Editor::updateTimeStamp(int block_num, QTime endTime){
 
 void Editor::showWaveform()
 {
+    if (m_blocks.isEmpty())
+        return;
     //waveform
     QVector<QTime> timevec;
     QTime t;

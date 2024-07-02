@@ -57,7 +57,6 @@ void VideoWidget::dropEvent(QDropEvent *event)  {
     const QMimeData *mimeData = event->mimeData();
     if (mimeData->hasUrls()) {
         QUrl* url = new QUrl(mimeData->urls().first());
-        std::cerr << "dropped in vw";
         emit droppedFile(url);
     }
     event->acceptProposedAction();

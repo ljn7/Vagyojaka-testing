@@ -36,8 +36,6 @@ void MediaPlayer::setPositionToTime(const QTime& time)
     if (time.isNull())
         return;
     qint64 position = 3600000*time.hour() + 60000*time.minute() + 1000*time.second() + time.msec();
-    std::cerr << "Media Player: " << 3600000*time.hour() + 60000*time.minute() + 1000*time.second() + time.msec() << std::endl
-              << "Position in MediaPlayer: " << position << std::endl;
     setPosition(position);
 }
 
@@ -57,7 +55,7 @@ QString MediaPlayer::getPositionInfo()
 
 bool MediaPlayer::isAudioFile(const QString& filePath) {
     QFileInfo fileInfo(filePath);
-    QStringList audioExtensions = {"mp3", "wav", "ogg", "flac", "aac", "m4a"}; // Add more audio extensions as needed
+    QStringList audioExtensions = {/*"mp3", */"wav" /*, "ogg", "flac", "aac"*//*, "m4a"*/}; // Add more audio extensions as needed
 
     return audioExtensions.contains(fileInfo.suffix().toLower());
 }
@@ -92,7 +90,6 @@ void MediaPlayer::loadMediaFromUrl(QUrl *fileUrl)
 
     //waveform
     QByteArray audioData;
-
     if(isAudioFile(filepath)){
         qInfo()<<"File id audio file\n";
         audioData = MediaFile.readAll();
@@ -115,7 +112,9 @@ void MediaPlayer::loadMediaFromUrl(QUrl *fileUrl)
         }
     }
 
-    audioBuffer.open(QIODevice::ReadWrite);
+    audioBuffer.open(QIODevice::ReadWrite | QIODevice::Truncate);
+    audioBuffer.buffer().clear();
+    audioBuffer.seek(0);
 
     audioBuffer.write(audioData);
     audioBuffer.close();
@@ -128,7 +127,11 @@ void MediaPlayer::loadMediaFromUrl(QUrl *fileUrl)
         qInfo()<<"size of buffer is: "<<audioBuffer.size();
         AVFormatContext* formatContext = avformat_alloc_context();
         qint64 sampleRate = 0;
-        if (avformat_open_input(&formatContext, strdup(m_mediaFileName.toStdString().c_str()), nullptr, nullptr) == 0) {
+
+        if ( avformat_open_input(&formatContext,
+                strdup(m_mediaFileName.toStdString().c_str()),
+                nullptr, nullptr) == 0)
+        {
             if (avformat_find_stream_info(formatContext, nullptr) >= 0) {
                 int audioStreamIndex = -1;
                 for (unsigned int i = 0; i < formatContext->nb_streams; ++i) {
@@ -151,8 +154,13 @@ void MediaPlayer::loadMediaFromUrl(QUrl *fileUrl)
             avformat_close_input(&formatContext);
         }
         qint64 duration = p->duration();
-        if(sampleRate)
+        if(sampleRate) {
             emit sendSampleRate(sampleRate, audioBuffer, duration);
+            emit sendingSampleRateStatus(true);
+        }
+        else {
+            emit sendingSampleRateStatus(false);
+        }
     });
     //=======================
     emit message("Opened file " + fileUrl->fileName());

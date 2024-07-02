@@ -31,7 +31,7 @@ void customMessageHandler(QtMsgType type, const QMessageLogContext &context, con
     }
 
     QFile outFile("LogFile.log");
-    outFile.open(QIODevice::WriteOnly | QIODevice::Append);
+    outFile.open(QIODevice::ReadWrite | QIODevice::Append | QIODevice::Text);
 
     QTextStream textStream(&outFile);
     //Qt6

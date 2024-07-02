@@ -32,18 +32,26 @@ public:
 
 public slots:
     void getDuration(qint64 total_time);
-    void onMousePress(QMouseEvent *event);
+
     void getTimeArray(QVector<QTime> timeArray);
-    void getSampleRate(qint64 sampleRate, QBuffer &audioBuffer, qint64 totalDuration);
+    void getSampleRate(qint64 sampleRate, QBuffer& audioBuffer, qint64 totalDuration);
     void processBuffer(QBuffer &audioBuffer);
+    void setPlayerPosition(qint64 position);
 
 private slots:
     void processAudioIn();
-
+    void onMouseRelease(QMouseEvent *event);
     void onMouseMove(QMouseEvent *event);
+    void onMousePress(QMouseEvent *event);
 
 signals:
     void updateTime(int block_num, QTime endTime);
+    void positionChanged(qint64 position);
+    void samplingStatus(bool status);
+
+protected:
+    // void resizeEvent(QResizeEvent *event) override;
+
 private:
     Ui::AudioWaveForm *ui;
     //-------------------------------------------
@@ -53,6 +61,8 @@ private:
     void deselectLines(QVector<QCPItemLine*> &lines, int index, int num_of_lines);
     void setUtteranceNumber(int n);
     void updateUtterances(int ind);
+    void adjustTime(double timeValue);
+    void getUpdatedIndexes(int index1, int index2);
 
     QBuffer mInputBuffer;
     qint64 tot_duration;
@@ -80,9 +90,15 @@ private:
     QVector<QCPItemLine*> startLine;
     QVector<QCPItemLine*> endLine;
     QVector<QCPItemText*> utteranceNumbers;
+    QCPItemLine* playLine;
     QVector<double> startCoords;
     QVector<double> endCoords;
     bool updateTimestamps = false;
+
+    bool dragging = false;
+    double lastMouseX;
+
+
 };
 
 #endif // AUDIOWAVEFORM_H

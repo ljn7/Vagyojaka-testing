@@ -56,6 +56,7 @@ signals:
     void sendBuffer(QBuffer& audio);
     void sendDuration(qint64 total_duration);
     void sendSampleRate(qint64 sampleRate, QBuffer& audioBuffer, qint64 totalDuration);
+    void sendingSampleRateStatus(bool status);
 
 private:
     static QTime getTimeFromPosition(const qint64& position);

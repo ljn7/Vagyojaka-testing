@@ -2697,13 +2697,50 @@ QList<QTime> Editor::getTimeStamps()
 }
 
 void Editor::updateTimeStamp(int block_num, QTime endTime){
+    // if (block_num < m_blocks.size()) {
     m_blocks[block_num].timeStamp = endTime;
-    //qInfo()<<"number of words in block "<<block_num<<" is "<<m_blocks[block_num].words.size()<<"\n";
     m_blocks[block_num].words[m_blocks[block_num].words.size() - 1].timeStamp = endTime;
+    setContent();
+    // } else if (block_num == m_blocks.size()) {
+    //     struct block obj;
+    //     obj.timeStamp = endTime;
+    //     m_blocks.append(obj);
+    //     setContent();
+    // }
     /*for(int i = 0; i < m_blocks.size(); ++i)
     {
         qInfo()<<"timestamp of block "<<i+1<<" is: "<<m_blocks[i].timeStamp<<"\n";
     }*/
+}
+
+void Editor::updateTimeStampsBlock(QVector<int> blks) {
+
+    for (int i = 0; i < m_blocks.size(); i++) {
+        QTime time(0,0,0);
+        time = time.addSecs(blks[i]);
+        m_blocks[i].timeStamp = time;
+        m_blocks[i].words[m_blocks[i].words.size() - 1].timeStamp = time;
+    }
+
+    for (int i = m_blocks.size(); i < blks.size(); i++) {
+
+        QTime time(0,0,0);
+        time = time.addSecs(blks[i]);
+
+        word wrd;
+        wrd.timeStamp = time;
+        wrd.text = "";
+
+        block bl;
+        bl.speaker = "";
+        bl.text = "";
+        bl.words.append(wrd);
+        bl.timeStamp = time;
+
+        m_blocks.append(bl);
+    }
+
+    setContent();
 }
 
 void Editor::showWaveform()

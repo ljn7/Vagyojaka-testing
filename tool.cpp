@@ -98,7 +98,7 @@ Tool::Tool(QWidget *parent)
 
     connect(player, &MediaPlayer::sendSampleRate, ui->widget, &AudioWaveForm::getSampleRate);
 
-
+    connect(ui->widget, &AudioWaveForm::updateTimeStampsBlock, ui->m_editor, &Editor::updateTimeStampsBlock);
 
     connect(player, &MediaPlayer::sendingSampleRateStatus, this, [&](bool status) {
         isSendingSampleRateSuccess = status;
@@ -961,5 +961,11 @@ void Tool::on_saveTableButton_clicked()
 void Tool::on_actionSave_Timestamps_triggered()
 {
     ui->widget->updateTimestampsToggle();
+}
+
+
+void Tool::on_actionUpdate_Timestamps_triggered()
+{
+    ui->widget->updateTimeStamps();
 }
 

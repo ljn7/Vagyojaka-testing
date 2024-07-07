@@ -103,6 +103,8 @@ private slots:
 
     void on_actionSave_Timestamps_triggered();
     void connectWaveformAndMediaplayer();
+    void on_actionUpdate_Timestamps_triggered();
+
 private:
     void setFontForElements();
     void setTransliterationLangCodes();

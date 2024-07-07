@@ -703,27 +703,26 @@
        </layout>
       </widget>
       <widget class="QWidget" name="tab_3">
-          <attribute name="title">
-              <string>Waveform</string>
-          </attribute>
-          <layout class="QVBoxLayout" name="verticalLayout_7">
-              <property name="spacing">
-                  <number>0</number>
-              </property>
-              <item>
-                  <widget class="AudioWaveForm" name="widget" native="true">
-                      <property name="sizePolicy">
-                          <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-                              <horstretch>0</horstretch>
-                              <verstretch>0</verstretch>
-                          </sizepolicy>
-                      </property>
-                  </widget>
-              </item>
-          </layout>
+       <attribute name="title">
+        <string>Waveform</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="verticalLayout_7">
+        <property name="spacing">
+         <number>0</number>
+        </property>
+        <item>
+         <widget class="AudioWaveForm" name="widget" native="true">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+         </widget>
+        </item>
+       </layout>
       </widget>
-
-    <widget class="QWidget" name="tab_4">
+      <widget class="QWidget" name="tab_4">
        <property name="minimumSize">
         <size>
          <width>752</width>
@@ -989,6 +988,7 @@
     </property>
     <addaction name="actionShow_Waveform"/>
     <addaction name="separator"/>
+    <addaction name="actionUpdate_Timestamps"/>
     <addaction name="actionSave_Timestamps"/>
    </widget>
    <widget class="QMenu" name="menuTTS">
@@ -1349,7 +1349,7 @@
     <bool>false</bool>
    </property>
    <property name="text">
-    <string>Version 5.2.3</string>
+    <string>Version 5.3.0</string>
    </property>
    <property name="toolTip">
     <string>Version</string>
@@ -1400,7 +1400,12 @@
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>Save Timestamps Automatically</string>
+    <string>Update Timestamps Automatically</string>
+   </property>
+  </action>
+  <action name="actionUpdate_Timestamps">
+   <property name="text">
+    <string>Update Timestamps</string>
    </property>
   </action>
  </widget>

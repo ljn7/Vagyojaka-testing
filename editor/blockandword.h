@@ -31,6 +31,11 @@ struct block
     QStringList tagList;
     QVector<word> words;
 
+    block() : timeStamp(), text(), speaker(), tagList(), words() {};
+
+    block(QTime timeStamp, QString text, QString speaker, QStringList tagList, QVector<word> words)
+        : timeStamp(timeStamp), text(text), speaker(speaker), tagList(tagList), words(words) {};
+
     inline bool operator==(block b) const
     {
         if(b.timeStamp==timeStamp && b.text==text && b.speaker==speaker && b.words==words)

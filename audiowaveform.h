@@ -29,6 +29,7 @@ public:
     explicit AudioWaveForm(QWidget *parent = nullptr);
     ~AudioWaveForm();
     void updateTimestampsToggle();
+    void updateTimeStamps();
 
 public slots:
     void getDuration(qint64 total_time);
@@ -44,10 +45,15 @@ private slots:
     void onMouseMove(QMouseEvent *event);
     void onMousePress(QMouseEvent *event);
 
+    void on_addBtn_clicked();
+
+    void on_updateTimestampsBtn_clicked();
+
 signals:
     void updateTime(int block_num, QTime endTime);
     void positionChanged(qint64 position);
     void samplingStatus(bool status);
+    void updateTimeStampsBlock(QVector<int> blocks);
 
 protected:
     // void resizeEvent(QResizeEvent *event) override;
@@ -63,6 +69,8 @@ private:
     void updateUtterances(int ind);
     void adjustTime(double timeValue);
     void getUpdatedIndexes(int index1, int index2);
+    void addPlotLine();
+    void addUtteranceNumber();
 
     QBuffer mInputBuffer;
     qint64 tot_duration;
@@ -91,13 +99,14 @@ private:
     QVector<QCPItemLine*> endLine;
     QVector<QCPItemText*> utteranceNumbers;
     QCPItemLine* playLine;
-    QVector<double> startCoords;
+    // QVector<double> startCoords;
     QVector<double> endCoords;
     bool updateTimestamps = false;
 
     bool dragging = false;
     double lastMouseX;
-
+    int selectedLineIndex = -1;
+    uint64_t numOfAddedLines = 0;
 
 };
 

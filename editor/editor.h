@@ -99,6 +99,7 @@ public slots:
     void saveAsTXT();
 
     void updateTimeStamp(int block_num, QTime endTime);
+    void updateTimeStampsBlock(QVector<int> blks);
 
 private slots:
     void contentChanged(int position, int charsRemoved, int charsAdded);

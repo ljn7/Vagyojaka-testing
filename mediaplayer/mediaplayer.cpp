@@ -121,6 +121,7 @@ void MediaPlayer::loadMediaFromUrl(QUrl *fileUrl)
 
     p->setSource(*fileUrl);
 
+    std::cerr << QDir::currentPath().toStdString() << std::endl;
 
     connect(p, &QMediaPlayer::durationChanged, [this]() {
         qint64 tot_duration = p->duration();

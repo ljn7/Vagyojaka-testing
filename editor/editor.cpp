@@ -2697,6 +2697,8 @@ QList<QTime> Editor::getTimeStamps()
 }
 
 void Editor::updateTimeStamp(int block_num, QTime endTime){
+    if (m_blocks.empty() || block_num >= m_blocks.size() || block_num < 0)
+        return;
     // if (block_num < m_blocks.size()) {
     m_blocks[block_num].timeStamp = endTime;
     m_blocks[block_num].words[m_blocks[block_num].words.size() - 1].timeStamp = endTime;

@@ -61,6 +61,15 @@ Editor::Editor(QWidget *parent)
     //    undoStack =  new QUndoStack(this);
     QString iniPath = QApplication::applicationDirPath() + "/" + "config.ini";
     settings = new QSettings(iniPath, QSettings::IniFormat);
+
+    if(settings->value("showTimeStamps").toString()=="") {
+        showTimeStamp = true;
+    }
+    else {
+        showTimeStamp = settings->value("showTimeStamps").toString() == "true";
+    }
+
+    settings->setValue("showTimeStamps", QVariant(showTimeStamp).toString());
 }
 
 
@@ -391,7 +400,7 @@ void Editor::keyPressEvent(QKeyEvent *event)
     else if (event->modifiers() == Qt::ControlModifier && event->key() == Qt::Key_M){
         QString blockText = textCursor().block().text();
         QString textTillCursor = blockText.left(textCursor().positionInBlock());
-
+        emit sendBlockText(blockText);
         //Qt6
         // const bool containsSpeakerBraces = blockText.leftRef(blockText.indexOf(" ")).contains("]:");
         const bool containsSpeakerBraces = blockText.left(blockText.indexOf(" ")).contains("]:");
@@ -943,6 +952,9 @@ void Editor::highlightTranscript(const QTime& elapsedTime)
     }
     if (blockToHighlight == -1)
         return;
+
+    emit sendBlockText(m_blocks[blockToHighlight].text);
+
     for (int i = 0; i < m_blocks[blockToHighlight].words.size(); i++) {
         if (m_blocks[blockToHighlight].words[i].timeStamp > elapsedTime) {
             wordToHighlight = i;
@@ -1238,6 +1250,7 @@ void Editor::saveXml(QFile* file)
 
 void Editor::helpJumpToPlayer()
 {
+    emit sendBlockText(textCursor().block().text());
     auto currentBlockNumber = textCursor().blockNumber();
     auto timeToJump = QTime(0, 0);
 
@@ -1393,12 +1406,13 @@ QStringList Editor::listFromFile(const QString& fileName)
 void Editor::setShowTimeStamp()
 {
 
-
     if(showTimeStamp){
         showTimeStamp=false;}
     else{
         showTimeStamp=true;
     }
+
+    settings->setValue("showTimeStamps", QVariant(showTimeStamp).toString());
 
     setContent();
     QTextCursor cursorx(this->document()->findBlockByNumber(highlightedBlock));

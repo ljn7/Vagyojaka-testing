@@ -988,6 +988,7 @@
     </property>
     <addaction name="actionShow_Waveform"/>
     <addaction name="separator"/>
+    <addaction name="actionShow_Endlines"/>
     <addaction name="actionUpdate_Timestamps"/>
     <addaction name="actionSave_Timestamps"/>
    </widget>
@@ -1349,7 +1350,7 @@
     <bool>false</bool>
    </property>
    <property name="text">
-    <string>Version 5.4.0</string>
+    <string>Version 5.5.0</string>
    </property>
    <property name="toolTip">
     <string>Version</string>
@@ -1406,6 +1407,11 @@
   <action name="actionUpdate_Timestamps">
    <property name="text">
     <string>Update Timestamps</string>
+   </property>
+  </action>
+  <action name="actionShow_Endlines">
+   <property name="text">
+    <string>Show Endlines </string>
    </property>
   </action>
  </widget>

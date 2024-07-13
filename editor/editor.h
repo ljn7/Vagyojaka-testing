@@ -66,6 +66,7 @@ signals:
     void openMessage(const QString& text);
 
     void sendBlockTime(QVector<QTime> timeArray);
+    void sendBlockText(QString blockText);
 
 public slots:
     void transcriptOpen();

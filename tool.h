@@ -105,6 +105,8 @@ private slots:
     void connectWaveformAndMediaplayer();
     void on_actionUpdate_Timestamps_triggered();
 
+    void on_actionShow_Endlines_triggered();
+
 private:
     void setFontForElements();
     void setTransliterationLangCodes();
@@ -120,7 +122,7 @@ private:
     QTableWidget* tableWidget;
     bool isSendingSampleRateSuccess = false;
     bool isSamplingSuccess = false;
-
+    QSettings* settings;
 
     void onTabChanged(int index);
 

@@ -24,6 +24,16 @@ Tool::Tool(QWidget *parent)
     , ui(new Ui::Tool)
 {
     ui->setupUi(this);
+
+    QString iniPath = QApplication::applicationDirPath() + "/" + "config.ini";
+    settings = new QSettings(iniPath, QSettings::IniFormat);
+    if(settings->value("showTimeStamps").toString()=="") {
+        ui->Show_Time_Stamps->setChecked(true);
+    }
+    else {
+        ui->Show_Time_Stamps->setChecked(settings->value("showTimeStamps").toString() == "true");
+    }
+
     player = new MediaPlayer(this);
     player->setVideoOutput(ui->m_videoWidget);
     m_audioOutput = new QAudioOutput(this);
@@ -88,7 +98,7 @@ Tool::Tool(QWidget *parent)
     connect(player, &MediaPlayer::errorChanged, this, &Tool::handleMediaPlayerError);
 
     //Waveofrm
-    connect(player, &MediaPlayer::sendBuffer, ui->widget, &AudioWaveForm::processBuffer);
+    // connect(player, &MediaPlayer::sendBuffer, ui->widget, &AudioWaveForm::processBuffer);
 
     connect(player, &MediaPlayer::sendDuration, ui->widget, &AudioWaveForm::getDuration);
 
@@ -96,7 +106,7 @@ Tool::Tool(QWidget *parent)
 
     connect(ui->widget, &AudioWaveForm::updateTime, ui->m_editor, &Editor::updateTimeStamp);
 
-    connect(player, &MediaPlayer::sendSampleRate, ui->widget, &AudioWaveForm::getSampleRate);
+    // connect(player, &MediaPlayer::sendSampleRate, ui->widget, &AudioWaveForm::getSampleRate);
 
     connect(ui->widget, &AudioWaveForm::updateTimeStampsBlock, ui->m_editor, &Editor::updateTimeStampsBlock);
 
@@ -109,6 +119,8 @@ Tool::Tool(QWidget *parent)
         isSamplingSuccess = status;
         connectWaveformAndMediaplayer();
     });
+
+    connect(ui->m_editor, &Editor::sendBlockText, ui->widget, &AudioWaveForm::getBlockText);
 
     // Connect components dependent on Player's position change to player
     connect(player, &QMediaPlayer::positionChanged, this,
@@ -272,6 +284,7 @@ Tool::Tool(QWidget *parent)
     });
 
     connect(ui->tabWidget, &QTabWidget::currentChanged, this, &Tool::onTabChanged);
+    connect(player, &MediaPlayer::sendMediaUrl, ui->widget, &AudioWaveForm::setMediaUrl);
 
 }
 
@@ -284,7 +297,7 @@ Tool::~Tool()
 
 void Tool::connectWaveformAndMediaplayer()
 {
-    if (isSendingSampleRateSuccess && isSamplingSuccess) {
+    if (isSamplingSuccess) {
         connect(player, &QMediaPlayer::positionChanged, ui->widget, &AudioWaveForm::setPlayerPosition);
         connect(ui->widget, &AudioWaveForm::positionChanged, player, &QMediaPlayer::setPosition);
     } else {
@@ -786,7 +799,7 @@ bool Tool::isDroppedOnLayout(const QPoint &pos, QVBoxLayout *layout) {
 
 void Tool::on_actionShow_Waveform_triggered()
 {
-    ui->m_editor->showWaveform();
+    ui->widget->showWaveForm();
 }
 
 void Tool::onTabChanged(int index) {
@@ -968,4 +981,11 @@ void Tool::on_actionUpdate_Timestamps_triggered()
 {
     ui->widget->updateTimeStamps();
 }
+
+
+void Tool::on_actionShow_Endlines_triggered()
+{
+    ui->m_editor->showWaveform();
+}
+
 

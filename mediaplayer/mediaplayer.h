@@ -52,6 +52,7 @@ public slots:
 signals:
     void message(QString text, int timeout = 5000);
     void openMessage(QString text);
+    void sendMediaUrl(QUrl mediaUrl);
 
     void sendBuffer(QBuffer& audio);
     void sendDuration(qint64 total_duration);

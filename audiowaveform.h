@@ -17,6 +17,15 @@
 #include"mediaplayer/fftw3.h"
 #include<QAudioFormat>
 
+extern "C" {
+#include <libavformat/avformat.h>
+#include <libavcodec/avcodec.h>
+#include <libavutil/opt.h>
+#include <libavutil/samplefmt.h>
+#include <libavutil/channel_layout.h>
+#include <libswresample/swresample.h>
+}
+
 namespace Ui {
 class AudioWaveForm;
 }
@@ -30,14 +39,15 @@ public:
     ~AudioWaveForm();
     void updateTimestampsToggle();
     void updateTimeStamps();
+    void showWaveForm();
 
 public slots:
     void getDuration(qint64 total_time);
-
+    void getBlockText(QString blockText);
     void getTimeArray(QVector<QTime> timeArray);
-    void getSampleRate(qint64 sampleRate, QBuffer& audioBuffer, qint64 totalDuration);
-    void processBuffer(QBuffer &audioBuffer);
+
     void setPlayerPosition(qint64 position);
+    void setMediaUrl(QUrl url);
 
 private slots:
     void processAudioIn();
@@ -61,7 +71,11 @@ protected:
 private:
     Ui::AudioWaveForm *ui;
     //-------------------------------------------
+
     QCustomPlot *waveWidget;
+    void processSampleRate();
+    void processBuffer();
+
     void samplesUpdated();
     void plotLines(int n);
     void deselectLines(QVector<QCPItemLine*> &lines, int index, int num_of_lines);
@@ -71,6 +85,7 @@ private:
     void getUpdatedIndexes(int index1, int index2);
     void addPlotLine();
     void addUtteranceNumber();
+    bool isAudioFile(const QString& filePath);
 
     QBuffer mInputBuffer;
     qint64 tot_duration;
@@ -85,7 +100,7 @@ private:
     QVector<double> mSamples;
     QVector<double> mIndices;
 
-    qint64 total_dur;
+    qint64 total_duration = 0;
     int flag1 = 1;
     int linesAvailable = -1;
     int num_of_blocks;
@@ -98,7 +113,7 @@ private:
     QVector<QCPItemLine*> startLine;
     QVector<QCPItemLine*> endLine;
     QVector<QCPItemText*> utteranceNumbers;
-    QCPItemLine* playLine;
+    std::unique_ptr<QCPItemLine> playLine = nullptr;
     // QVector<double> startCoords;
     QVector<double> endCoords;
     bool updateTimestamps = false;
@@ -107,6 +122,15 @@ private:
     double lastMouseX;
     int selectedLineIndex = -1;
     uint64_t numOfAddedLines = 0;
+    QString blockText;
+
+    QUrl mUrl;
+    QMediaPlayer* mPlayer = nullptr;
+    QBuffer mAudioBuffer;
+    QString mMediaFileName;
+
+    QVector<double> timeValues;
+
 
 };
 

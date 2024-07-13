@@ -1,4 +1,5 @@
 #include "audiowaveform.h"
+#include "libavformat/avformat.h"
 #include "ui_audiowaveform.h"
 #include <QBoxLayout>
 #include <QSlider>
@@ -6,6 +7,7 @@
 #include <QToolButton>
 #include <QComboBox>
 #include <QAudio>
+#include <iostream>
 
 
 //---------------------------- ---
@@ -57,7 +59,61 @@ AudioWaveForm::AudioWaveForm(QWidget *parent)
     connect(waveWidget, SIGNAL(mouseRelease(QMouseEvent*)), this, SLOT(onMouseRelease(QMouseEvent*)));
 
     waveWidget->setVisible(true);
+    ui->textEdit->setText("");
     // ui->addBtn->setDisabled(true);
+
+    mPlayer = new QMediaPlayer(this);
+    connect(waveWidget, &QCustomPlot::mousePress, this, [this](QMouseEvent *event) {
+        if (event->modifiers() == Qt::ControlModifier) {
+            // Ctrl key is pressed
+            qint64 currentMouseX = std::abs( static_cast<qint64>( waveWidget->xAxis->pixelToCoord( event->pos().x() ) ) )
+                                   * 1000;
+            std::cerr << currentMouseX << " \n";
+            emit positionChanged(currentMouseX);
+        }
+    });
+    connect(mPlayer, &QMediaPlayer::durationChanged, [this]() {
+        emit samplingStatus(false);
+        qint64 tot_duration = mPlayer->duration();
+        qInfo()<<"size of buffer is: "<< mAudioBuffer.size();
+        AVFormatContext* formatCtx = avformat_alloc_context();
+        sample_rate = 0;
+        total_duration = 0;
+        waveWidget->graph(0)->data()->clear();
+        waveWidget->replot();
+        if ( avformat_open_input(&formatCtx,
+                                strdup(mMediaFileName.toStdString().c_str()),
+                                nullptr, nullptr) == 0)
+        {
+            if (avformat_find_stream_info(formatCtx, nullptr) >= 0) {
+                int audioStreamIndex = -1;
+                for (unsigned int i = 0; i < formatCtx->nb_streams; ++i) {
+                    if (formatCtx->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_AUDIO) {
+                        audioStreamIndex = i;
+                        break;
+                    }
+                }
+                if (audioStreamIndex != -1) {
+                    sample_rate = formatCtx->streams[audioStreamIndex]->codecpar->sample_rate;
+                    qDebug() << "Sample Rate from FFMPEG:" << sample_rate;
+                } else {
+                    qWarning() << "No audio stream found.";
+                    avformat_close_input(&formatCtx);
+                    return;
+                }
+            } else {
+                qWarning() << "Failed to find stream information.";
+                avformat_close_input(&formatCtx);
+                return;
+            }
+
+            avformat_close_input(&formatCtx);
+        }
+        total_duration = mPlayer->duration();
+        if(sample_rate) {
+            processSampleRate();
+        }
+    });
 }
 
 AudioWaveForm::~AudioWaveForm()
@@ -68,14 +124,58 @@ AudioWaveForm::~AudioWaveForm()
     fftw_destroy_plan(mFftPlan);
 }
 
+void AudioWaveForm::showWaveForm() {
 
+    QFile MediaFile(mUrl.toLocalFile());
+    QByteArray audioData;
+    QString filePath = mUrl.toLocalFile();
+    QFileInfo filedir(MediaFile);
+    QString dirInString=filedir.dir().path();
+    QString slash = "/";
+    mMediaFileName = dirInString + slash + mUrl.fileName();
 
-void AudioWaveForm::getSampleRate(qint64 sampleRate, QBuffer& audioBuffer, qint64 totalDuration)
+    if(!MediaFile.open(QIODevice::ReadOnly))
+    {
+        qInfo()<<"Not open for readonly\n";
+        return;
+    }
+    if(isAudioFile(filePath)){
+        qInfo()<<"File id audio file\n";
+        audioData = MediaFile.readAll();
+    } else {
+        qInfo()<<"File is video file\n";
+        QString ffmpegPath = "ffmpeg";
+        QProcess ffmpegProcess;
+        QStringList ffmpegArgs = {"-i", filePath, "-vn", "-f", "wav", "-"};
+        ffmpegProcess.start(ffmpegPath, ffmpegArgs);
+        if (ffmpegProcess.waitForStarted() && ffmpegProcess.waitForFinished()) {
+            audioData += ffmpegProcess.readAllStandardOutput();
+        } else {
+            qWarning() << "FFmpeg process failed:" << ffmpegProcess.errorString();
+
+            return;
+        }
+    }
+
+    // mAudioBuffer.open(QIODevice::ReadWrite | QIODevice::Truncate);
+    // mAudioBuffer.buffer().clear();
+    // mAudioBuffer.seek(0);
+    // mAudioBuffer.write(audioData);
+    // mAudioBuffer.close();
+
+    mInputBuffer.open(QIODevice::ReadWrite | QIODevice::Truncate);
+    mInputBuffer.buffer().clear();
+    mInputBuffer.seek(0);
+    mInputBuffer.write(audioData);
+    mInputBuffer.close();
+
+    mPlayer->setSource(mUrl);
+}
+
+void AudioWaveForm::processSampleRate()
 {
 
-    emit samplingStatus(false);
-
-    if (audioBuffer.size() < 0)
+    if (mInputBuffer.size() <= 0)
         return;
 
     waveWidget->graph(0)->data()->clear();
@@ -83,9 +183,9 @@ void AudioWaveForm::getSampleRate(qint64 sampleRate, QBuffer& audioBuffer, qint6
     mSamples.clear();
     mIndices.clear();
 
-    this->sample_rate = sampleRate;
-    this->total_dur = totalDuration;
-    this->num_sam = sample_rate * (total_dur/1000);
+    // this->sample_rate = sampleRate;
+    // this->total_duration = totalDuration;
+    this->num_sam = sample_rate * (total_duration/1000);
     // factor = num_sam / NUM_SAMPLES;
     qInfo()<<"sample_rate is: :"<<this->sample_rate<<"\n";
     //qInfo()<<"total duration is: "<<total_dur<<"\n";
@@ -94,25 +194,23 @@ void AudioWaveForm::getSampleRate(qint64 sampleRate, QBuffer& audioBuffer, qint6
 
     // mInputBuffer.
     // mInputBuffer.open(QIODevice::ReadWrite);
-    mInputBuffer.open(QIODevice::WriteOnly | QIODevice::Truncate);
-    mInputBuffer.buffer().clear();
-    mInputBuffer.seek(0);
-    audioBuffer.open(QIODevice::ReadOnly);
+    // -- temp --
+    // mInputBuffer.open(QIODevice::WriteOnly | QIODevice::Truncate);
+    // mInputBuffer.buffer().clear();
+    // mInputBuffer.seek(0);
+    // mAudioBuffer.open(QIODevice::ReadOnly);
 
-    while (!audioBuffer.atEnd()) {
-        QByteArray chunk = audioBuffer.read(1024); // Read 1024 bytes at a time
-        mInputBuffer.write(chunk);
-    }
-    mInputBuffer.close();
-    audioBuffer.close();
+    // while (!mAudioBuffer.atEnd()) {
+    //     QByteArray chunk = mAudioBuffer.read(1024); // Read 1024 bytes at a time
+    //     mInputBuffer.write(chunk);
+    // }
+    // mInputBuffer.close();
+    // mAudioBuffer.close();
 
-    processBuffer(audioBuffer);
+    processBuffer();
 }
-void AudioWaveForm::processBuffer(QBuffer& audioBuffer)
+void AudioWaveForm::processBuffer()
 {
-    /*while(num_sam == 0 && sample_rate == 0){
-
-    }*/
     for (qint64 i = 0; i < num_sam; i ++) {
         mIndices.append((double)i);
         mSamples.append(0);
@@ -131,17 +229,6 @@ void AudioWaveForm::processBuffer(QBuffer& audioBuffer)
     mFftPlan = fftw_plan_r2r_1d(num_sam, mFftIn, mFftOut, FFTW_R2HC,FFTW_ESTIMATE);
 
     waveWidget->setVisible(true);
-    //qInfo()<<"processing buffer\n";
-    mInputBuffer.open(QIODevice::ReadWrite);
-    audioBuffer.open(QIODevice::ReadOnly);
-
-    while (!audioBuffer.atEnd()) {
-        QByteArray chunk = audioBuffer.read(1024); // Read 1024 bytes at a time
-        mInputBuffer.write(chunk);
-    }
-    mInputBuffer.close();
-    audioBuffer.close();
-    //processAudioIn();
 
     processAudioIn();
 }
@@ -155,15 +242,13 @@ void AudioWaveForm::setPlayerPosition(qint64 position)
         playLine->start->setCoords(currentTimeSec, -1);
         playLine->end->setCoords(currentTimeSec, 1);
     }
-
     else
     {
-        playLine = new QCPItemLine(waveWidget);
+        playLine = std::make_unique<QCPItemLine>(waveWidget);
         playLine->start->setCoords(currentTimeSec, -1);
         playLine->end->setCoords(currentTimeSec, 1);
         playLine->setPen(QPen(Qt::black));
     }
-
     waveWidget->replot();
 }
 
@@ -344,7 +429,7 @@ void AudioWaveForm::updateUtterances(int index)
 
 void AudioWaveForm::getDuration(qint64 total_time)
 {
-    total_dur = total_time;
+    // total_dur = total_time;
     //qInfo()<<"Duration is: "<<total_dur<<"\n";
     //sample_rate = num_sam/(total_dur/1000);
 }
@@ -360,25 +445,20 @@ void AudioWaveForm::samplesUpdated()
     memcpy(mFftIn, mSamples.data(), num_sam * sizeof(double));
     fftw_execute(mFftPlan);
 
-    QVector<double> fftVec;
-    double totalDuration = total_dur/1000.0;
+    double totalDuration = total_duration/1000.0;
     // Create a vector for time values from 0 to totalDuration
     QVector<double> timeValues;
     double timeStep = totalDuration/((num_sam) - 1);
     for (qint64 i = 0; i < num_sam; i++) {
         timeValues.append(i * timeStep);
     }
-    /*
-    for (qint64 i = 0; i < NUM_SAMPLES; i++) {
-        fftVec.append(abs(mFftOut[i]));
-    }*/
 
     waveWidget->graph(0)->setData(timeValues, mSamples);
     waveWidget->xAxis->rescale();
     waveWidget->replot();
     waveWidget->setVisible(true);
 
-
+    setPlayerPosition(0);
     emit samplingStatus(true);
 
 }
@@ -571,7 +651,6 @@ void AudioWaveForm::onMouseMove(QMouseEvent *event) {
                         }
                     }
                 }
-
                 waveWidget->replot();
             }
         }
@@ -714,7 +793,11 @@ void AudioWaveForm::updateTimeStamps()
     num_of_blocks = blocktime.size();
 }
 
-
+void AudioWaveForm::getBlockText(QString blockText) {
+    this->blockText = blockText;
+    ui->textEdit->clear();
+    ui->textEdit->setText(this->blockText);
+}
 
 
 
@@ -722,4 +805,23 @@ void AudioWaveForm::on_updateTimestampsBtn_clicked()
 {
     updateTimeStamps();
 }
+
+void AudioWaveForm::setMediaUrl(QUrl url) {
+    emit samplingStatus(false);
+    waveWidget->graph(0)->data()->clear();
+    if (playLine) {
+        waveWidget->removeItem(playLine.release());
+    }
+    waveWidget->replot();
+    mUrl = url;
+}
+
+bool AudioWaveForm::isAudioFile(const QString& filePath) {
+    QFileInfo fileInfo(filePath);
+    QStringList audioExtensions = {/*"mp3", */"wav" /*, "ogg", "flac", "aac"*//*, "m4a"*/}; // Add more audio extensions as needed
+
+    return audioExtensions.contains(fileInfo.suffix().toLower());
+}
+
+
 

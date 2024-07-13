@@ -1,5 +1,6 @@
 #include "mediaplayer.h"
 #include "qapplication.h"
+#include "qmediametadata.h"
 #include <iostream>
 
 MediaPlayer::MediaPlayer(QWidget *parent)
@@ -74,10 +75,10 @@ void MediaPlayer::loadMediaFromUrl(QUrl *fileUrl)
     {
         qInfo()<<"Not open for readonly\n";
     }
-    p = new QMediaPlayer(this);
-    QString filepath;
+    // p = new QMediaPlayer(this);
+    // QString filepath;
 
-    filepath = fileUrl->toLocalFile();
+    // filepath = fileUrl->toLocalFile();
     QFileInfo filedir(MediaFile);
     QString dirInString=filedir.dir().path();
     settings->setValue("mediaDir",dirInString);
@@ -88,81 +89,97 @@ void MediaPlayer::loadMediaFromUrl(QUrl *fileUrl)
     // setMedia(*fileUrl);
     setSource(*fileUrl);
 
+    emit sendMediaUrl(*fileUrl);
     //waveform
-    QByteArray audioData;
-    if(isAudioFile(filepath)){
-        qInfo()<<"File id audio file\n";
-        audioData = MediaFile.readAll();
-    }
-    else
-    {
-        qInfo()<<"File is video file\n";
-        QString ffmpegPath = "ffmpeg";
-        // #ifdef Q_OS_WIN
-        //             ffmpegPath = QCoreApplication::applicationDirPath() + "/ffmpeg";
-        // #endif
-        QProcess ffmpegProcess;
-        QStringList ffmpegArgs = {"-i", filepath, "-vn", "-f", "wav", "-"};
-        ffmpegProcess.start(ffmpegPath, ffmpegArgs);
+    // QByteArray audioData;
+    // if(isAudioFile(filepath)){
+    //     qInfo()<<"File id audio file\n";
+    //     audioData = MediaFile.readAll();
+    // }
+    // else
+    // {
+    //     qInfo()<<"File is video file\n";
+    //     QString ffmpegPath = "ffmpeg";
+    //     // #ifdef Q_OS_WIN
+    //     //             ffmpegPath = QCoreApplication::applicationDirPath() + "/ffmpeg";
+    //     // #endif
+    //     QProcess ffmpegProcess;
+    //     QStringList ffmpegArgs = {"-i", filepath, "-vn", "-f", "wav", "-"};
+    //     ffmpegProcess.start(ffmpegPath, ffmpegArgs);
 
-        if (ffmpegProcess.waitForStarted() && ffmpegProcess.waitForFinished()) {
-            audioData += ffmpegProcess.readAllStandardOutput();
-        } else {
-            qWarning() << "FFmpeg process failed:" << ffmpegProcess.errorString();
-        }
-    }
+    //     if (ffmpegProcess.waitForStarted() && ffmpegProcess.waitForFinished()) {
+    //         audioData += ffmpegProcess.readAllStandardOutput();
+    //     } else {
+    //         qWarning() << "FFmpeg process failed:" << ffmpegProcess.errorString();
+    //     }
+    // }
 
-    audioBuffer.open(QIODevice::ReadWrite | QIODevice::Truncate);
-    audioBuffer.buffer().clear();
-    audioBuffer.seek(0);
+    // audioBuffer.open(QIODevice::ReadWrite | QIODevice::Truncate);
+    // audioBuffer.buffer().clear();
+    // audioBuffer.seek(0);
 
-    audioBuffer.write(audioData);
-    audioBuffer.close();
+    // audioBuffer.write(audioData);
+    // audioBuffer.close();
 
-    p->setSource(*fileUrl);
+    // p->setSource(*fileUrl);
 
-    std::cerr << QDir::currentPath().toStdString() << std::endl;
+    // std::cerr << QDir::currentPath().toStdString() << std::endl;
 
-    connect(p, &QMediaPlayer::durationChanged, [this]() {
-        qint64 tot_duration = p->duration();
-        qInfo()<<"size of buffer is: "<<audioBuffer.size();
-        AVFormatContext* formatContext = avformat_alloc_context();
-        qint64 sampleRate = 0;
+    // connect(p, &QMediaPlayer::durationChanged, [this]() {
+    //     qint64 tot_duration = p->duration();
+    //     qInfo()<<"size of buffer is: "<<audioBuffer.size();
+    //     AVFormatContext* formatContext = avformat_alloc_context();
+    //     qint64 sampleRate = 0;
 
-        if ( avformat_open_input(&formatContext,
-                strdup(m_mediaFileName.toStdString().c_str()),
-                nullptr, nullptr) == 0)
-        {
-            if (avformat_find_stream_info(formatContext, nullptr) >= 0) {
-                int audioStreamIndex = -1;
-                for (unsigned int i = 0; i < formatContext->nb_streams; ++i) {
-                    if (formatContext->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_AUDIO) {
-                        audioStreamIndex = i;
-                        break;
-                    }
-                }
+    //     if ( avformat_open_input(&formatContext,
+    //             strdup(m_mediaFileName.toStdString().c_str()),
+    //             nullptr, nullptr) == 0)
+    //     {
+    //         if (avformat_find_stream_info(formatContext, nullptr) >= 0) {
+    //             int audioStreamIndex = -1;
+    //             for (unsigned int i = 0; i < formatContext->nb_streams; ++i) {
+    //                 if (formatContext->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_AUDIO) {
+    //                     audioStreamIndex = i;
+    //                     break;
+    //                 }
+    //             }
 
-                if (audioStreamIndex != -1) {
-                    sampleRate = formatContext->streams[audioStreamIndex]->codecpar->sample_rate;
-                    qDebug() << "Sample Rate:" << sampleRate;
-                } else {
-                    qWarning() << "No audio stream found.";
-                }
-            } else {
-                qWarning() << "Failed to find stream information.";
-            }
+    //             if (audioStreamIndex != -1) {
+    //                 sampleRate = formatContext->streams[audioStreamIndex]->codecpar->sample_rate;
+    //                 /*qDebug()*/std::cerr << "Sample Rate from FFMPEG:" << sampleRate;
+    //             } else {
+    //                 qWarning() << "No audio stream found.";
+    //             }
+    //         } else {
+    //             qWarning() << "Failed to find stream information.";
+    //         }
 
-            avformat_close_input(&formatContext);
-        }
-        qint64 duration = p->duration();
-        if(sampleRate) {
-            emit sendSampleRate(sampleRate, audioBuffer, duration);
-            emit sendingSampleRateStatus(true);
-        }
-        else {
-            emit sendingSampleRateStatus(false);
-        }
-    });
+    //         avformat_close_input(&formatContext);
+    //     }
+    //     qint64 duration = p->duration();
+    //     if(sampleRate) {
+    //         emit sendSampleRate(sampleRate, audioBuffer, duration);
+    //         emit sendingSampleRateStatus(true);
+    //     }
+    //     else {
+    //         emit sendingSampleRateStatus(false);
+    //     }
+    // });
+
+    // connect(p, &QMediaPlayer::metaDataChanged, [this]() {
+    //     if (!p->metaData().isEmpty()) {
+    //         qint64 sampleRate = p->metaData().AudioBitRate;
+    //         qint64 duration = p->duration();
+    //         std::cerr << "Sample rate from meta: " << sampleRate;
+    //         // if (sampleRate) {
+    //         //     emit sendSampleRate(sampleRate, audioBuffer, duration);
+    //         //     emit sendingSampleRateStatus(true);
+    //         // } else {
+    //         //     emit sendingSampleRateStatus(false);
+    //         // }
+    //     }
+    // });
+
     //=======================
     emit message("Opened file " + fileUrl->fileName());
     emit openMessage(fileUrl->fileName());

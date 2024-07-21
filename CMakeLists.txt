@@ -122,9 +122,11 @@ target_link_libraries(
         Qt6::Network
         Qt6::PrintSupport
 )
-target_compile_options(${PROJECT_NAME} PRIVATE
-    -Wa,-mbig-obj
-)
+if (WIN32 AND MINGW)
+    target_compile_options(${PROJECT_NAME} PRIVATE
+        -Wa,-mbig-obj
+    )
+endif()
 
 if (LINUX OR UNIX)
     find_package(PkgConfig REQUIRED)

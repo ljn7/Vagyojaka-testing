@@ -70,6 +70,10 @@ Editor::Editor(QWidget *parent)
     }
 
     settings->setValue("showTimeStamps", QVariant(showTimeStamp).toString());
+    this->supportedFormats = {
+        "xml Files (*.xml)",
+        "All Files (*)"
+    };
 }
 
 
@@ -747,6 +751,7 @@ void Editor::transcriptOpen()
     QFileDialog fileDialog(this);
     fileDialog.setAcceptMode(QFileDialog::AcceptOpen);
     fileDialog.setWindowTitle(tr("Open File"));
+    fileDialog.setNameFilters(supportedFormats);
     if(settings->value("transcriptDir").toString()=="")
         fileDialog.setDirectory(QStandardPaths::standardLocations(QStandardPaths::DocumentsLocation).value(0, QDir::homePath()));
     else
@@ -1439,12 +1444,12 @@ void Editor::setContent()
             auto blockText = "[" + a_block.speaker + "]: " + a_block.text ;
             content_without_time_stamp.append(blockText + "\n");
         }
+
         if(showTimeStamp){
             setPlainText(content_with_time_stamp.trimmed());}
         else{
             setPlainText(content_without_time_stamp.trimmed());
         }
-
         m_highlighter = new Highlighter(document());
 
         QList<int> invalidBlocks;
@@ -1914,13 +1919,15 @@ void Editor::splitLine(const QTime& elapsedTime)
     auto cursor = textCursor();
     // if (cursor.blockNumber() != highlightedBlock)
     //     return;
-
     int positionInBlock = cursor.positionInBlock();
     auto blockText = cursor.block().text();
+
     auto textBeforeCursor = blockText.left(positionInBlock);
     auto textAfterCursor = blockText.right(blockText.size() - positionInBlock);
+
     auto cutWordLeft = textBeforeCursor.split(" ").last();
     auto cutWordRight = textAfterCursor.split(" ").first();
+
     int wordNumber = textBeforeCursor.count(" ");
 
     // if (m_blocks[highlightedBlock].speaker != "" || blockText.contains("[]:"))
@@ -1967,10 +1974,13 @@ void Editor::splitLine(const QTime& elapsedTime)
     if (wordNumber < 0 || wordNumber >= m_blocks[cursor.blockNumber()].words.size())
         return;
 
+
     if (textBeforeCursor.contains("]:"))
         textBeforeCursor = textBeforeCursor.split("]:").last();
+
     if (textAfterCursor.contains("["))
         textAfterCursor = textAfterCursor.split("[").first();
+
 
     auto timeStampOfCutWord = m_blocks[cursor.blockNumber()].words[wordNumber].timeStamp;
     auto tagsOfCutWord = m_blocks[cursor.blockNumber()].words[wordNumber].tagList;
@@ -1980,6 +1990,7 @@ void Editor::splitLine(const QTime& elapsedTime)
     //checking
     if (cutWordRight != "")
         words.append(makeWord(timeStampOfCutWord, cutWordRight, tagsOfCutWord, "true"));
+
     for (int i = 0; i < sizeOfWordsAfter; i++) {
         words.append(m_blocks[cursor.blockNumber()].words[wordNumber + 1]);
         m_blocks[cursor.blockNumber()].words.removeAt(wordNumber + 1);
@@ -2423,7 +2434,6 @@ void Editor::updateWordEditor()
 {
     if (!m_wordEditor || dontUpdateWordEditor)
         return;
-
     updatingWordEditor = true;
 
     auto blockNumber = textCursor().blockNumber();
@@ -2434,7 +2444,6 @@ void Editor::updateWordEditor()
     }
 
     m_wordEditor->refreshWords(m_blocks[blockNumber].words);
-
     updatingWordEditor = false;
 }
 

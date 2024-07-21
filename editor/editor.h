@@ -164,6 +164,8 @@ private:
     QStringList allClips;
     int lastHighlightedBlock=-1;
     bool moveAlongTimeStamps=true;
+    QStringList supportedFormats;
+
 public:
 
 };

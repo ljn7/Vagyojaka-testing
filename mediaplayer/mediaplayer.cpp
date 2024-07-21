@@ -8,13 +8,13 @@ MediaPlayer::MediaPlayer(QWidget *parent)
 {
     //Qt6
     this->supportedFormats = {
+        "Audio Files (*.mp3 *.ogg *.oga *.mka *.wav *.m4a *.aac *.flac *.wv *.mpc *.ape *.alac *.amr "
+        "*.tta *.ac3 *.dts *.ra *.opus *.spx *.aif *.aiff *.aifc *.caf *.tak *.shr)",
+
         "Video Files (*.avi *.divx *.amv *.mpg *.mpeg *.mpe *.m1v *.m2v *.mpv2 "
         "*.mp2v *.m2p *.vob *.evo *.mod *.ts *.m2ts *.m2t *.mts *.pva *.tp *.tpr "
         "*.mp4 *.m4v *.mp4v *.mpv4 *.hdmov *.mov *.3gp *.3gpp *.3g2 *.3gp2 *.mkv "
         "*.webm *.ogm *.ogv *.flv *.f4v *.wmv *.asf *.rmvb *.rm *.dv *.mxf *.dav)",
-
-        "Audio Files (*.mp3 *.ogg *.oga *.mka *.wav *.m4a *.aac *.flac *.wv *.mpc *.ape *.alac *.amr "
-        "*.tta *.ac3 *.dts *.ra *.opus *.spx *.aif *.aiff *.aifc *.caf *.tak *.shr)",
 
         "All Files (*)"
     };

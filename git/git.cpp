@@ -15,7 +15,7 @@
 #include <errno.h>
 
 int credentialsCallback(git_cred **out, const char *url, const char *username_from_url, unsigned int allowed_types, void *payload);
-int fetchhead_cb(const char *ref_name, const char *remote_url, const git_oid *oid, unsigned int is_merge, void *payload);
+// int fetchhead_cb(const char *ref_name, const char *remote_url, const git_oid *oid, unsigned int is_merge, void *payload);
 int print_matched_cb(const char *path, const char *matched_pathspec, void *payload);
 bool check_lg2(int error, const char *message, const char *extra);
 static int readline(char **out);
@@ -1046,15 +1046,15 @@ static void output_conflicts(git_index *index)
 static int create_merge_commit(git_repository *repo, git_index *index, struct merge_options *opts)
 {
     git_oid tree_oid, commit_oid;
-    git_tree *tree;
-    git_signature *sign;
+    git_tree *tree = NULL;
+    git_signature *sign = NULL;
     git_reference *merge_ref = NULL;
     git_annotated_commit *merge_commit;
-    git_reference *head_ref;
+    git_reference *head_ref = NULL;
     git_commit **parents = (git_commit**) calloc(opts->annotated_count + 1, sizeof(git_commit *));
     const char *msg_target = NULL;
     size_t msglen = 0;
-    char *msg;
+    char *msg = NULL;
     size_t i;
     int err;
 
@@ -1113,15 +1113,28 @@ static int create_merge_commit(git_repository *repo, git_index *index, struct me
     git_repository_state_cleanup(repo);
 
 cleanup:
-    free(parents);
+    // free(parents);
+    // return err;
+    if (msg) free(msg);
+    if (sign) git_signature_free(sign);
+    if (tree) git_tree_free(tree);
+    if (merge_commit) git_annotated_commit_free(merge_commit);
+    if (merge_ref) git_reference_free(merge_ref);
+    if (head_ref) git_reference_free(head_ref);
+    if (parents) {
+        for (i = 0; i < opts->annotated_count + 1; i++) {
+            if (parents[i]) git_commit_free(parents[i]);
+        }
+        free(parents);
+    }
     return err;
 }
 
-int fetchhead_cb(const char *ref_name, const char *remote_url, const git_oid *oid, unsigned int is_merge, void *payload)
-{
-    if (is_merge)
-    {
-        printf("reference: '%s' is the reference we should merge\n");
-        git_oid_cpy((git_oid *)payload, oid);
-    }
-}
+// int fetchhead_cb(const char *ref_name, const char *remote_url, const git_oid *oid, unsigned int is_merge, void *payload)
+// {
+//     if (is_merge)
+//     {
+//         printf("reference: '%s' is the reference we should merge\n");
+//         git_oid_cpy((git_oid *)payload, oid);
+//     }
+// }

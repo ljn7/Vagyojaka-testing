@@ -220,7 +220,10 @@ bool MediaSplitter::splitMediaUtil(uint64_t startSeconds = 0, uint64_t endSecond
     avformat_free_context(avOutputFormatContext);
 
     if (operationResult < 0 && operationResult != AVERROR_EOF) {
-        qCritical("%s", QString("Error occurred: %1.").arg(av_err2str(operationResult)).toStdString().c_str());
+        if (_WIN32)
+            qCritical("%s", QString("Error occurred: %1.").arg(av_err2str(operationResult)).toStdString().c_str());
+        else
+            qInfo("FFMPEG Error");
         return false;
     }
 

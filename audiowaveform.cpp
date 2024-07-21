@@ -68,7 +68,6 @@ AudioWaveForm::AudioWaveForm(QWidget *parent)
             // Ctrl key is pressed
             qint64 currentMouseX = std::abs( static_cast<qint64>( waveWidget->xAxis->pixelToCoord( event->pos().x() ) ) )
                                    * 1000;
-            std::cerr << currentMouseX << " \n";
             emit positionChanged(currentMouseX);
         }
     });

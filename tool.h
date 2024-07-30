@@ -1,6 +1,8 @@
 #pragma once
 
 #include <QMainWindow>
+#include "about.h"
+#include "editor/utilities/keyboardshortcutguide.h"
 #include "git/git.h"
 #include "mediaplayer/mediaplayer.h"
 #include "editor/texteditor.h"
@@ -123,7 +125,8 @@ private:
     bool isSendingSampleRateSuccess = false;
     bool isSamplingSuccess = false;
     QSettings* settings;
-
+    KeyboardShortcutGuide* help_keyshortcuts = nullptr;
+    About* about = nullptr;
     void onTabChanged(int index);
 
 };

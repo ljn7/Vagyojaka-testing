@@ -27,6 +27,7 @@ PlayerControls::PlayerControls(QWidget *parent)
     m_seekForwardButton->setIcon(style()->standardIcon(QStyle::SP_MediaSeekForward));
     m_seekForwardButton->setToolTip("Forward");
 
+
     connect(m_seekForwardButton, &QAbstractButton::clicked, this, &PlayerControls::seekForward);
 
     m_seekBackwardButton = new QToolButton(this);
@@ -50,11 +51,11 @@ PlayerControls::PlayerControls(QWidget *parent)
 
     m_rateBox = new QComboBox(this);
 
-    m_rateBox->addItem("0.5x", QVariant(0.5));
-    m_rateBox->addItem("0.7x", QVariant(0.7));
+    m_rateBox->addItem("0.8x", QVariant(0.8));
+    m_rateBox->addItem("0.9x", QVariant(0.9));
     m_rateBox->addItem("1.0x", QVariant(1.0));
-    m_rateBox->addItem("1.5x", QVariant(1.5));
-    m_rateBox->addItem("2.0x", QVariant(2.0));
+    m_rateBox->addItem("1.1x", QVariant(1.1));
+    m_rateBox->addItem("1.2x", QVariant(1.2));
     m_rateBox->setCurrentIndex(2);
     m_rateBox->setToolTip("Speed");
 

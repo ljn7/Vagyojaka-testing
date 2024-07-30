@@ -35,7 +35,7 @@ Git::Git(QWidget *parent)
     statusBar = new QStatusBar();
 
     git_libgit2_init();
-    repoPath = QDir::currentPath() + "/Splitted-Media";
+    repoPath = QDir::currentPath() + "/vagyojaka-git";
     init();
 }
 

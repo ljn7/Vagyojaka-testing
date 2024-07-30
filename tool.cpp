@@ -62,13 +62,13 @@ Tool::Tool(QWidget *parent)
     // Connect Player Controls and Media Player
     connect(ui->player_open, &QAction::triggered, player, &MediaPlayer::open);
     connect(ui->player_togglePlay, &QAction::triggered, player, &MediaPlayer::togglePlayback);
-    connect(ui->player_seekForward, &QAction::triggered, player, [&]() {player->seek(5);});
-    connect(ui->player_seekBackward, &QAction::triggered, player, [&]() {player->seek(-5);});
+    connect(ui->player_seekForward, &QAction::triggered, player, [&]() {player->seek(3);});
+    connect(ui->player_seekBackward, &QAction::triggered, player, [&]() {player->seek(-3);});
     connect(ui->m_playerControls, &PlayerControls::play, player, &QMediaPlayer::play);
     connect(ui->m_playerControls, &PlayerControls::pause, player, &QMediaPlayer::pause);
     connect(ui->m_playerControls, &PlayerControls::stop, player, &QMediaPlayer::stop);
-    connect(ui->m_playerControls, &PlayerControls::seekForward, player, [&]() {player->seek(5);});
-    connect(ui->m_playerControls, &PlayerControls::seekBackward, player, [&]() {player->seek(-5);});
+    connect(ui->m_playerControls, &PlayerControls::seekForward, player, [&]() {player->seek(3);});
+    connect(ui->m_playerControls, &PlayerControls::seekBackward, player, [&]() {player->seek(-3);});
     connect(ui->m_playerControls, &PlayerControls::changeVolume, m_audioOutput, &QAudioOutput::setVolume);
     connect(ui->m_playerControls, &PlayerControls::changeMuting, m_audioOutput, &QAudioOutput::setMuted);
     connect(ui->m_playerControls, &PlayerControls::changeRate, player, &QMediaPlayer::setPlaybackRate);
@@ -350,10 +350,20 @@ void Tool::keyPressEvent(QKeyEvent *event)
 
 void Tool::createKeyboardShortcutGuide()
 {
-    auto help_keyshortcuts = new KeyboardShortcutGuide(this);
+    if (!help_keyshortcuts)
+    {
+        help_keyshortcuts = new KeyboardShortcutGuide(this);
+        help_keyshortcuts->setAttribute(Qt::WA_DeleteOnClose);
+        help_keyshortcuts->show();
 
-    help_keyshortcuts->setAttribute(Qt::WA_DeleteOnClose);
-    help_keyshortcuts->show();
+        connect(help_keyshortcuts, &QObject::destroyed, [this]() {
+            help_keyshortcuts = nullptr;
+        });
+
+    } else {
+        help_keyshortcuts->raise();
+        help_keyshortcuts->activateWindow();
+    }
 
 }
 
@@ -693,8 +703,20 @@ void Tool::on_fontComboBox_currentFontChanged(const QFont &f)
 
 void Tool::on_actionAbout_triggered()
 {
-    About* about = new About(this);
-    about->show();
+
+    if (!about)
+    {
+        about = new About(this);
+        about->setAttribute(Qt::WA_DeleteOnClose);
+        about->show();
+
+        connect(about, &QObject::destroyed, [this]() {
+            about = nullptr;
+        });
+    } else {
+        about->raise();
+        about->activateWindow();
+    }
 }
 
 

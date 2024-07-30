@@ -25,8 +25,8 @@ Editor::Editor(QWidget *parent)
     : TextEditor(parent),
     m_speakerCompleter(makeCompleter()), m_textCompleter(makeCompleter()), m_transliterationCompleter(makeCompleter()),
     m_dictionary(listFromFile(":/wordlists/english.txt")), m_transcriptLang("english"),
-    timeStampExp(QRegularExpression(R"(\[(\d?\d:)?[0-5]?\d:[0-5]?\d(\.\d\d?\d?)?])")),
-    speakerExp(QRegularExpression(R"(\[.*]:)")),
+    timeStampExp(QRegularExpression(R"(\{(\d?\d:)?[0-5]?\d:[0-5]?\d(\.\d\d?\d?)?\})")),
+    speakerExp(QRegularExpression(R"(\{.*\}:)")),
     m_saveTimer(new QTimer(this))
 {
     connect(this->document(), &QTextDocument::contentsChange, this, &Editor::contentChanged);
@@ -120,7 +120,7 @@ void Highlighter::highlightBlock(const QString& text)
     if (invalidWords.contains(currentBlock().blockNumber())) {
         auto invalidWordNumbers = invalidWords.values(currentBlock().blockNumber());
         auto speakerEnd = 0;
-        auto speakerMatch = QRegularExpression(R"(\[.*]:)").match(text);
+        auto speakerMatch = QRegularExpression(R"(\{.*\}:)").match(text);
         if (speakerMatch.hasMatch())
             speakerEnd = speakerMatch.capturedEnd();
 
@@ -156,7 +156,7 @@ void Highlighter::highlightBlock(const QString& text)
     if (taggedWords.contains(currentBlock().blockNumber())) {
         auto invalidWordNumbers = taggedWords.values(currentBlock().blockNumber());
         auto speakerEnd = 0;
-        auto speakerMatch = QRegularExpression(R"(\[.*]:)").match(text);
+        auto speakerMatch = QRegularExpression(R"(\{.*\}:)").match(text);
         if (speakerMatch.hasMatch())
             speakerEnd = speakerMatch.capturedEnd();
 
@@ -190,7 +190,7 @@ void Highlighter::highlightBlock(const QString& text)
     if (!editedWords.isEmpty()) {
         auto invalidWordNumbers = editedWords.values(currentBlock().blockNumber());
         auto speakerEnd = 0;
-        auto speakerMatch = QRegularExpression(R"(\[.*]:)").match(text);
+        auto speakerMatch = QRegularExpression(R"(\{.*\}:)").match(text);
         if (speakerMatch.hasMatch())
             speakerEnd = speakerMatch.capturedEnd();
 
@@ -226,11 +226,11 @@ void Highlighter::highlightBlock(const QString& text)
     else if (currentBlock().blockNumber() == blockToHighlight) {
         int speakerEnd = 0;
         int lineEnd=text.length();
-        auto speakerMatch = QRegularExpression(R"(\[.*]:)").match(text);
+        auto speakerMatch = QRegularExpression(R"(\{.*\}:)").match(text);
         if (speakerMatch.hasMatch())
             speakerEnd = speakerMatch.capturedEnd();
 
-        int timeStampStart = QRegularExpression(R"(\[(\d?\d:)?[0-5]?\d:[0-5]?\d(\.\d\d?\d?)?])").match(text).capturedStart();
+        int timeStampStart = QRegularExpression(R"(\{(\d?\d:)?[0-5]?\d:[0-5]?\d(\.\d\d?\d?)?\})").match(text).capturedStart();
         qInfo()<<timeStampStart;
         QTextCharFormat format;
 
@@ -304,7 +304,7 @@ void Highlighter::highlightBlock(const QString& text)
             auto taggedWordNumbers = taggedWords.values(currentBlock().blockNumber());
             auto invalidWordNumbers = invalidWords.values(currentBlock().blockNumber());
             auto speakerEnd = 0;
-            auto speakerMatch = QRegularExpression(R"(\[.*]:)").match(text);
+            auto speakerMatch = QRegularExpression(R"(\{.*\}:)").match(text);
             if (speakerMatch.hasMatch())
                 speakerEnd = speakerMatch.capturedEnd();
 
@@ -407,8 +407,8 @@ void Editor::keyPressEvent(QKeyEvent *event)
         emit sendBlockText(blockText);
         //Qt6
         // const bool containsSpeakerBraces = blockText.leftRef(blockText.indexOf(" ")).contains("]:");
-        const bool containsSpeakerBraces = blockText.left(blockText.indexOf(" ")).contains("]:");
-        const bool containsTimeStamp = blockText.trimmed() != "" && blockText.trimmed().back() == ']';
+        const bool containsSpeakerBraces = blockText.left(blockText.indexOf(" ")).contains("}:");
+        const bool containsTimeStamp = blockText.trimmed() != "" && blockText.trimmed().back() == '}';
         bool isAWordUnderCursor = false;
         int wordNumber = 0;
 
@@ -418,7 +418,7 @@ void Editor::keyPressEvent(QKeyEvent *event)
                 isAWordUnderCursor = true;
 
                 if (containsSpeakerBraces) {
-                    auto textWithoutSpeaker = textTillCursor.split("]:").last();
+                    auto textWithoutSpeaker = textTillCursor.split("}:").last();
                     wordNumber = textWithoutSpeaker.trimmed().count(" ");
                 }
                 else
@@ -483,7 +483,7 @@ void Editor::keyPressEvent(QKeyEvent *event)
     const bool hasModifier = (event->modifiers() != Qt::NoModifier);
     //Qt6
     // const bool containsSpeakerBraces = blockText.leftRef(blockText.indexOf(" ")).contains("]:");
-    const bool containsSpeakerBraces = blockText.left(blockText.indexOf(" ")).contains("]:");
+    const bool containsSpeakerBraces = blockText.left(blockText.indexOf(" ")).contains("}:");
 
     static QString eow("~!@#$%^&*()_+{}|:\"<>?,./;'[]\\-="); // end of word
 
@@ -496,7 +496,7 @@ void Editor::keyPressEvent(QKeyEvent *event)
 
     QCompleter *m_completer = nullptr;
 
-    if (!textTillCursor.count(" ") && !textTillCursor.contains("]:") && !textTillCursor.contains("]")
+    if (!textTillCursor.count(" ") && !textTillCursor.contains("}:") && !textTillCursor.contains("}")
         && textTillCursor.size() && containsSpeakerBraces) {
         // Complete speaker
 
@@ -517,8 +517,8 @@ void Editor::keyPressEvent(QKeyEvent *event)
             QString blockText = textCursor().block().text();
             QString textTillCursor = blockText.left(textCursor().positionInBlock());
 
-            const bool containsSpeakerBraces = blockText.left(blockText.indexOf(" ")).contains("]:");
-            const bool containsTimeStamp = blockText.trimmed() != "" && blockText.trimmed().back() == ']';
+            const bool containsSpeakerBraces = blockText.left(blockText.indexOf(" ")).contains("}:");
+            const bool containsTimeStamp = blockText.trimmed() != "" && blockText.trimmed().back() == '}';
             bool isAWordUnderCursor = false;
             int wordNumber = 0;
 
@@ -528,7 +528,7 @@ void Editor::keyPressEvent(QKeyEvent *event)
                     isAWordUnderCursor = true;
 
                     if (containsSpeakerBraces) {
-                        auto textWithoutSpeaker = textTillCursor.split("]:").last();
+                        auto textWithoutSpeaker = textTillCursor.split("}:").last();
                         wordNumber = textWithoutSpeaker.trimmed().count(" ");
                     }
                     else
@@ -642,8 +642,8 @@ void Editor::contextMenuEvent(QContextMenuEvent *event)
     QString blockText = textCursor().block().text();
     QString textTillCursor = blockText.left(textCursor().positionInBlock());
 
-    const bool containsSpeakerBraces = blockText.left(blockText.indexOf(" ")).contains("]:");
-    const bool containsTimeStamp = blockText.trimmed() != "" && blockText.trimmed().back() == ']';
+    const bool containsSpeakerBraces = blockText.left(blockText.indexOf(" ")).contains("}:");
+    const bool containsTimeStamp = blockText.trimmed() != "" && blockText.trimmed().back() == '}';
     bool isAWordUnderCursor = false;
     int wordNumber = 0;
 
@@ -653,7 +653,7 @@ void Editor::contextMenuEvent(QContextMenuEvent *event)
             isAWordUnderCursor = true;
 
             if (containsSpeakerBraces) {
-                auto textWithoutSpeaker = textTillCursor.split("]:").last();
+                auto textWithoutSpeaker = textTillCursor.split("}:").last();
                 wordNumber = textWithoutSpeaker.trimmed().count(" ");
             }
             else
@@ -1266,7 +1266,7 @@ void Editor::helpJumpToPlayer()
     auto blockText = textCursor().block().text();
     auto textBeforeCursor = blockText.left(positionInBlock);
     int wordNumber = textBeforeCursor.count(" ");
-    if (m_blocks[currentBlockNumber].speaker != "" || textCursor().block().text().contains("[]:"))
+    if (m_blocks[currentBlockNumber].speaker != "" || textCursor().block().text().contains("{}:"))
         wordNumber--;
 
     for (int i = currentBlockNumber - 1; i >= 0; i--) {
@@ -1436,12 +1436,12 @@ void Editor::setContent()
         QString content_with_time_stamp("");
         QString content_without_time_stamp("");
         for (auto& a_block: std::as_const(m_blocks)) {
-            auto blockText = "[" + a_block.speaker + "]: " + a_block.text + " [" + a_block.timeStamp.toString("hh:mm:ss.zzz") + "]";
+            auto blockText = "{" + a_block.speaker + "}: " + a_block.text + " {" + a_block.timeStamp.toString("hh:mm:ss.zzz") + "}";
             content_with_time_stamp.append(blockText + "\n");
         }
 
         for (auto& a_block: std::as_const(m_blocks)) {
-            auto blockText = "[" + a_block.speaker + "]: " + a_block.text ;
+            auto blockText = "{" + a_block.speaker + "}: " + a_block.text ;
             content_without_time_stamp.append(blockText + "\n");
         }
 
@@ -1915,12 +1915,16 @@ void Editor::jumpToHighlightedLine()
 
 void Editor::splitLine(const QTime& elapsedTime)
 {
+    if (document()->blockCount() <= 0)
+        return;
+
     qInfo() << "Split Line - - - - - -- - - - -- - \n";
     auto cursor = textCursor();
     // if (cursor.blockNumber() != highlightedBlock)
     //     return;
     int positionInBlock = cursor.positionInBlock();
     auto blockText = cursor.block().text();
+    auto blockNumber = cursor.blockNumber();
 
     auto textBeforeCursor = blockText.left(positionInBlock);
     auto textAfterCursor = blockText.right(blockText.size() - positionInBlock);
@@ -1969,17 +1973,17 @@ void Editor::splitLine(const QTime& elapsedTime)
     // m_blocks[highlightedBlock].text = textBeforeCursor.trimmed();
     // m_blocks[highlightedBlock].timeStamp = elapsedTime;
 
-    if (m_blocks[cursor.blockNumber()].speaker != "" || blockText.contains("[]:"))
+    if (m_blocks[cursor.blockNumber()].speaker != "" || blockText.contains("{}:"))
         wordNumber--;
     if (wordNumber < 0 || wordNumber >= m_blocks[cursor.blockNumber()].words.size())
         return;
 
 
-    if (textBeforeCursor.contains("]:"))
-        textBeforeCursor = textBeforeCursor.split("]:").last();
+    if (textBeforeCursor.contains("}:"))
+        textBeforeCursor = textBeforeCursor.split("}:").last();
 
-    if (textAfterCursor.contains("["))
-        textAfterCursor = textAfterCursor.split("[").first();
+    if (textAfterCursor.contains("{"))
+        textAfterCursor = textAfterCursor.split("{").first();
 
 
     auto timeStampOfCutWord = m_blocks[cursor.blockNumber()].words[wordNumber].timeStamp;
@@ -2015,6 +2019,20 @@ void Editor::splitLine(const QTime& elapsedTime)
 
     setContent();
     updateWordEditor();
+
+    int totalBlocks = document()->blockCount();
+    if (blockNumber >= totalBlocks)
+    {
+        blockNumber = totalBlocks - 1;
+    }
+    if (blockNumber < 0)
+    {
+        blockNumber = 0;
+    }
+
+    QTextCursor newCursor(document()->findBlockByNumber(blockNumber));
+    newCursor.movePosition(QTextCursor::EndOfBlock);
+    setTextCursor(newCursor);
 
     // QTextCursor cursorx(this->document()->findBlockByNumber(highlightedBlock));
     // this->setTextCursor(cursorx);
@@ -2367,12 +2385,12 @@ void Editor::saveAsPDF()
 
 
     for (auto& a_block: std::as_const(m_blocks)) {
-        auto blockText = "<p>[" + a_block.speaker + "]: " + a_block.text + " [" + a_block.timeStamp.toString("hh:mm:ss.zzz") + "]<p>";
+        auto blockText = "<p>{" + a_block.speaker + "}: " + a_block.text + " {" + a_block.timeStamp.toString("hh:mm:ss.zzz") + "}<p>";
         content_with_time_stamp.append(blockText + "\n\n");
     }
 
     for (auto& a_block: std::as_const(m_blocks)) {
-        auto blockText = "<p>[" + a_block.speaker + "]: " + a_block.text+"<p>" ;
+        auto blockText = "<p>{" + a_block.speaker + "}: " + a_block.text+"<p>" ;
         content_without_time_stamp.append(blockText + "\n\n");
     }
 
@@ -2407,7 +2425,7 @@ void Editor::saveAsTXT()    // save the transcript as a text file
     QString txtContent;
 
     for (auto& a_block : std::as_const(m_blocks)) {
-        auto blockText = "[" + a_block.speaker + "]: " + a_block.text + " [" + a_block.timeStamp.toString("hh:mm:ss.zzz") + "]\n";
+        auto blockText = "{" + a_block.speaker + "}: " + a_block.text + " {" + a_block.timeStamp.toString("hh:mm:ss.zzz") + "}\n";
         txtContent.append(blockText + "\n");
     }
 

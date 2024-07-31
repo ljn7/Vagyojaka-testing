@@ -4,7 +4,7 @@
 
 const int MaxLogLines = 10000;
 
-boolean isTrimming = true;
+bool isTrimming = true;
 
 void customMessageHandler(QtMsgType type, const QMessageLogContext &context, const QString &msg)
 {

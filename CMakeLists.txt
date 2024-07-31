@@ -154,10 +154,17 @@ endif()
 #     message("FFmpeg libraries: ${FFMPEG_LIBRARIES}")
 #     target_include_directories(${PROJECT_NAME} PRIVATE ${FFMPEG_INCLUDE_DIRS})
 #     target_link_libraries(${PROJECT_NAME} PRIVATE ${FFMPEG_LIBRARIES})
-find_package(FFTW3 CONFIG REQUIRED)
-target_link_libraries(${PROJECT_NAME} PRIVATE FFTW3::fftw3)
+
 # elseif (WIN32)
 if (WIN32)
+    find_package(FFTW3 CONFIG REQUIRED)
+
+    if (FFTW3_FOUND)
+        target_link_libraries(${PROJECT_NAME} PRIVATE FFTW3::fftw3)
+    else()
+        message(FATAL_ERROR "FFTW3 is required")
+    endif()
+
     if (CMAKE_SIZEOF_VOID_P EQUAL 4)
         set(FFMEPG_INCLUDE_DIR C:/ffmpeg_x86/include)
         set(FFMEPG_LIB_DIR C:/ffmpeg_x86/lib)
@@ -198,6 +205,16 @@ if (WIN32)
 
 elseif(UNIX)
     find_package(PkgConfig REQUIRED)
+
+    pkg_check_modules(FFTW3 REQUIRED fftw3)
+    if(FFTW3_FOUND)
+        message(STATUS "FFTW3 found")
+        target_include_directories(${PROJECT_NAME} PRIVATE ${FFTW3_INCLUDE_DIRS})
+        target_link_libraries(${PROJECT_NAME} PRIVATE ${FFTW3_LIBRARIES})
+    else()
+        message(FATAL_ERROR "FFTW3 is required")
+    endif()
+
     pkg_check_modules(FFMPEG REQUIRED IMPORTED_TARGET
       libavcodec
       libavformat
@@ -213,6 +230,4 @@ elseif(UNIX)
         message(FATAL_ERROR "FFmpeg is required")
     endif()
 
-else()
-    message(FATAL_ERROR "FFmpeg is required")
 endif()

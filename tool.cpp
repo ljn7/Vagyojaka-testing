@@ -16,8 +16,8 @@
 #include <QActionGroup>
 
 #include <git/git.h>
-#include <iostream>
-
+#include "qmediadevices.h"
+#include "qaudiodevice.h"
 
 Tool::Tool(QWidget *parent)
     : QMainWindow(parent)
@@ -38,6 +38,10 @@ Tool::Tool(QWidget *parent)
     player->setVideoOutput(ui->m_videoWidget);
     m_audioOutput = new QAudioOutput(this);
     player->setAudioOutput(m_audioOutput);
+
+    connect(&m_mediaDevices, &QMediaDevices::audioOutputsChanged, [this]() {
+        setDefaultAudioOutputDevice();
+    });
 
     ui->splitter_tool->setCollapsible(0, false);
     ui->splitter_tool->setCollapsible(1, false);
@@ -1010,4 +1014,14 @@ void Tool::on_actionShow_Endlines_triggered()
     ui->m_editor->showWaveform();
 }
 
+void Tool::setDefaultAudioOutputDevice() {
+
+    QAudioDevice device = QMediaDevices::defaultAudioOutput();
+    if (!device.isNull()) {
+        m_audioOutput->setDevice(device);
+        qDebug() << "Audio output device set to:" << device.description();
+    } else {
+        qDebug() << "No audio output devices available.";
+    }
+}
 

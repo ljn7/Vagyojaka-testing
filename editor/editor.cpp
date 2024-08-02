@@ -120,7 +120,8 @@ void Highlighter::highlightBlock(const QString& text)
     if (invalidWords.contains(currentBlock().blockNumber())) {
         auto invalidWordNumbers = invalidWords.values(currentBlock().blockNumber());
         auto speakerEnd = 0;
-        auto speakerMatch = QRegularExpression(R"(\{.*\}:)").match(text);
+        static QRegularExpression regex(R"(\{.*\}:)");
+        auto speakerMatch = regex.match(text);
         if (speakerMatch.hasMatch())
             speakerEnd = speakerMatch.capturedEnd();
 

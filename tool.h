@@ -13,6 +13,7 @@
 #include "qmainwindow.h"
 
 #include"audiowaveform.h"
+#include "qmediadevices.h"
 #include "qtablewidget.h"
 #include "tts/ttsrow.h"
 QT_BEGIN_NAMESPACE
@@ -114,6 +115,8 @@ private:
     void setTransliterationLangCodes();
     bool isDroppedOnLayout(const QPoint &pos, QVBoxLayout *layout);
     QVector<TTSRow> parseXML(const QUrl& fileUrl);
+    void setDefaultAudioOutputDevice();
+    void onTabChanged(int index);
 
     MediaPlayer *player = nullptr;
     QAudioOutput *m_audioOutput = nullptr;
@@ -127,6 +130,6 @@ private:
     QSettings* settings;
     KeyboardShortcutGuide* help_keyshortcuts = nullptr;
     About* about = nullptr;
-    void onTabChanged(int index);
+    QMediaDevices m_mediaDevices;
 
 };

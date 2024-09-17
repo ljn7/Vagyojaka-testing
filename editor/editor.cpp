@@ -74,6 +74,7 @@ Editor::Editor(QWidget *parent)
         "xml Files (*.xml)",
         "All Files (*)"
     };
+    m_english_dictionary = (listFromFile(QString(":/wordlists/english.txt")));
 }
 
 
@@ -431,17 +432,26 @@ void Editor::keyPressEvent(QKeyEvent *event)
     }
     else if (event->modifiers() == Qt::ControlModifier && event->key() == Qt::Key_I){
         qInfo()<<"doubtful";
-        int blocknumber=textCursor().blockNumber(), wordNumber=textCursor().block().text().left(textCursor().positionInBlock()).trimmed().count(" ");
+        int blocknumber = textCursor().blockNumber();
+        int wordNumber = textCursor().block().text().left(textCursor().positionInBlock()).trimmed().count(" ");
         qInfo()<<blocknumber;
         qInfo()<<wordNumber;
-        if(m_blocks[blocknumber].words[wordNumber-1].tagList.empty()){
-            m_blocks[blocknumber].words[wordNumber-1].tagList.append("InvW");
-            qInfo()<<"marked";
+
+        if (blocknumber > m_blocks.size() || blocknumber < 0 ||
+            wordNumber <= 0 || wordNumber > m_blocks[blocknumber].words.size()) {
+            event->ignore();
+            return;
         }
+
+        // if(m_blocks[blocknumber].words[wordNumber-1].tagList.empty()){
+        //     m_blocks[blocknumber].words[wordNumber-1].tagList.append("InvW");
+        //     qInfo()<<"marked";
+        // }
 
         QTextBlock block = document()->findBlockByNumber(blocknumber);
         QTextCursor cursor(document()->findBlockByNumber(blocknumber));
         setContent();
+
         cursor.setPosition(block.position());
         cursor.movePosition(QTextCursor::NextWord, QTextCursor::MoveAnchor, wordNumber - 1);
         setTextCursor(cursor);
@@ -461,15 +471,15 @@ void Editor::keyPressEvent(QKeyEvent *event)
 
         // The following keys are forwarded by the completer to the widget
         switch (event->key()) {
-        case Qt::Key_Enter:
-        case Qt::Key_Return:
-        case Qt::Key_Escape:
-        case Qt::Key_Tab:
-        case Qt::Key_Backtab:
-            //       case Qt::Key_Space:
-            event->ignore();
-            return; // let the completer do default behavior
-        default:
+            case Qt::Key_Enter:
+            case Qt::Key_Return:
+            case Qt::Key_Escape:
+            case Qt::Key_Tab:
+            case Qt::Key_Backtab:
+                //       case Qt::Key_Space:
+                event->ignore();
+                return; // let the completer do default behavior
+            default:
             break;
         }
     }
@@ -1363,6 +1373,7 @@ void Editor::loadDictionary()
                     );
         }
     }
+    m_english_dictionary.sort();
     m_dictionary.sort();
     m_textCompleter->setModel(new QStringListModel(m_dictionary, m_textCompleter));
 
@@ -1382,7 +1393,11 @@ void Editor::loadDictionary()
                                     m_dictionary.end(),
                                     wordText)
                 ) {
-                invalidWords.insert(i, j);
+                if (m_transcriptLang != "english" && !std::binary_search(m_english_dictionary.begin(),
+                                                                         m_english_dictionary.end(),
+                                                                         wordText)) {
+                    invalidWords.insert(i, j);
+                }
             }
         }
     }
@@ -1572,8 +1587,11 @@ void Editor::setContent()
                                             m_dictionary.end(),
                                             wordText)
                         ){
-
-                        invalidWords.insert(i, j);
+                        if (m_transcriptLang != "english" && !std::binary_search(m_english_dictionary.begin(),
+                                                                                 m_english_dictionary.end(),
+                                                                                 wordText)) {
+                            invalidWords.insert(i, j);
+                        }
                     }
                     if(!m_blocks[i].words[j].tagList.empty()){
                         taggedWords.insert(i,j);
@@ -1885,8 +1903,13 @@ void Editor::contentChanged(int position, int charsRemoved, int charsAdded)
                 if (!std::binary_search(m_dictionary.begin(),
                                         m_dictionary.end(),
                                         wordText)
-                    )
-                    invalidWords.insert(i, j);
+                    ) {
+                    if (m_transcriptLang != "english" && !std::binary_search(m_english_dictionary.begin(),
+                                                                             m_english_dictionary.end(),
+                                                                             wordText)) {
+                        invalidWords.insert(i, j);
+                    }
+                }
                 if(!m_blocks[i].words[j].tagList.empty()){
                     taggedWords.insert(i,j);
                 }
@@ -2593,8 +2616,13 @@ void Editor::markWordAsCorrect(int blockNumber, int wordNumber)
                            m_dictionary.end(),
                            textToInsert))
     {
-        emit message("Word is already correct.");
-        return;
+        if (m_transcriptLang != "english" && !std::binary_search(m_english_dictionary.begin(),
+                                                                 m_english_dictionary.end(),
+                                                                 textToInsert)) {
+            emit message("Word is already correct.");
+            return;
+        }
+
     }
 
     m_dictionary.insert
@@ -2618,8 +2646,13 @@ void Editor::markWordAsCorrect(int blockNumber, int wordNumber)
             if (!std::binary_search(m_dictionary.begin(),
                                     m_dictionary.end(),
                                     wordText)
-                )
-                invalidWords.insert(i, j);
+                ) {
+                if (m_transcriptLang != "english" && !std::binary_search(m_english_dictionary.begin(),
+                                                                         m_english_dictionary.end(),
+                                                                         wordText)) {
+                    invalidWords.insert(i, j);
+                }
+            }
         }
     }
     m_highlighter->setInvalidWords(invalidWords);

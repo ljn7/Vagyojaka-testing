@@ -147,6 +147,7 @@ private:
     TagSelectionDialog* m_selectTag = nullptr;
     QCompleter *m_speakerCompleter = nullptr, *m_textCompleter = nullptr, *m_transliterationCompleter = nullptr;
     QStringList m_dictionary;
+    QStringList m_english_dictionary;
     QString m_customDictonaryPath=NULL;
     std::set<QString> m_correctedWords;
     QString m_transliterateLangCode;

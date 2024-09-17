@@ -1,6 +1,6 @@
 #pragma once
 
-#include <QMainWindow>
+#include <qmainwindow.h>
 #include "about.h"
 #include "editor/utilities/keyboardshortcutguide.h"
 #include "git/git.h"
@@ -96,19 +96,14 @@ private slots:
 
     void on_actionShow_Waveform_triggered();
 
-    void on_actionOpen_triggered();
-
-    void on_InsertRowButton_clicked();
-
-    void on_deleteRowButton_clicked();
-
-    void on_saveTableButton_clicked();
 
     void on_actionSave_Timestamps_triggered();
     void connectWaveformAndMediaplayer();
     void on_actionUpdate_Timestamps_triggered();
 
     void on_actionShow_Endlines_triggered();
+
+    void on_actionOpen_triggered();
 
 private:
     void setFontForElements();
@@ -124,7 +119,7 @@ private:
     QFont font;
     QMap<QString, QString> m_transliterationLang;
     Git* git = nullptr;
-    QTableWidget* tableWidget;
+    // QTableWidget* tableWidget;
     bool isSendingSampleRateSuccess = false;
     bool isSamplingSuccess = false;
     QSettings* settings;

@@ -92,13 +92,15 @@ int main(int argc, char *argv[])
 {
 
     qInstallMessageHandler(customMessageHandler);
-    QApplication a(argc, argv);
-
+    QApplication app(argc, argv);
+    app.setApplicationName("Vagyojaka");
+    // app.setApplicationDisplayName("Vagyojaka: ASR Post Editor");
+    app.setOrganizationName("IIT Bombay");
     Tool w;
     w.show();
 
     trimLogFile();
 
-    return a.exec();
+    return app.exec();
 }
 

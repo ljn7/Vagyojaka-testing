@@ -265,28 +265,7 @@ Tool::Tool(QWidget *parent)
     setAcceptDrops(true);
     // installEventFilter(this);
     ui->m_editor->setAcceptDrops(false);
-    tableWidget = ui->tableWidget;
-    for(int row = 0; row < tableWidget->rowCount(); ++row) {
-        for(int col = 0; col < tableWidget->columnCount(); ++col) {
-            QTableWidgetItem *item = tableWidget->item(row, col);
-            if (item) {
-                item->setFlags(item->flags() | Qt::ItemIsSelectable | Qt::ItemIsEditable | Qt::ItemIsEnabled);
-                item->setText(item->text().trimmed());
-            }
-
-        }
-    }
-    tableWidget->resizeRowsToContents();
-    tableWidget->resizeColumnsToContents();
-    tableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
-    QObject::connect(tableWidget, &QTableWidget::cellChanged, [=]() {
-        if (tableWidget) {
-            // tableWidget->resizeColumnsToContents();
-            tableWidget->resizeRowsToContents();
-
-        }
-    });
-
+    // tableWidget = ui->tableWidget;
     connect(ui->tabWidget, &QTabWidget::currentChanged, this, &Tool::onTabChanged);
     connect(player, &MediaPlayer::sendMediaUrl, ui->widget, &AudioWaveForm::setMediaUrl);
 
@@ -838,162 +817,10 @@ void Tool::onTabChanged(int index) {
     }
 }
 
-int count = 0;
-void Tool::on_actionOpen_triggered()
-{
-    tableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
-    QFileDialog fileDialog(this);
-    fileDialog.setAcceptMode(QFileDialog::AcceptOpen);
-    fileDialog.setWindowTitle(tr("Open File"));
-
-
-    if (fileDialog.exec() == QDialog::Accepted) {
-        QUrl fileUrl = fileDialog.selectedUrls().constFirst();
-        QFile file(fileUrl.toLocalFile());
-        QString xmlDirectory = QFileInfo(fileUrl.toLocalFile()).path();
-        QVector<TTSRow> rows = parseXML(fileUrl);
-        tableWidget->setRowCount(0);
-
-        for (int i = 0; i < rows.size(); ++i) {
-            const TTSRow& row = rows[i];
-            tableWidget->insertRow(tableWidget->rowCount());
-            std::unique_ptr<AudioPlayerWidget> audioPlayer(new AudioPlayerWidget(xmlDirectory + "/file-" + QString::number(i) + ".mp3"));
-            tableWidget->setCellWidget(i, 0, audioPlayer.release());
-            tableWidget->setItem(i, 1, new QTableWidgetItem(row.words));
-            tableWidget->setItem(i, 2, new QTableWidgetItem(row.not_pronunced_properly_1));
-            QMargins margins = tableWidget->cellWidget(i, 0)->layout()->contentsMargins();
-            margins.setLeft(0); // Adjust left padding
-            margins.setTop(0); // Adjust top padding
-            margins.setRight(0); // Adjust right padding
-            margins.setBottom(0); // Adjust bottom padding
-            tableWidget->cellWidget(i, 0)->layout()->setContentsMargins(margins);
-
-            std::unique_ptr<QComboBox> comboBox1(new QComboBox(this));
-            comboBox1->addItem("1");
-            comboBox1->addItem("2");
-            comboBox1->addItem("3");
-            comboBox1->addItem("4");
-            comboBox1->addItem("5");
-            comboBox1->setCurrentIndex(row.sound_quality_1 - 1); // -1 because index starts from 0
-            comboBox1->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Fixed); // Set size policy
-            comboBox1->setFont(QFont(comboBox1->font().family(), 8)); // Set font size
-            // comboBox1->setMaximumWidth(50); // Adjust maximum width
-            tableWidget->setCellWidget(i, 3, comboBox1.release());
-
-
-            std::unique_ptr<QComboBox> comboBox2(new QComboBox(this));
-            comboBox2->addItem("1");
-            comboBox2->addItem("2");
-            comboBox2->addItem("3");
-            comboBox2->addItem("4");
-            comboBox2->addItem("5");
-            comboBox2->setCurrentIndex(row.tts_quality - 1); // -1 because index starts from 0
-            comboBox2->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Fixed); // Set size policy
-            comboBox2->setFont(QFont(comboBox2->font().family(), 8)); // Set font size
-            // comboBox2->setMaximumWidth(50); // Adjust maximum width
-            tableWidget->setCellWidget(i, 4, comboBox2.release());
-
-        }
-    }
-    // tableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
-    QScreen *primaryScreen = QGuiApplication::primaryScreen();
-    int screenWidth = primaryScreen->geometry().width();
-    int firstColumnWidth = screenWidth * 0.2; // Adjust the percentage as needed
-    tableWidget->setColumnWidth(0, firstColumnWidth);
-    // tableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::Interactive);
-
-    // for (int col = 0; col < tableWidget->horizontalHeader()->count(); ++col) {
-    //     tableWidget->horizontalHeader()->setSectionResizeMode(col, QHeaderView::ResizeToContents);
-    // }
-
-    int totalColumns = ui->tableWidget->model()->columnCount();
-    for(int c = 0; c <= totalColumns; c++) {
-        ui->tableWidget->horizontalHeader()->resizeSection(c, 150);
-    }
-    ui->tableWidget->horizontalHeader()->setStretchLastSection(true);
-    // tableWidget->setColumnWidth(0, 50);
-}
-QVector<TTSRow> Tool::parseXML(const QUrl& fileUrl) {
-    QVector<TTSRow> rows;
-
-    QFile file(fileUrl.toLocalFile());
-    if (!file.open(QIODevice::ReadOnly)) {
-        qDebug() << "Failed to open file" << file.errorString();
-        return rows;
-    }
-
-    QXmlStreamReader xmlReader(&file);
-    while (!xmlReader.atEnd() && !xmlReader.hasError()) {
-        if (xmlReader.isStartElement() && xmlReader.name() == QString("row")) {
-            TTSRow row;
-            while (!(xmlReader.isEndElement() && xmlReader.name() == QString("row"))) {
-                xmlReader.readNext();
-                if (xmlReader.isStartElement()) {
-                    QStringView elementName = xmlReader.name();
-                    xmlReader.readNext();
-                    QStringView text = xmlReader.text();
-                    if (elementName.toString() == QString("words")) {
-                        row.words = text.toString();
-                    } else if (elementName.toString() == QString("not-pronunced-properly-1")) {
-                        row.not_pronunced_properly_1 = text.toString();
-                    } else if (elementName.toString() == QString("sound-quality-1")) {
-                        row.sound_quality_1 = text.toInt();
-                    } else if (elementName.toString() == QString("tts-quality")) {
-                        row.tts_quality = text.toInt();
-                    } /*else if (elementName.toString() == QString("new-tts-quality-1")) {
-                        row.new_tts_quality_1 = text.toInt();
-                    } else if (elementName.toString() == QString("new-tts-words-not-pronunced-properly-1")) {
-                        row.new_tts_words_not_pronunced_properly_1 = text.toString();
-                    } else if (elementName.toString() == QString("new-tts-sound-quality-1")) {
-                        row.new_tts_sound_quality_1 = text.toInt();
-                    } else if (elementName.toString() == QString("new-tts-quality-2")) {
-                        row.new_tts_quality_2 = text.toInt();
-                    } else if (elementName.toString() == QString("new-tts-words-not-pronunced-properly-2")) {
-                        row.new_tts_words_not_pronunced_properly_2 = text.toString();
-                    } else if (elementName.toString() == QString("new-tts-sound-quality-2")) {
-                        row.new_tts_sound_quality_2 = text.toInt();
-                    }*/
-                }
-            }
-            rows.append(row);
-        }
-        xmlReader.readNext();
-    }
-    file.close();
-    if (xmlReader.hasError()) {
-        qDebug() << "XML error:" << xmlReader.errorString();
-    }
-
-    return rows;
-}
-
 void Tool::resizeEvent(QResizeEvent *event)  {
-     // Call the base class implementation
     QMainWindow::resizeEvent(event);
-    // Set the width of the first column to a fixed value
-     // if (tableWidget->columnWidth(0) != 100) // Adjust the fixed width as needed
-     //     tableWidget->setColumnWidth(0, 100);
 }
 
-void Tool::on_InsertRowButton_clicked()
-{
-    tableWidget->insertRow(tableWidget->rowCount());
-}
-
-
-void Tool::on_deleteRowButton_clicked()
-{
-    int currentRow = ui->tableWidget->currentRow();
-    if (currentRow >= 0) {
-        ui->tableWidget->removeRow(currentRow);
-    }
-}
-
-
-void Tool::on_saveTableButton_clicked()
-{
-
-}
 
 
 // To prevent auto updates on timestamps
@@ -1023,5 +850,11 @@ void Tool::setDefaultAudioOutputDevice() {
     } else {
         qDebug() << "No audio output devices available.";
     }
+}
+
+
+void Tool::on_actionOpen_triggered()
+{
+    ui->tableWidget->openTTSTranscript();
 }
 

@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.16)
 
 
-project(asr-post-editor VERSION 3.0.1 LANGUAGES CXX)
+project(Vagyojaka VERSION 5.5.5 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -18,6 +18,7 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 # using "vcpkg install libgit2 --triplet=x64_mingw_dynamic" command from cmd
 
 if(WIN32)
+    set(APP_ICON_RESOURCE_WINDOWS "${CMAKE_CURRENT_SOURCE_DIR}/icon.rc")
     if(MINGW)
         set(CMAKE_PREFIX_PATH "D:/Qt/6.6.1/mingw_64" CACHE PATH "Initial cache" FORCE)
         set(CMAKE_PREFIX_PATH "${CMAKE_PREFIX_PATH};C:/vcpkg/installed/x64-mingw-dynamic/share")
@@ -68,12 +69,12 @@ file(GLOB PROJECT_SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp")
 file(GLOB PROJECT_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/*.h")
 file(GLOB PROJECT_RESOURCES "${CMAKE_CURRENT_SOURCE_DIR}/*.qrc")
 
-set(GUI_TYPE)
-if (WIN32)
-    set(GUI_TYPE WIN32)
-else ()
-    set(GUI_TYPE)
-endif ()
+# set(GUI_TYPE)
+# if (WIN32)
+#     set(GUI_TYPE WIN32)
+# else ()
+#     set(GUI_TYPE)
+# endif ()
 
 add_executable(
         ${PROJECT_NAME}
@@ -104,10 +105,18 @@ add_executable(
         ${GIT_FORMS}
         ${GIT_SOURCE}
         ${GIT_HEADER}
-        tts/texttospeech.h tts/texttospeech.cpp tts/texttospeech.ui
+        tts/ttsannotator.h tts/ttsannotator.cpp tts/ttsannotator.ui
         tts/ttsrow.h
         audioplayer/audioplayerwidget.h
         audioplayer/audioplayerwidget.cpp
+        icons.qrc
+        icon.rc
+
+        ${APP_ICON_RESOURCE_WINDOWS}
+        tts/lazyloadingmodel.h tts/lazyloadingmodel.cpp
+        tts/customdelegates.h tts/customdelegates.cpp
+        AppIcon.ico
+
 
 )
 
@@ -122,6 +131,27 @@ target_link_libraries(
         Qt6::Network
         Qt6::PrintSupport
 )
+
+if(WIN32)
+    set_target_properties(${PROJECT_NAME} PROPERTIES
+        WIN32_EXECUTABLE TRUE
+        OUTPUT_NAME "${PROJECT_NAME}"
+    )
+elseif(APPLE)
+    set_target_properties(${PROJECT_NAME} PROPERTIES
+        MACOSX_BUNDLE TRUE
+        OUTPUT_NAME "${PROJECT_NAME}"
+        MACOSX_BUNDLE_BUNDLE_NAME "${PROJECT_NAME}"
+        # MACOSX_BUNDLE_BUNDLE_VERSION "${PROJECT_VERSION}"
+        # MACOSX_BUNDLE_SHORT_VERSION_STRING "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}"
+    )
+else()
+    # Linux-specific settings
+    set_target_properties(${PROJECT_NAME} PROPERTIES
+        OUTPUT_NAME "vagyojaka"
+    )
+endif()
+
 if (WIN32 AND MINGW)
     target_compile_options(${PROJECT_NAME} PRIVATE
         -Wa,-mbig-obj

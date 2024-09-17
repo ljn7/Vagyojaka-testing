@@ -1,4 +1,5 @@
 #include "ttsannotator.h"
+#include "qfontdatabase.h"
 #include "ui_ttsannotator.h"
 #include "lazyloadingmodel.h"
 #include "customdelegates.h"
@@ -16,7 +17,7 @@ TTSAnnotator::TTSAnnotator(QWidget *parent)
     ui->setupUi(this);
     tableView = ui->tableView;
     tableView->setModel(m_model.get());
-
+    setDefaultFontOnTableView();
     setupUI();
 
     QString iniPath = QApplication::applicationDirPath() + "/" + "config.ini";
@@ -129,27 +130,28 @@ void TTSAnnotator::parseXML()
     }
 
     QXmlStreamReader xmlReader(&file);
+
     while (!xmlReader.atEnd() && !xmlReader.hasError()) {
         if (xmlReader.isStartElement() && xmlReader.name() == QString("row")) {
             TTSRow row;
             while (!(xmlReader.isEndElement() && xmlReader.name() == QString("row"))) {
                 xmlReader.readNext();
                 if (xmlReader.isStartElement()) {
-                    QStringView elementName = xmlReader.name();
+                    QString elementName = QString::fromUtf8(xmlReader.name().toUtf8());
                     xmlReader.readNext();
-                    QStringView text = xmlReader.text();
+                    QString text = QString::fromUtf8(xmlReader.text().toUtf8());
                     if (elementName == QString("words")) {
-                        row.words = text.toString();
+                        row.words = text;
                     } else if (elementName == QString("not-pronounced-properly")) {
-                        row.not_pronounced_properly = text.toString();
+                        row.not_pronounced_properly = text;
                     } else if (elementName == QString("sound-quality")) {
                         row.sound_quality = text.toInt();
                     } else if (elementName == QString("tts-quality")) {
                         row.tts_quality = text.toInt();
                     } else if (elementName == QString("audio-filename")) {
-                        row.audioFileName = text.toString();
+                        row.audioFileName = text;
                     } else if (elementName == QString("tag")) {
-                        row.tag = text.toString();
+                        row.tag = text;
                     }
                 }
             }
@@ -262,4 +264,36 @@ void TTSAnnotator::onCellClicked(const QModelIndex &index)
     if (index.column() == 0) {  // Assuming audio player is in the first column
         tableView->openPersistentEditor(index);
     }
+}
+
+void TTSAnnotator::setDefaultFontOnTableView()
+{
+    QFont defaultFont = tableView->font();
+
+    // Define a list of preferred fonts
+    QStringList preferredFonts = {
+        ".AppleSystemUIFont",  // macOS system font
+        "SF Pro",              // macOS
+        "Segoe UI",            // Windows
+        "Roboto",              // Android and modern systems
+        "Noto Sans",           // Good Unicode coverage
+        "Arial",               // Widely available
+        "Helvetica"            // Fallback
+    };
+
+    QString chosenFont;
+    for (const QString& fontFamily : preferredFonts) {
+        if (QFontDatabase::families().contains(fontFamily)) {
+            chosenFont = fontFamily;
+            break;
+        }
+    }
+
+    if (!chosenFont.isEmpty()) {
+        defaultFont.setFamily(chosenFont);
+    }
+
+    tableView->setFont(defaultFont);
+
+    tableView->resizeRowsToContents();
 }

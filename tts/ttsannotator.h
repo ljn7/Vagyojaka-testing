@@ -40,6 +40,7 @@ private:
     void saveToFile(const QString& fileName);
     void insertRow();
     void deleteRow();
+    void setDefaultFontOnTableView();
 
     Ui::TTSAnnotator* ui;
     QTableView* tableView;

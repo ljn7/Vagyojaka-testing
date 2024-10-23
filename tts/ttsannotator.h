@@ -23,6 +23,9 @@ public:
     ~TTSAnnotator();
     void openTTSTranscript();
 
+    static const QColor SoundQualityColor;
+    static const QColor TTSQualityColor;
+
 private slots:
     void on_saveAsTableButton_clicked();
     void on_InsertRowButton_clicked();
@@ -31,6 +34,7 @@ private slots:
     void on_actionOpen_triggered();
     void onSelectionChanged(const QItemSelection &selected, const QItemSelection &deselected);
     void onCellClicked(const QModelIndex &index);
+    void onItemSelectionChanged();
 
 private:
     void parseXML();

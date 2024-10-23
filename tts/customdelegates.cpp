@@ -96,8 +96,8 @@ void AudioPlayerDelegate::setBaseDir(QString pBaseDir)
     m_baseDir = pBaseDir;
 }
 
-ComboBoxDelegate::ComboBoxDelegate(int min, int max, QObject* parent)
-    : QStyledItemDelegate(parent), m_min(min), m_max(max)
+ComboBoxDelegate::ComboBoxDelegate(int min, int max, const QColor& color, QObject* parent)
+    : QStyledItemDelegate(parent), m_min(min), m_max(max), m_color(color)
 {
 }
 
@@ -109,6 +109,20 @@ QWidget* ComboBoxDelegate::createEditor(QWidget* parent, const QStyleOptionViewI
     for (int i = m_min; i <= m_max; ++i) {
         editor->addItem(QString::number(i));
     }
+
+    QString styleSheet = QString(
+                             "QComboBox {"
+                             "   background-color: %1;"
+                             "   selection-background-color: %2;"
+                             "   selection-color: black;"
+                             "}"
+                             "QComboBox QAbstractItemView {"
+                             "   background-color: %1;"
+                             "   selection-background-color: %2;"
+                             "   selection-color: black;"
+                             "}"
+                         ).arg(m_color.name()).arg(m_color.darker(110).name());
+    editor->setStyleSheet(styleSheet);
     return editor;
 }
 
@@ -127,4 +141,28 @@ void ComboBoxDelegate::setModelData(QWidget* editor, QAbstractItemModel* model, 
     if (comboBox) {
         model->setData(index, comboBox->currentText().toInt(), Qt::EditRole);
     }
+}
+
+void ComboBoxDelegate::paint(QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index) const
+{
+    painter->save();
+
+    // Fill the background with the specified color
+    painter->fillRect(option.rect, m_color);
+
+    // Draw the text
+    QString text = index.data(Qt::DisplayRole).toString();
+    painter->setPen(option.palette.color(QPalette::Text));
+    painter->drawText(option.rect, Qt::AlignCenter, text);
+
+    // Draw the focus rect if the item has focus
+    if (option.state & QStyle::State_HasFocus) {
+        QStyleOptionFocusRect focusOption;
+        focusOption.rect = option.rect;
+        focusOption.state = option.state | QStyle::State_KeyboardFocusChange | QStyle::State_Item;
+        focusOption.backgroundColor = option.palette.color(QPalette::Base);
+        QApplication::style()->drawPrimitive(QStyle::PE_FrameFocusRect, &focusOption, painter);
+    }
+
+    painter->restore();
 }

@@ -9,6 +9,9 @@
 #include <QXmlStreamReader>
 #include <QXmlStreamWriter>
 
+const QColor TTSAnnotator::SoundQualityColor = QColor(230, 255, 230);
+const QColor TTSAnnotator::TTSQualityColor = QColor(255, 230, 230);
+
 TTSAnnotator::TTSAnnotator(QWidget *parent)
     : QWidget(parent)
     , ui(new Ui::TTSAnnotator)
@@ -54,14 +57,18 @@ void TTSAnnotator::setupUI()
 
     // Set headers for the model
     m_model->setHorizontalHeaderLabels({
-        "Audios", "Transcript", "Mispronounced words", "Tags", "Sound Quality", "TTS Quality"
+        "Audios", "Transcript", "Mispronounced words", "Tags", "Sound Quality", "ASR Quality"
     });
 
     // Set up delegates
     m_audioPlayerDelegate = new AudioPlayerDelegate(xmlDirectory, this);
     tableView->setItemDelegateForColumn(0, m_audioPlayerDelegate);
-    tableView->setItemDelegateForColumn(4, new ComboBoxDelegate(1, 5, this));
-    tableView->setItemDelegateForColumn(5, new ComboBoxDelegate(0, 1, this));
+
+    ComboBoxDelegate* soundQualityDelegate = new ComboBoxDelegate(1, 5, SoundQualityColor.darker(105), this);
+    ComboBoxDelegate* ttsQualityDelegate = new ComboBoxDelegate(0, 1, TTSQualityColor.darker(105), this);
+
+    tableView->setItemDelegateForColumn(4, soundQualityDelegate);
+    tableView->setItemDelegateForColumn(5, ttsQualityDelegate);
 
     // Set up table view properties
     tableView->setSelectionBehavior(QAbstractItemView::SelectRows);
@@ -73,6 +80,11 @@ void TTSAnnotator::setupUI()
     // Set up header properties
     tableView->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
     tableView->verticalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
+
+    tableView->setStyleSheet(
+        "QTableView::item:selected { background-color: rgba(0, 120, 215, 100); }"
+        "QTableView::item:focus { background-color: rgba(0, 120, 215, 50); }"
+        );
 
     // Enable sorting
     tableView->setSortingEnabled(true);
@@ -92,6 +104,15 @@ void TTSAnnotator::setupUI()
     // Resize rows and columns to content
     tableView->resizeRowsToContents();
     tableView->resizeColumnsToContents();
+    connect(tableView->selectionModel(), &QItemSelectionModel::selectionChanged,
+            this, &TTSAnnotator::onItemSelectionChanged);
+
+}
+
+
+void TTSAnnotator::onItemSelectionChanged()
+{
+    tableView->viewport()->update();
 }
 
 void TTSAnnotator::openTTSTranscript()
@@ -146,8 +167,8 @@ void TTSAnnotator::parseXML()
                         row.not_pronounced_properly = text;
                     } else if (elementName == QString("sound-quality")) {
                         row.sound_quality = text.toInt();
-                    } else if (elementName == QString("tts-quality")) {
-                        row.tts_quality = text.toInt();
+                    } else if (elementName == QString("asr-quality")) {
+                        row.asr_quality = text.toInt();
                     } else if (elementName == QString("audio-filename")) {
                         row.audioFileName = text;
                     } else if (elementName == QString("tag")) {
@@ -203,7 +224,7 @@ void TTSAnnotator::saveToFile(const QString& fileName)
         xmlWriter.writeTextElement("words", row.words);
         xmlWriter.writeTextElement("not-pronounced-properly", row.not_pronounced_properly);
         xmlWriter.writeTextElement("sound-quality", QString::number(row.sound_quality));
-        xmlWriter.writeTextElement("tts-quality", QString::number(row.tts_quality));
+        xmlWriter.writeTextElement("asr-quality", QString::number(row.asr_quality));
         xmlWriter.writeTextElement("audio-filename", row.audioFileName);
         xmlWriter.writeTextElement("tag", row.tag);
         xmlWriter.writeEndElement(); // row

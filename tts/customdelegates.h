@@ -33,11 +33,13 @@ private:
 class ComboBoxDelegate : public QStyledItemDelegate {
     Q_OBJECT
 public:
-    ComboBoxDelegate(int min, int max, QObject* parent = nullptr);
+    ComboBoxDelegate(int min, int max, const QColor& color, QObject* parent = nullptr);
     QWidget* createEditor(QWidget* parent, const QStyleOptionViewItem& option, const QModelIndex& index) const override;
     void setEditorData(QWidget* editor, const QModelIndex& index) const override;
     void setModelData(QWidget* editor, QAbstractItemModel* model, const QModelIndex& index) const override;
+    void paint(QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index) const override;
 
 private:
     int m_min, m_max;
+    QColor m_color;
 };

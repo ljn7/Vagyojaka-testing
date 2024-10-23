@@ -4,13 +4,9 @@
 
 const int MaxLogLines = 10000;
 
-bool isTrimming = true;
 
 void customMessageHandler(QtMsgType type, const QMessageLogContext &context, const QString &msg)
 {
-    if (isTrimming)
-        return;
-
     Q_UNUSED(context);
 
     QString dateTime = QDateTime::currentDateTime().toString("dd/MM/yyyy hh:mm:ss");
@@ -58,36 +54,6 @@ void customMessageHandler(QtMsgType type, const QMessageLogContext &context, con
     textStream << logText << "\n";
 }
 
-void trimLogFile()
-{
-    QFile logFile("LogFile.log");
-    if (!logFile.open(QIODevice::ReadWrite | QIODevice::Text)) {
-        qWarning("Failed to open log file for trimming.");
-        isTrimming = false;
-        return;
-    }
-
-    QStringList lines;
-    QTextStream textStream(&logFile);
-    while (!textStream.atEnd()) {
-        lines.append(textStream.readLine());
-    }
-
-    int excessLines = lines.size() - MaxLogLines;
-    if (excessLines > 0) {
-        lines = lines.mid(excessLines);
-        logFile.resize(0); // Clear the file content
-        QTextStream out(&logFile);
-        for (const QString &line : lines) {
-            out << line << "\n"; // Write trimmed lines back to the file
-        }
-    }
-
-    logFile.close();
-    isTrimming = false;
-}
-
-
 int main(int argc, char *argv[])
 {
 
@@ -98,8 +64,6 @@ int main(int argc, char *argv[])
     app.setOrganizationName("IIT Bombay");
     Tool w;
     w.show();
-
-    trimLogFile();
 
     return app.exec();
 }

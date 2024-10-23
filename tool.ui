@@ -724,7 +724,7 @@
       </widget>
       <widget class="QWidget" name="tab_4">
        <attribute name="title">
-        <string>TTS Annotator</string>
+        <string>ASR Validation</string>
        </attribute>
        <layout class="QHBoxLayout" name="horizontalLayout_5">
         <property name="spacing">
@@ -1227,7 +1227,7 @@
     <bool>false</bool>
    </property>
    <property name="text">
-    <string>Version 5.5.5-beta-5</string>
+    <string>Version 5.5.6-1</string>
    </property>
    <property name="toolTip">
     <string>Version</string>

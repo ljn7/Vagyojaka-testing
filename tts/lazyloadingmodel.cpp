@@ -1,4 +1,6 @@
 #include "lazyloadingmodel.h"
+#include "qcolor.h"
+#include "tts/ttsannotator.h"
 
 LazyLoadingModel::LazyLoadingModel(QObject* parent)
     : QAbstractTableModel(parent)
@@ -26,6 +28,17 @@ QVariant LazyLoadingModel::data(const QModelIndex& index, int role) const
 
     const TTSRow& row = m_rows[index.row()];
 
+    if (role == Qt::BackgroundRole) {
+        switch (index.column()) {
+        case 4: // Sound Quality column
+            return TTSAnnotator::SoundQualityColor; // Light green
+        case 5: // TTS Quality column
+            return TTSAnnotator::TTSQualityColor; // Light red
+        default:
+            return QVariant(); // Default background
+        }
+    }
+
     if (role == Qt::DisplayRole || role == Qt::EditRole) {
         switch (index.column()) {
         case 0: return row.audioFileName;
@@ -33,7 +46,7 @@ QVariant LazyLoadingModel::data(const QModelIndex& index, int role) const
         case 2: return row.not_pronounced_properly;
         case 3: return row.tag;
         case 4: return row.sound_quality;
-        case 5: return row.tts_quality;
+        case 5: return row.asr_quality;
         }
     }
 
@@ -49,7 +62,7 @@ bool LazyLoadingModel::setData(const QModelIndex& index, const QVariant& value, 
         case 2: row.not_pronounced_properly = value.toString(); break;
         case 3: row.tag = value.toString(); break;
         case 4: row.sound_quality = value.toInt(); break;
-        case 5: row.tts_quality = value.toInt(); break;
+        case 5: row.asr_quality = value.toInt(); break;
         default: return false;
         }
         emit dataChanged(index, index, {role});

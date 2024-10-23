@@ -8,7 +8,7 @@ struct TTSRow {
     QString not_pronounced_properly;
     QString tag;
     int sound_quality;
-    int tts_quality;
+    int asr_quality;
 };
 
 #endif // TTSBLOCK_H

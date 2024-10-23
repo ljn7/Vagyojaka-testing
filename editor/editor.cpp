@@ -1587,7 +1587,7 @@ void Editor::setContent()
                                             m_dictionary.end(),
                                             wordText)
                         ){
-                        if (m_transcriptLang != "english" && !std::binary_search(m_english_dictionary.begin(),
+                        if (m_transcriptLang != "english" || !std::binary_search(m_english_dictionary.begin(),
                                                                                  m_english_dictionary.end(),
                                                                                  wordText)) {
                             invalidWords.insert(i, j);

@@ -22,7 +22,7 @@ jobs:
       uses: jurplel/install-qt-action@v3
       with:
         version: ${{ env.QT_VERSION }}
-        modules: 'qtmultimedia qtnetwork qtprintsupport'
+        modules: 'qt5compat qtmultimedia qtshadertools qtpositioning qtbase'
         aqtversion: '==3.1.*'
         py7zrversion: '==0.20.*'
         setup-python: true

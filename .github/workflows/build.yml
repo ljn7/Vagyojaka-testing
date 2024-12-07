@@ -10,10 +10,11 @@ on:
 
 jobs:
   build:
-    runs-on: macos-12
+    runs-on: macos-14
     
     env:
       QT_VERSION: "6.6.1"
+      MACOSX_DEPLOYMENT_TARGET: "12.0"
     
     steps:
     - uses: actions/checkout@v4
@@ -35,6 +36,10 @@ jobs:
         brew install fftw
         brew install ffmpeg
 
+    - name: Switch Xcode version
+      run: |
+        sudo xcode-select --switch /Applications/Xcode_15.2.app
+
     - name: Create build directory
       run: mkdir build
     
@@ -45,7 +50,9 @@ jobs:
       run: |
         cmake .. \
           -DCMAKE_BUILD_TYPE=Release \
-          -DCMAKE_PREFIX_PATH=${{ env.Qt6_DIR }}
+          -DCMAKE_PREFIX_PATH=${{ env.Qt6_DIR }} \
+          -DCMAKE_OSX_DEPLOYMENT_TARGET=12.0 \
+          -DCMAKE_OSX_ARCHITECTURES="x86_64;arm64"
     
     - name: Build
       working-directory: ./build
@@ -76,7 +83,7 @@ jobs:
             <key>CFBundleShortVersionString</key>
             <string>${GITHUB_REF_NAME:-1.0.0}</string>
             <key>LSMinimumSystemVersion</key>
-            <string>10.15</string>
+            <string>12.0</string>
             <key>NSHighResolutionCapable</key>
             <true/>
         </dict>
@@ -84,7 +91,8 @@ jobs:
         EOF
         
         # Deploy Qt dependencies and create DMG
-        macdeployqt Vagyojaka.app -verbose=2 -dmg
+        # Using -always-overwrite to ensure all dependencies are properly updated
+        macdeployqt Vagyojaka.app -verbose=2 -dmg -always-overwrite
         
         # Rename DMG if this is a release
         if [[ $GITHUB_REF == refs/tags/* ]]; then

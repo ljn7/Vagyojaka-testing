@@ -10,7 +10,7 @@ on:
 
 jobs:
   build:
-    runs-on: macos-12
+    runs-on: macos-13
     
     env:
       QT_VERSION: "6.6.1"
@@ -18,17 +18,6 @@ jobs:
     
     steps:
     - uses: actions/checkout@v4
-
-    - name: Setup Intel Homebrew
-      run: |
-        cd /usr/local
-        sudo mkdir homebrew
-        sudo chown -R $(whoami) homebrew
-        curl -L https://github.com/Homebrew/brew/tarball/master | tar xz --strip 1 -C homebrew
-        eval "$(/usr/local/homebrew/bin/brew shellenv)"
-        brew update --force --quiet
-        echo "PATH=/usr/local/homebrew/bin:$PATH" >> $GITHUB_ENV
-        chmod -R g+rwx /usr/local/homebrew
 
     - name: Install Qt
       uses: jurplel/install-qt-action@v3
@@ -41,14 +30,11 @@ jobs:
 
     - name: Install dependencies
       run: |
+        brew update
         brew install cmake pkg-config
         brew install libgit2
         brew install fftw
         brew install ffmpeg
-
-    - name: Switch Xcode version
-      run: |
-        sudo xcode-select --switch /Applications/Xcode_15.2.app
 
     - name: Create build directory
       run: mkdir build
@@ -57,15 +43,11 @@ jobs:
       working-directory: ./build
       env:
         Qt6_DIR: ${{ env.Qt6_DIR }}
-        PKG_CONFIG_PATH: "/usr/local/homebrew/lib/pkgconfig"
       run: |
         cmake .. \
           -DCMAKE_BUILD_TYPE=Release \
           -DCMAKE_PREFIX_PATH=${{ env.Qt6_DIR }} \
-          -DCMAKE_OSX_DEPLOYMENT_TARGET=12.0 \
-          -DCMAKE_OSX_ARCHITECTURES="x86_64" \
-          -DCMAKE_LIBRARY_PATH="/usr/local/homebrew/lib" \
-          -DCMAKE_INCLUDE_PATH="/usr/local/homebrew/include"
+          -DCMAKE_OSX_DEPLOYMENT_TARGET=12.0
     
     - name: Build
       working-directory: ./build
@@ -105,14 +87,6 @@ jobs:
         
         # Deploy Qt dependencies and create DMG
         macdeployqt Vagyojaka.app -verbose=2 -dmg -always-overwrite
-        
-        # Copy required x86_64 libraries
-        mkdir -p Vagyojaka.app/Contents/Frameworks
-        for lib in libgit2 libfftw3 libavformat libavcodec libavutil libavdevice; do
-          if [ -f "/usr/local/homebrew/lib/${lib}*.dylib" ]; then
-            cp /usr/local/homebrew/lib/${lib}*.dylib Vagyojaka.app/Contents/Frameworks/
-          fi
-        done
         
         # Rename DMG if this is a release
         if [[ $GITHUB_REF == refs/tags/* ]]; then

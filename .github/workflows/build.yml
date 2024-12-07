@@ -61,8 +61,11 @@ jobs:
       run: |
         cd output
         
+        # Ensure proper permissions for the app bundle
+        sudo chmod -R 755 Vagyojaka.app
+        
         # Update Info.plist
-        cat > Vagyojaka.app/Contents/Info.plist << EOF
+        sudo tee Vagyojaka.app/Contents/Info.plist << EOF
         <?xml version="1.0" encoding="UTF-8"?>
         <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
         <plist version="1.0">
@@ -87,25 +90,9 @@ jobs:
         </plist>
         EOF
         
-        # Create frameworks directory if it doesn't exist
-        mkdir -p Vagyojaka.app/Contents/Frameworks
-        
-        # Function to copy library and its dependencies
-        copy_library() {
-          local lib=$1
-          if [ -f "$lib" ]; then
-            cp -L "$lib" Vagyojaka.app/Contents/Frameworks/
-            # Get dependencies
-            otool -L "$lib" | tail -n +2 | cut -d' ' -f1 | while read -r dep; do
-              if [[ "$dep" == @rpath/* ]] || [[ "$dep" == /usr/local/* ]]; then
-                local depname=$(basename "$dep")
-                if [ -f "/usr/local/lib/$depname" ]; then
-                  cp -L "/usr/local/lib/$depname" Vagyojaka.app/Contents/Frameworks/
-                fi
-              fi
-            done
-          fi
-        }
+        # Create frameworks directory with proper permissions
+        sudo mkdir -p Vagyojaka.app/Contents/Frameworks
+        sudo chmod 755 Vagyojaka.app/Contents/Frameworks
         
         # Copy FFmpeg and related libraries
         BREW_PREFIX=$(brew --prefix)
@@ -124,29 +111,35 @@ jobs:
           libjxl_cms.*.dylib \
           libgit2.*.dylib \
           libfftw3.*.dylib; do
-          find "$BREW_PREFIX" -name "$lib" -exec cp -L {} Vagyojaka.app/Contents/Frameworks/ \;
+          find "$BREW_PREFIX" -name "$lib" -exec sudo cp -p {} Vagyojaka.app/Contents/Frameworks/ \;
         done
         
         # Fix library paths
-        find Vagyojaka.app/Contents/Frameworks -name "*.dylib" -type f | while read -r lib; do
-          chmod u+w "$lib"
+        sudo find Vagyojaka.app/Contents/Frameworks -name "*.dylib" -type f | while read -r lib; do
+          sudo chmod 755 "$lib"
           # Fix ID
-          install_name_tool -id "@rpath/$(basename "$lib")" "$lib"
+          sudo install_name_tool -id "@rpath/$(basename "$lib")" "$lib"
           # Fix dependencies
           otool -L "$lib" | tail -n +2 | cut -d' ' -f1 | while read -r dep; do
-            if [[ "$dep" == /usr/local/* ]] || [[ "$dep" == @rpath/* ]]; then
-              local depname=$(basename "$dep")
-              install_name_tool -change "$dep" "@rpath/$depname" "$lib" || true
+            if [[ "$dep" == /usr/local/* ]] || [[ "$dep" == @rpath/* ]] || [[ "$dep" == /opt/homebrew/* ]]; then
+              depname=$(basename "$dep")
+              sudo install_name_tool -change "$dep" "@rpath/$depname" "$lib" || true
             fi
           done
         done
         
         # Run macdeployqt after fixing libraries
-        macdeployqt Vagyojaka.app -verbose=2 -dmg -always-overwrite
+        sudo macdeployqt Vagyojaka.app -verbose=2 -dmg -always-overwrite
+        
+        # Fix permissions of the final DMG
+        if [[ -f Vagyojaka.dmg ]]; then
+          sudo chmod 644 Vagyojaka.dmg
+        fi
         
         # Rename DMG if this is a release
         if [[ $GITHUB_REF == refs/tags/* ]]; then
-          mv Vagyojaka.dmg "Vagyojaka-${{ github.ref_name }}-macos.dmg"
+          sudo mv Vagyojaka.dmg "Vagyojaka-${{ github.ref_name }}-macos.dmg"
+          sudo chmod 644 "Vagyojaka-${{ github.ref_name }}-macos.dmg"
         fi
 
     - name: Upload artifact

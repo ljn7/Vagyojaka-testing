@@ -35,6 +35,8 @@ jobs:
         brew install libgit2
         brew install fftw
         brew install ffmpeg
+        brew install webp
+        brew install jpeg-xl
 
     - name: Create build directory
       run: mkdir build
@@ -85,7 +87,61 @@ jobs:
         </plist>
         EOF
         
-        # Deploy Qt dependencies and create DMG
+        # Create frameworks directory if it doesn't exist
+        mkdir -p Vagyojaka.app/Contents/Frameworks
+        
+        # Function to copy library and its dependencies
+        copy_library() {
+          local lib=$1
+          if [ -f "$lib" ]; then
+            cp -L "$lib" Vagyojaka.app/Contents/Frameworks/
+            # Get dependencies
+            otool -L "$lib" | tail -n +2 | cut -d' ' -f1 | while read -r dep; do
+              if [[ "$dep" == @rpath/* ]] || [[ "$dep" == /usr/local/* ]]; then
+                local depname=$(basename "$dep")
+                if [ -f "/usr/local/lib/$depname" ]; then
+                  cp -L "/usr/local/lib/$depname" Vagyojaka.app/Contents/Frameworks/
+                fi
+              fi
+            done
+          fi
+        }
+        
+        # Copy FFmpeg and related libraries
+        BREW_PREFIX=$(brew --prefix)
+        for lib in \
+          libavcodec.*.dylib \
+          libavdevice.*.dylib \
+          libavfilter.*.dylib \
+          libavformat.*.dylib \
+          libavutil.*.dylib \
+          libswresample.*.dylib \
+          libswscale.*.dylib \
+          libsharpyuv.*.dylib \
+          libwebp.*.dylib \
+          libwebpmux.*.dylib \
+          libjxl.*.dylib \
+          libjxl_cms.*.dylib \
+          libgit2.*.dylib \
+          libfftw3.*.dylib; do
+          find "$BREW_PREFIX" -name "$lib" -exec cp -L {} Vagyojaka.app/Contents/Frameworks/ \;
+        done
+        
+        # Fix library paths
+        find Vagyojaka.app/Contents/Frameworks -name "*.dylib" -type f | while read -r lib; do
+          chmod u+w "$lib"
+          # Fix ID
+          install_name_tool -id "@rpath/$(basename "$lib")" "$lib"
+          # Fix dependencies
+          otool -L "$lib" | tail -n +2 | cut -d' ' -f1 | while read -r dep; do
+            if [[ "$dep" == /usr/local/* ]] || [[ "$dep" == @rpath/* ]]; then
+              local depname=$(basename "$dep")
+              install_name_tool -change "$dep" "@rpath/$depname" "$lib" || true
+            fi
+          done
+        done
+        
+        # Run macdeployqt after fixing libraries
         macdeployqt Vagyojaka.app -verbose=2 -dmg -always-overwrite
         
         # Rename DMG if this is a release

@@ -10,7 +10,7 @@ on:
 
 jobs:
   build:
-    runs-on: macos-latest
+    runs-on: macos-12
     
     env:
       QT_VERSION: "6.6.1"
@@ -35,10 +35,6 @@ jobs:
         brew install fftw
         brew install ffmpeg
 
-    - name: Switch Xcode version
-      run: |
-        sudo xcode-select --switch /Applications/Xcode_15.2.app
-        
     - name: Create build directory
       run: mkdir build
     

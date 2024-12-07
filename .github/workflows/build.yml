@@ -13,7 +13,7 @@ jobs:
     runs-on: macos-latest
     
     env:
-      QT_VERSION: 6.6.1
+      QT_VERSION: "6.6.1"
     
     steps:
     - uses: actions/checkout@v4
@@ -22,10 +22,10 @@ jobs:
       uses: jurplel/install-qt-action@v3
       with:
         version: ${{ env.QT_VERSION }}
-        modules: 'qt5compat qtmultimedia qtshadertools qtpositioning qtbase'
+        modules: 'qtmultimedia qtpositioning qtwebchannel'
+        tools: 'tools_cmake tools_ninja'
+        cache: true
         aqtversion: '==3.1.*'
-        py7zrversion: '==0.20.*'
-        setup-python: true
 
     - name: Install dependencies
       run: |
@@ -34,21 +34,28 @@ jobs:
         brew install libgit2
         brew install fftw
         brew install ffmpeg
+
+    # Switch to correct Xcode version for Qt 6.6.1
+    - name: Switch Xcode version
+      run: |
+        sudo xcode-select --switch /Applications/Xcode_15.2.app
         
     - name: Create build directory
       run: mkdir build
     
     - name: Configure CMake
       working-directory: ./build
+      env:
+        Qt6_DIR: ${{ env.Qt6_DIR }}
       run: |
         cmake .. \
           -DCMAKE_BUILD_TYPE=Release \
-          -DCMAKE_PREFIX_PATH=${{ env.Qt6_DIR }} \
-          -DCMAKE_OSX_ARCHITECTURES="x86_64"
+          -DCMAKE_PREFIX_PATH=${{ env.Qt6_DIR }}
     
     - name: Build
       working-directory: ./build
-      run: cmake --build . --config Release -j$(sysctl -n hw.ncpu)
+      run: |
+        cmake --build . --config Release -j$(sysctl -n hw.ncpu)
     
     - name: Package
       working-directory: ./build/output
@@ -83,7 +90,7 @@ jobs:
         </plist>
         EOF
         
-        # Create DMG
+        # Deploy Qt dependencies and create DMG
         macdeployqt Vagyojaka.app -verbose=2 -dmg
         
         # Rename DMG if this is a release

@@ -19,11 +19,16 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - name: Install x86_64 Homebrew
+    - name: Setup Intel Homebrew
       run: |
-        /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-        echo "/usr/local/bin" >> $GITHUB_PATH
-        echo "HOMEBREW_PREFIX=/usr/local" >> $GITHUB_ENV
+        cd /usr/local
+        sudo mkdir homebrew
+        sudo chown -R $(whoami) homebrew
+        curl -L https://github.com/Homebrew/brew/tarball/master | tar xz --strip 1 -C homebrew
+        eval "$(/usr/local/homebrew/bin/brew shellenv)"
+        brew update --force --quiet
+        echo "PATH=/usr/local/homebrew/bin:$PATH" >> $GITHUB_ENV
+        chmod -R g+rwx /usr/local/homebrew
 
     - name: Install Qt
       uses: jurplel/install-qt-action@v3
@@ -36,12 +41,10 @@ jobs:
 
     - name: Install dependencies
       run: |
-        # Install x86_64 dependencies using /usr/local/bin/brew
-        /usr/local/bin/brew update
-        /usr/local/bin/brew install cmake pkg-config
-        /usr/local/bin/brew install libgit2
-        /usr/local/bin/brew install fftw
-        /usr/local/bin/brew install ffmpeg
+        brew install cmake pkg-config
+        brew install libgit2
+        brew install fftw
+        brew install ffmpeg
 
     - name: Switch Xcode version
       run: |
@@ -54,20 +57,20 @@ jobs:
       working-directory: ./build
       env:
         Qt6_DIR: ${{ env.Qt6_DIR }}
-        PKG_CONFIG_PATH: "/usr/local/lib/pkgconfig"
+        PKG_CONFIG_PATH: "/usr/local/homebrew/lib/pkgconfig"
       run: |
-        /usr/local/bin/cmake .. \
+        cmake .. \
           -DCMAKE_BUILD_TYPE=Release \
           -DCMAKE_PREFIX_PATH=${{ env.Qt6_DIR }} \
           -DCMAKE_OSX_DEPLOYMENT_TARGET=12.0 \
           -DCMAKE_OSX_ARCHITECTURES="x86_64" \
-          -DCMAKE_LIBRARY_PATH="/usr/local/lib" \
-          -DCMAKE_INCLUDE_PATH="/usr/local/include"
+          -DCMAKE_LIBRARY_PATH="/usr/local/homebrew/lib" \
+          -DCMAKE_INCLUDE_PATH="/usr/local/homebrew/include"
     
     - name: Build
       working-directory: ./build
       run: |
-        /usr/local/bin/cmake --build . --config Release -j$(sysctl -n hw.ncpu)
+        cmake --build . --config Release -j$(sysctl -n hw.ncpu)
     
     - name: Package
       working-directory: ./build
@@ -101,13 +104,13 @@ jobs:
         EOF
         
         # Deploy Qt dependencies and create DMG
-        /usr/local/bin/macdeployqt Vagyojaka.app -verbose=2 -dmg -always-overwrite
+        macdeployqt Vagyojaka.app -verbose=2 -dmg -always-overwrite
         
         # Copy required x86_64 libraries
         mkdir -p Vagyojaka.app/Contents/Frameworks
         for lib in libgit2 libfftw3 libavformat libavcodec libavutil libavdevice; do
-          if [ -f "/usr/local/lib/${lib}*.dylib" ]; then
-            cp /usr/local/lib/${lib}*.dylib Vagyojaka.app/Contents/Frameworks/
+          if [ -f "/usr/local/homebrew/lib/${lib}*.dylib" ]; then
+            cp /usr/local/homebrew/lib/${lib}*.dylib Vagyojaka.app/Contents/Frameworks/
           fi
         done
         

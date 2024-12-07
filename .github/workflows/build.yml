@@ -1,0 +1,126 @@
+name: MacOS Build
+
+on:
+  push:
+    branches: [ main ]
+    tags:
+      - 'v*'  # Push events to matching v*, i.e. v1.0, v20.15.10
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: macos-latest
+    
+    env:
+      QT_VERSION: 6.6.1
+    
+    steps:
+    - uses: actions/checkout@v4
+        
+    # Setup caching
+    - name: Cache Qt
+      id: cache-qt
+      uses: actions/cache@v3
+      with:
+        path: ${{ runner.workspace }}/Qt
+        key: ${{ runner.os }}-qt-${{ env.QT_VERSION }}
+        
+    - name: Cache Homebrew
+      id: cache-homebrew
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/Library/Caches/Homebrew
+          /usr/local/Cellar
+        key: ${{ runner.os }}-brew-${{ hashFiles('.github/workflows/macos-build.yml') }}
+        restore-keys: ${{ runner.os }}-brew-
+        
+    - name: Install Qt
+      uses: jurplel/install-qt-action@v3
+      with:
+        version: ${{ env.QT_VERSION }}
+        cache: true
+        modules: 'qtmultimedia qtnetwork qtprintsupport'
+    
+    - name: Install dependencies
+      run: |
+        brew update
+        brew install cmake pkg-config
+        brew install libgit2
+        brew install fftw
+        brew install ffmpeg
+        
+    - name: Create build directory
+      run: mkdir build
+    
+    - name: Configure CMake
+      working-directory: ./build
+      run: |
+        cmake .. \
+          -DCMAKE_BUILD_TYPE=Release \
+          -DCMAKE_PREFIX_PATH=${{ env.Qt6_DIR }} \
+          -DCMAKE_OSX_DEPLOYMENT_TARGET=10.15
+    
+    - name: Build
+      working-directory: ./build
+      run: cmake --build . --config Release -j$(sysctl -n hw.ncpu)
+    
+    - name: Prepare App Bundle
+      working-directory: ./build/output
+      run: |
+        mkdir -p Vagyojaka.app/Contents/Frameworks
+        mkdir -p Vagyojaka.app/Contents/MacOS
+        cp Vagyojaka Vagyojaka.app/Contents/MacOS/
+        
+        # Create Info.plist
+        cat > Vagyojaka.app/Contents/Info.plist << EOF
+        <?xml version="1.0" encoding="UTF-8"?>
+        <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+        <plist version="1.0">
+        <dict>
+            <key>CFBundleExecutable</key>
+            <string>Vagyojaka</string>
+            <key>CFBundleIconFile</key>
+            <string>AppIcon.icns</string>
+            <key>CFBundleIdentifier</key>
+            <string>com.vagyojaka.app</string>
+            <key>CFBundleName</key>
+            <string>Vagyojaka</string>
+            <key>CFBundlePackageType</key>
+            <string>APPL</string>
+            <key>CFBundleShortVersionString</key>
+            <string>${{ github.ref_name }}</string>
+            <key>LSMinimumSystemVersion</key>
+            <string>10.15</string>
+            <key>NSHighResolutionCapable</key>
+            <true/>
+        </dict>
+        </plist>
+        EOF
+        
+        # Deploy Qt dependencies
+        macdeployqt Vagyojaka.app -verbose=2 -dmg
+        
+        # Rename DMG to include version if this is a release
+        if [[ $GITHUB_REF == refs/tags/* ]]; then
+          mv Vagyojaka.dmg "Vagyojaka-${{ github.ref_name }}-macos.dmg"
+        fi
+
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: Vagyojaka-macOS
+        path: |
+          build/output/Vagyojaka-*-macos.dmg
+          build/output/Vagyojaka.app
+
+    # Create GitHub Release when a tag is pushed
+    - name: Create Release
+      if: startsWith(github.ref, 'refs/tags/')
+      uses: softprops/action-gh-release@v1
+      with:
+        files: build/output/Vagyojaka-*-macos.dmg
+        draft: false
+        prerelease: false
+        generate_release_notes: true

@@ -57,7 +57,8 @@ jobs:
         cmake .. \
           -DCMAKE_BUILD_TYPE=Release \
           -DCMAKE_PREFIX_PATH=${{ env.Qt6_DIR }} \
-          -DCMAKE_OSX_DEPLOYMENT_TARGET=12.0
+          -DCMAKE_OSX_DEPLOYMENT_TARGET=12.0 \
+          -DCMAKE_INSTALL_RPATH="@executable_path/../Frameworks"
     
     - name: Build
       working-directory: ./build
@@ -71,101 +72,65 @@ jobs:
         
         sudo chmod -R 755 Vagyojaka.app
         
-        sudo tee Vagyojaka.app/Contents/Info.plist << EOF
-        <?xml version="1.0" encoding="UTF-8"?>
-        <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-        <plist version="1.0">
-        <dict>
-            <key>CFBundleExecutable</key>
-            <string>Vagyojaka</string>
-            <key>CFBundleIconFile</key>
-            <string>AppIcon.icns</string>
-            <key>CFBundleIdentifier</key>
-            <string>com.vagyojaka.app</string>
-            <key>CFBundleName</key>
-            <string>Vagyojaka</string>
-            <key>CFBundlePackageType</key>
-            <string>APPL</string>
-            <key>CFBundleShortVersionString</key>
-            <string>${GITHUB_REF_NAME:-1.0.0}</string>
-            <key>LSMinimumSystemVersion</key>
-            <string>12.0</string>
-            <key>NSHighResolutionCapable</key>
-            <true/>
-        </dict>
-        </plist>
-        EOF
-        
+        # Create app bundle structure
         sudo mkdir -p Vagyojaka.app/Contents/Frameworks
+        sudo mkdir -p Vagyojaka.app/Contents/Plugins
         sudo chmod 755 Vagyojaka.app/Contents/Frameworks
+        sudo chmod 755 Vagyojaka.app/Contents/Plugins
         
-        # Copy all libraries and their dependencies
-        copy_libs() {
-          local lib="$1"
-          local dest="$2"
-          if [ -f "$lib" ]; then
-            sudo cp -p "$lib" "$dest/"
-            # Fix permissions
-            sudo chmod 755 "$dest/$(basename "$lib")"
-            # Get and copy dependencies
-            otool -L "$lib" | tail -n +2 | cut -d' ' -f1 | while read -r dep; do
-              if [[ "$dep" =~ ^(/usr/local/|/opt/homebrew/|@rpath/) ]]; then
-                local depname=$(basename "$dep")
-                for search_path in "/usr/local/lib" "/usr/local/opt/"*/lib "/opt/homebrew/lib" "/opt/homebrew/opt/"*/lib; do
-                  if [ -f "$search_path/$depname" ]; then
-                    copy_libs "$search_path/$depname" "$dest"
-                    break
-                  fi
-                done
-              fi
-            done
+        # Copy all dependencies from Homebrew
+        brew_libs=(
+            'ffmpeg'
+            'webp'
+            'jpeg-xl'
+            'sdl2'
+            'libsoxr'
+            'libgit2'
+            'fftw'
+        )
+        
+        for formula in "${brew_libs[@]}"; do
+          lib_path="$(brew --prefix $formula)/lib"
+          if [ -d "$lib_path" ]; then
+            sudo cp -a "$lib_path"/*.dylib Vagyojaka.app/Contents/Frameworks/ 2>/dev/null || true
           fi
-        }
-        
-        # List of libraries to copy
-        for lib in \
-          libavcodec.*.dylib \
-          libavdevice.*.dylib \
-          libavfilter.*.dylib \
-          libavformat.*.dylib \
-          libavutil.*.dylib \
-          libswresample.*.dylib \
-          libswscale.*.dylib \
-          libsharpyuv.*.dylib \
-          libwebp.*.dylib \
-          libwebpmux.*.dylib \
-          libjxl.*.dylib \
-          libjxl_cms.*.dylib \
-          libgit2.*.dylib \
-          libfftw3.*.dylib \
-          libsoxr.*.dylib \
-          libSDL2.*.dylib \
-          libX11.*.dylib \
-          libxcb.*.dylib \
-          libxcb-shm.*.dylib \
-          libxcb-shape.*.dylib \
-          libxcb-xfixes.*.dylib \
-          libXau.*.dylib \
-          libXdmcp.*.dylib \
-          libXext.*.dylib \
-          libXfixes.*.dylib; do
-          find "$(brew --prefix)" -name "$lib" -exec bash -c 'copy_libs "{}" "Vagyojaka.app/Contents/Frameworks"' \;
         done
         
         # Fix library paths
-        sudo find Vagyojaka.app/Contents/Frameworks -name "*.dylib" -type f | while read -r lib; do
-          sudo chmod 755 "$lib"
-          sudo install_name_tool -id "@rpath/$(basename "$lib")" "$lib"
-          otool -L "$lib" | tail -n +2 | cut -d' ' -f1 | while read -r dep; do
-            if [[ "$dep" =~ ^(/usr/local/|/opt/homebrew/|@rpath/) ]]; then
-              depname=$(basename "$dep")
-              sudo install_name_tool -change "$dep" "@rpath/$depname" "$lib" || true
+        frameworks_path="Vagyojaka.app/Contents/Frameworks"
+        executables=(
+          "Vagyojaka.app/Contents/MacOS/Vagyojaka"
+          "${frameworks_path}"/*.dylib
+        )
+        
+        for file in "${executables[@]}"; do
+          if [ -f "$file" ]; then
+            sudo chmod +w "$file"
+            
+            # Update the file's own ID if it's a dylib
+            if [[ "$file" == *.dylib ]]; then
+              sudo install_name_tool -id "@rpath/$(basename "$file")" "$file"
             fi
-          done
+            
+            # Update all dependencies
+            otool -L "$file" | tail -n +2 | while read -r line; do
+              dep=$(echo "$line" | awk '{print $1}')
+              base_dep=$(basename "$dep")
+              
+              if [[ "$dep" == /usr/local/* ]] || [[ "$dep" == /opt/homebrew/* ]] || [[ "$dep" == "@rpath/"* ]]; then
+                if [ -f "${frameworks_path}/${base_dep}" ]; then
+                  sudo install_name_tool -change "$dep" "@rpath/${base_dep}" "$file" || true
+                fi
+              fi
+            done
+          fi
         done
         
-        # Run macdeployqt after fixing libraries
-        sudo macdeployqt Vagyojaka.app -verbose=2 -dmg -always-overwrite
+        # Run macdeployqt
+        sudo macdeployqt Vagyojaka.app -verbose=2 -always-overwrite
+        
+        # Create DMG
+        sudo macdeployqt Vagyojaka.app -dmg
         
         if [[ -f Vagyojaka.dmg ]]; then
           sudo chmod 644 Vagyojaka.dmg

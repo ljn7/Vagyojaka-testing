@@ -35,7 +35,6 @@ jobs:
         brew install fftw
         brew install ffmpeg
 
-    # Switch to correct Xcode version for Qt 6.6.1
     - name: Switch Xcode version
       run: |
         sudo xcode-select --switch /Applications/Xcode_15.2.app
@@ -57,12 +56,27 @@ jobs:
       run: |
         cmake --build . --config Release -j$(sysctl -n hw.ncpu)
     
-    - name: Package
-      working-directory: ./build/output
+    - name: Find executable
+      working-directory: ./build
       run: |
+        echo "Looking for executable..."
+        find . -name "Vagyojaka" -type f -o -name "Vagyojaka.app"
+        
+    - name: Package
+      working-directory: ./build
+      run: |
+        # Create app bundle directory structure
         mkdir -p Vagyojaka.app/Contents/Frameworks
         mkdir -p Vagyojaka.app/Contents/MacOS
-        cp Vagyojaka Vagyojaka.app/Contents/MacOS/
+        
+        # Find and copy the executable
+        EXECUTABLE_PATH=$(find . -name "Vagyojaka" -type f)
+        if [ -z "$EXECUTABLE_PATH" ]; then
+          echo "Error: Could not find Vagyojaka executable"
+          exit 1
+        fi
+        echo "Found executable at: $EXECUTABLE_PATH"
+        cp "$EXECUTABLE_PATH" Vagyojaka.app/Contents/MacOS/
         
         # Create Info.plist
         cat > Vagyojaka.app/Contents/Info.plist << EOF
@@ -91,7 +105,7 @@ jobs:
         EOF
         
         # Deploy Qt dependencies and create DMG
-        macdeployqt Vagyojaka.app -verbose=2 -dmg
+        macdeployqt Vagyojava.app -verbose=2 -dmg
         
         # Rename DMG if this is a release
         if [[ $GITHUB_REF == refs/tags/* ]]; then
@@ -102,13 +116,15 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
         name: Vagyojaka-macOS
-        path: build/output/Vagyojaka*.dmg
+        path: |
+          build/Vagyojaka*.dmg
+          build/Vagyojaka.app
 
     - name: Create Release
       if: startsWith(github.ref, 'refs/tags/')
       uses: softprops/action-gh-release@v1
       with:
-        files: build/output/Vagyojaka*.dmg
+        files: build/Vagyojaka*.dmg
         draft: false
         prerelease: false
         generate_release_notes: true

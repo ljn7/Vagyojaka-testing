@@ -38,7 +38,7 @@ jobs:
         brew install webp
         brew install jpeg-xl
         brew install sdl2
-        brew install soxr
+        brew install libsoxr
         brew install libx11
         brew install libxcb
         brew install libxau
@@ -124,7 +124,31 @@ jobs:
         
         # List of libraries to copy
         for lib in \
-          lib{avcodec,avdevice,avfilter,avformat,avutil,swresample,swscale,sharpyuv,webp,webpmux,jxl,jxl_cms,git2,fftw3,soxr,SDL2,X11,xcb,xcb-shm,xcb-shape,xcb-xfixes,Xau,Xdmcp,Xext,Xfixes}.*.dylib; do
+          libavcodec.*.dylib \
+          libavdevice.*.dylib \
+          libavfilter.*.dylib \
+          libavformat.*.dylib \
+          libavutil.*.dylib \
+          libswresample.*.dylib \
+          libswscale.*.dylib \
+          libsharpyuv.*.dylib \
+          libwebp.*.dylib \
+          libwebpmux.*.dylib \
+          libjxl.*.dylib \
+          libjxl_cms.*.dylib \
+          libgit2.*.dylib \
+          libfftw3.*.dylib \
+          libsoxr.*.dylib \
+          libSDL2.*.dylib \
+          libX11.*.dylib \
+          libxcb.*.dylib \
+          libxcb-shm.*.dylib \
+          libxcb-shape.*.dylib \
+          libxcb-xfixes.*.dylib \
+          libXau.*.dylib \
+          libXdmcp.*.dylib \
+          libXext.*.dylib \
+          libXfixes.*.dylib; do
           find "$(brew --prefix)" -name "$lib" -exec bash -c 'copy_libs "{}" "Vagyojaka.app/Contents/Frameworks"' \;
         done
         

@@ -19,6 +19,12 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
+    - name: Install x86_64 Homebrew
+      run: |
+        /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+        echo "/usr/local/bin" >> $GITHUB_PATH
+        echo "HOMEBREW_PREFIX=/usr/local" >> $GITHUB_ENV
+
     - name: Install Qt
       uses: jurplel/install-qt-action@v3
       with:
@@ -30,12 +36,12 @@ jobs:
 
     - name: Install dependencies
       run: |
-        brew update
-        # Force x86_64 installation
-        arch -x86_64 brew install cmake pkg-config
-        arch -x86_64 brew install libgit2
-        arch -x86_64 brew install fftw
-        arch -x86_64 brew install ffmpeg
+        # Install x86_64 dependencies using /usr/local/bin/brew
+        /usr/local/bin/brew update
+        /usr/local/bin/brew install cmake pkg-config
+        /usr/local/bin/brew install libgit2
+        /usr/local/bin/brew install fftw
+        /usr/local/bin/brew install ffmpeg
 
     - name: Switch Xcode version
       run: |
@@ -48,11 +54,9 @@ jobs:
       working-directory: ./build
       env:
         Qt6_DIR: ${{ env.Qt6_DIR }}
-        # Use x86_64 library paths
-        LIBRARY_PATH: "/usr/local/lib"
         PKG_CONFIG_PATH: "/usr/local/lib/pkgconfig"
       run: |
-        cmake .. \
+        /usr/local/bin/cmake .. \
           -DCMAKE_BUILD_TYPE=Release \
           -DCMAKE_PREFIX_PATH=${{ env.Qt6_DIR }} \
           -DCMAKE_OSX_DEPLOYMENT_TARGET=12.0 \
@@ -63,7 +67,7 @@ jobs:
     - name: Build
       working-directory: ./build
       run: |
-        cmake --build . --config Release -j$(sysctl -n hw.ncpu)
+        /usr/local/bin/cmake --build . --config Release -j$(sysctl -n hw.ncpu)
     
     - name: Package
       working-directory: ./build
@@ -97,12 +101,14 @@ jobs:
         EOF
         
         # Deploy Qt dependencies and create DMG
-        macdeployqt Vagyojaka.app -verbose=2 -dmg -always-overwrite
+        /usr/local/bin/macdeployqt Vagyojaka.app -verbose=2 -dmg -always-overwrite
         
         # Copy required x86_64 libraries
         mkdir -p Vagyojaka.app/Contents/Frameworks
         for lib in libgit2 libfftw3 libavformat libavcodec libavutil libavdevice; do
-          cp /usr/local/lib/${lib}*.dylib Vagyojaka.app/Contents/Frameworks/
+          if [ -f "/usr/local/lib/${lib}*.dylib" ]; then
+            cp /usr/local/lib/${lib}*.dylib Vagyojaka.app/Contents/Frameworks/
+          fi
         done
         
         # Rename DMG if this is a release

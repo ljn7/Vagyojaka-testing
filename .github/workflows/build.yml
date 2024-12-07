@@ -31,10 +31,11 @@ jobs:
     - name: Install dependencies
       run: |
         brew update
-        brew install cmake pkg-config
-        brew install libgit2
-        brew install fftw
-        brew install ffmpeg
+        # Force x86_64 installation
+        arch -x86_64 brew install cmake pkg-config
+        arch -x86_64 brew install libgit2
+        arch -x86_64 brew install fftw
+        arch -x86_64 brew install ffmpeg
 
     - name: Switch Xcode version
       run: |
@@ -47,12 +48,17 @@ jobs:
       working-directory: ./build
       env:
         Qt6_DIR: ${{ env.Qt6_DIR }}
+        # Use x86_64 library paths
+        LIBRARY_PATH: "/usr/local/lib"
+        PKG_CONFIG_PATH: "/usr/local/lib/pkgconfig"
       run: |
         cmake .. \
           -DCMAKE_BUILD_TYPE=Release \
           -DCMAKE_PREFIX_PATH=${{ env.Qt6_DIR }} \
           -DCMAKE_OSX_DEPLOYMENT_TARGET=12.0 \
-          -DCMAKE_OSX_ARCHITECTURES="x86_64;arm64"
+          -DCMAKE_OSX_ARCHITECTURES="x86_64" \
+          -DCMAKE_LIBRARY_PATH="/usr/local/lib" \
+          -DCMAKE_INCLUDE_PATH="/usr/local/include"
     
     - name: Build
       working-directory: ./build
@@ -91,8 +97,13 @@ jobs:
         EOF
         
         # Deploy Qt dependencies and create DMG
-        # Using -always-overwrite to ensure all dependencies are properly updated
         macdeployqt Vagyojaka.app -verbose=2 -dmg -always-overwrite
+        
+        # Copy required x86_64 libraries
+        mkdir -p Vagyojaka.app/Contents/Frameworks
+        for lib in libgit2 libfftw3 libavformat libavcodec libavutil libavdevice; do
+          cp /usr/local/lib/${lib}*.dylib Vagyojaka.app/Contents/Frameworks/
+        done
         
         # Rename DMG if this is a release
         if [[ $GITHUB_REF == refs/tags/* ]]; then

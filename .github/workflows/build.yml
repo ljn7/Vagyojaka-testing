@@ -64,35 +64,39 @@ jobs:
       run: |
         cd output
         
-        # Ensure proper permissions
-        sudo chmod -R 755 Vagyojaka.app
-        sudo mkdir -p Vagyojaka.app/Contents/Frameworks
-        sudo chmod 755 Vagyojaka.app/Contents/Frameworks
+        # Create Frameworks directory if it doesn't exist
+        mkdir -p Vagyojaka.app/Contents/Frameworks
+        chmod 755 Vagyojaka.app/Contents/Frameworks
 
-        # Function to copy library and its dependencies
+        # Enhanced function to copy library and its dependencies
         copy_lib_with_deps() {
           local lib=$1
-          if [ ! -f "$lib" ]; then return; fi
+          if [ ! -f "$lib" ]; then 
+            echo "Warning: Library $lib not found"
+            return 
+          fi
           
           local basename=$(basename "$lib")
           local dest="Vagyojaka.app/Contents/Frameworks/$basename"
           
           # Copy the library if not already copied
           if [ ! -f "$dest" ]; then
-            sudo cp -P "$lib" "Vagyojaka.app/Contents/Frameworks/"
-            sudo chmod 755 "$dest"
+            echo "Copying $lib to $dest"
+            cp -P "$lib" "Vagyojaka.app/Contents/Frameworks/"
+            chmod 755 "$dest"
             
             # Fix the library's ID
-            sudo install_name_tool -id "@rpath/$basename" "$dest"
+            install_name_tool -id "@rpath/$basename" "$dest"
             
             # Process dependencies
-            for dep in $(otool -L "$lib" | tail -n +2 | awk '{print $1}' | grep -E '^(/usr/local/|/opt/homebrew/)'); do
+            otool -L "$lib" | tail -n +2 | awk '{print $1}' | grep -E '^(/usr/local/|/opt/homebrew/)' | while read dep; do
               local depbase=$(basename "$dep")
-              sudo install_name_tool -change "$dep" "@rpath/$depbase" "$dest"
+              install_name_tool -change "$dep" "@rpath/$depbase" "$dest"
               
-              # Recursively process dependencies
+              # Search for dependencies in multiple locations
               for prefix in /usr/local/lib /opt/homebrew/lib /usr/local/opt/*/lib /opt/homebrew/opt/*/lib; do
                 if [ -f "$prefix/$depbase" ]; then
+                  echo "Found dependency $depbase in $prefix"
                   copy_lib_with_deps "$prefix/$depbase"
                   break
                 fi
@@ -101,29 +105,36 @@ jobs:
           fi
         }
 
-        # Copy all required libraries
-        for formula in ffmpeg webp jpeg-xl sdl2 libsoxr libgit2 fftw; do
+        # Explicitly copy FFmpeg libraries first
+        for lib in $(find $(brew --prefix ffmpeg)/lib -name "*.dylib"); do
+          echo "Processing FFmpeg library: $lib"
+          copy_lib_with_deps "$lib"
+        done
+
+        # Copy other required libraries
+        for formula in webp jpeg-xl sdl2 libsoxr libgit2 fftw; do
+          echo "Processing formula: $formula"
           prefix=$(brew --prefix $formula)
-          for lib in "$prefix"/lib/*.dylib; do
+          find "$prefix/lib" -name "*.dylib" -type f | while read lib; do
             copy_lib_with_deps "$lib"
           done
         done
 
         # Fix executable's library references
-        sudo chmod 755 Vagyojaka.app/Contents/MacOS/Vagyojaka
-        for dep in $(otool -L Vagyojaka.app/Contents/MacOS/Vagyojaka | tail -n +2 | awk '{print $1}' | grep -E '^(/usr/local/|/opt/homebrew/)'); do
-          sudo install_name_tool -change "$dep" "@rpath/$(basename "$dep")" Vagyojaka.app/Contents/MacOS/Vagyojaka
+        chmod 755 Vagyojaka.app/Contents/MacOS/Vagyojaka
+        otool -L Vagyojaka.app/Contents/MacOS/Vagyojaka | tail -n +2 | awk '{print $1}' | grep -E '^(/usr/local/|/opt/homebrew/)' | while read dep; do
+          install_name_tool -change "$dep" "@rpath/$(basename "$dep")" Vagyojaka.app/Contents/MacOS/Vagyojaka
         done
 
-        # Run macdeployqt twice to ensure all Qt dependencies are properly handled
-        sudo macdeployqt Vagyojaka.app -verbose=2 -always-overwrite
-        sudo macdeployqt Vagyojaka.app -verbose=2 -dmg -always-overwrite
+        # Run macdeployqt
+        macdeployqt Vagyojaka.app -verbose=2 -always-overwrite
+        macdeployqt Vagyojaka.app -verbose=2 -dmg -always-overwrite
 
         if [[ -f Vagyojaka.dmg ]]; then
-          sudo chmod 644 Vagyojaka.dmg
+          chmod 644 Vagyojaka.dmg
           if [[ $GITHUB_REF == refs/tags/* ]]; then
-            sudo mv Vagyojaka.dmg "Vagyojaka-${{ github.ref_name }}-macos.dmg"
-            sudo chmod 644 "Vagyojaka-${{ github.ref_name }}-macos.dmg"
+            mv Vagyojaka.dmg "Vagyojaka-${{ github.ref_name }}-macos.dmg"
+            chmod 644 "Vagyojaka-${{ github.ref_name }}-macos.dmg"
           fi
         fi
 

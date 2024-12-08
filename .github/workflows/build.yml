@@ -64,9 +64,22 @@ jobs:
       run: |
         cd output
         
-        # Create Frameworks directory if it doesn't exist
-        mkdir -p Vagyojaka.app/Contents/Frameworks
-        chmod 755 Vagyojaka.app/Contents/Frameworks
+        # Verify app exists and set up directory structure
+        if [ ! -d "Vagyojaka.app" ]; then
+          echo "Error: Vagyojaka.app not found"
+          exit 1
+        fi
+        
+        # Create and verify Frameworks directory
+        mkdir -p "Vagyojaka.app/Contents/Frameworks"
+        if [ ! -d "Vagyojaka.app/Contents/Frameworks" ]; then
+          echo "Error: Failed to create Frameworks directory"
+          exit 1
+        fi
+        
+        # Set permissions
+        chmod -R 755 "Vagyojaka.app"
+        chmod 755 "Vagyojaka.app/Contents/Frameworks"
 
         # Enhanced function to copy library and its dependencies
         copy_lib_with_deps() {
@@ -79,14 +92,35 @@ jobs:
           local basename=$(basename "$lib")
           local dest="Vagyojaka.app/Contents/Frameworks/$basename"
           
+          echo "Attempting to copy $lib to $dest"
+          
+          # Create parent directories if they don't exist
+          mkdir -p "$(dirname "$dest")"
+          
           # Copy the library if not already copied
           if [ ! -f "$dest" ]; then
-            echo "Copying $lib to $dest"
-            cp -P "$lib" "Vagyojaka.app/Contents/Frameworks/"
-            chmod 755 "$dest"
+            # Use cp -f to force copy and -P to preserve links
+            cp -f -P "$lib" "Vagyojaka.app/Contents/Frameworks/" || {
+              echo "Error: Failed to copy $lib to Frameworks directory"
+              return 1
+            }
+            
+            # Verify the copy succeeded
+            if [ ! -f "$dest" ]; then
+              echo "Error: File $dest does not exist after copy"
+              return 1
+            }
+            
+            chmod 755 "$dest" || {
+              echo "Error: Failed to set permissions on $dest"
+              return 1
+            }
             
             # Fix the library's ID
-            install_name_tool -id "@rpath/$basename" "$dest"
+            install_name_tool -id "@rpath/$basename" "$dest" || {
+              echo "Error: Failed to update library ID for $dest"
+              return 1
+            }
             
             # Process dependencies
             otool -L "$lib" | tail -n +2 | awk '{print $1}' | grep -E '^(/usr/local/|/opt/homebrew/)' | while read dep; do
@@ -105,10 +139,26 @@ jobs:
           fi
         }
 
+        # List current directory contents for debugging
+        echo "Current directory contents:"
+        ls -la
+        
+        echo "Vagyojaka.app contents:"
+        ls -la Vagyojaka.app
+        
+        echo "Contents directory contents:"
+        ls -la Vagyojaka.app/Contents
+        
         # Explicitly copy FFmpeg libraries first
-        for lib in $(find $(brew --prefix ffmpeg)/lib -name "*.dylib"); do
+        echo "Copying FFmpeg libraries..."
+        ffmpeg_prefix=$(brew --prefix ffmpeg)
+        echo "FFmpeg prefix: $ffmpeg_prefix"
+        find "$ffmpeg_prefix/lib" -name "*.dylib" -type f | while read lib; do
           echo "Processing FFmpeg library: $lib"
-          copy_lib_with_deps "$lib"
+          copy_lib_with_deps "$lib" || {
+            echo "Error: Failed to process $lib"
+            exit 1
+          }
         done
 
         # Copy other required libraries
@@ -116,14 +166,22 @@ jobs:
           echo "Processing formula: $formula"
           prefix=$(brew --prefix $formula)
           find "$prefix/lib" -name "*.dylib" -type f | while read lib; do
-            copy_lib_with_deps "$lib"
+            copy_lib_with_deps "$lib" || {
+              echo "Error: Failed to process $lib"
+              exit 1
+            }
           done
         done
 
-        # Fix executable's library references
-        chmod 755 Vagyojaka.app/Contents/MacOS/Vagyojaka
-        otool -L Vagyojaka.app/Contents/MacOS/Vagyojaka | tail -n +2 | awk '{print $1}' | grep -E '^(/usr/local/|/opt/homebrew/)' | while read dep; do
-          install_name_tool -change "$dep" "@rpath/$(basename "$dep")" Vagyojaka.app/Contents/MacOS/Vagyojaka
+        # Verify and fix executable's library references
+        if [ ! -f "Vagyojaka.app/Contents/MacOS/Vagyojaka" ]; then
+          echo "Error: Executable not found"
+          exit 1
+        fi
+        
+        chmod 755 "Vagyojaka.app/Contents/MacOS/Vagyojaka"
+        otool -L "Vagyojaka.app/Contents/MacOS/Vagyojaka" | tail -n +2 | awk '{print $1}' | grep -E '^(/usr/local/|/opt/homebrew/)' | while read dep; do
+          install_name_tool -change "$dep" "@rpath/$(basename "$dep")" "Vagyojaka.app/Contents/MacOS/Vagyojaka"
         done
 
         # Run macdeployqt

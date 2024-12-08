@@ -64,60 +64,119 @@ jobs:
       run: |
         cd output
         
-        # Setup app structure
-        mkdir -p Vagyojaka.app/Contents/Frameworks
-        chmod -R 755 Vagyojaka.app
+        echo "Current directory: $(pwd)"
+        echo "Directory contents:"
+        ls -la
         
-        # Function to copy libraries
+        # Setup app structure
+        if [ ! -d "Vagyojaka.app" ]; then
+          echo "Error: Vagyojaka.app not found"
+          exit 1
+        fi
+        
+        echo "Creating Frameworks directory..."
+        mkdir -p "Vagyojaka.app/Contents/Frameworks"
+        
+        echo "Setting initial permissions..."
+        chmod -R 755 "Vagyojaka.app"
+        
+        # Function to copy libraries with debug info
         copy_lib_with_deps() {
           local lib=$1
-          [ ! -f "$lib" ] && return
+          
+          if [ ! -f "$lib" ]; then
+            echo "Warning: Library $lib not found"
+            return 0
+          fi
           
           local basename=$(basename "$lib")
           local dest="Vagyojaka.app/Contents/Frameworks/$basename"
           
+          echo "Processing library: $lib"
+          echo "Destination: $dest"
+          
           if [ ! -f "$dest" ]; then
-            cp -f -P "$lib" "Vagyojaka.app/Contents/Frameworks/"
-            chmod 755 "$dest"
+            echo "Copying $lib to Frameworks directory..."
+            cp -v -f -p "$lib" "Vagyojaka.app/Contents/Frameworks/" || {
+              echo "Error: Failed to copy $lib"
+              echo "Source exists: $([ -f "$lib" ] && echo "Yes" || echo "No")"
+              echo "Destination dir exists: $([ -d "Vagyojaka.app/Contents/Frameworks" ] && echo "Yes" || echo "No")"
+              ls -la "$(dirname "$lib")"
+              return 1
+            }
+            
+            if [ ! -f "$dest" ]; then
+              echo "Error: File not found after copy: $dest"
+              return 1
+            fi
+            
+            echo "Setting permissions for $dest"
+            chmod 755 "$dest" || {
+              echo "Error: Failed to set permissions on $dest"
+              return 1
+            }
+            
+            echo "Updating library ID for $dest"
             install_name_tool -id "@rpath/$basename" "$dest"
             
-            otool -L "$lib" | tail -n +2 | awk '{print $1}' | grep -E '^(/usr/local/|/opt/homebrew/)' | while read dep; do
+            echo "Processing dependencies for $dest"
+            otool -L "$dest" | tail -n +2 | awk '{print $1}' | grep -E '^(/usr/local/|/opt/homebrew/)' | while read dep; do
               local depbase=$(basename "$dep")
+              echo "Updating dependency path: $dep -> @rpath/$depbase"
               install_name_tool -change "$dep" "@rpath/$depbase" "$dest"
               
               for prefix in /usr/local/lib /opt/homebrew/lib /usr/local/opt/*/lib /opt/homebrew/opt/*/lib; do
-                [ -f "$prefix/$depbase" ] && copy_lib_with_deps "$prefix/$depbase"
+                if [ -f "$prefix/$depbase" ]; then
+                  echo "Found dependency: $prefix/$depbase"
+                  copy_lib_with_deps "$prefix/$depbase"
+                  break
+                fi
               done
             done
+          else
+            echo "Library $basename already exists in Frameworks"
           fi
         }
 
-        # Copy FFmpeg libraries
-        for lib in $(find "$(brew --prefix ffmpeg)/lib" -name "*.dylib"); do
+        # First verify FFmpeg installation
+        echo "FFmpeg prefix: $(brew --prefix ffmpeg)"
+        echo "FFmpeg libraries:"
+        ls -la "$(brew --prefix ffmpeg)/lib"
+        
+        # Copy FFmpeg libraries with extra verification
+        echo "Copying FFmpeg libraries..."
+        for lib in $(find "$(brew --prefix ffmpeg)/lib" -name "*.dylib" -type f); do
+          echo "Found FFmpeg library: $lib"
           copy_lib_with_deps "$lib"
         done
 
-        # Copy other libraries
+        # Process other libraries
         for formula in webp jpeg-xl sdl2 libsoxr libgit2 fftw; do
-          for lib in $(find "$(brew --prefix $formula)/lib" -name "*.dylib"); do
+          echo "Processing $formula libraries..."
+          prefix=$(brew --prefix $formula)
+          echo "$formula prefix: $prefix"
+          for lib in $(find "$prefix/lib" -name "*.dylib" -type f); do
             copy_lib_with_deps "$lib"
           done
         done
 
-        # Fix executable references
-        chmod 755 Vagyojaka.app/Contents/MacOS/Vagyojaka
-        otool -L Vagyojaka.app/Contents/MacOS/Vagyojaka | tail -n +2 | awk '{print $1}' | grep -E '^(/usr/local/|/opt/homebrew/)' | while read dep; do
-          install_name_tool -change "$dep" "@rpath/$(basename "$dep")" Vagyojaka.app/Contents/MacOS/Vagyojaka
+        echo "Setting up executable..."
+        chmod 755 "Vagyojaka.app/Contents/MacOS/Vagyojaka"
+        
+        echo "Fixing executable library references..."
+        otool -L "Vagyojaka.app/Contents/MacOS/Vagyojaka" | tail -n +2 | awk '{print $1}' | grep -E '^(/usr/local/|/opt/homebrew/)' | while read dep; do
+          install_name_tool -change "$dep" "@rpath/$(basename "$dep")" "Vagyojaka.app/Contents/MacOS/Vagyojaka"
         done
 
-        # Create DMG
+        echo "Running macdeployqt..."
         macdeployqt Vagyojaka.app -verbose=2 -always-overwrite
         macdeployqt Vagyojaka.app -verbose=2 -dmg -always-overwrite
 
-        # Handle DMG for release
         if [ -f Vagyojaka.dmg ]; then
           chmod 644 Vagyojaka.dmg
-          [ "$GITHUB_REF" = refs/tags/* ] && mv Vagyojaka.dmg "Vagyojaka-${{ github.ref_name }}-macos.dmg"
+          if [[ $GITHUB_REF == refs/tags/* ]]; then
+            mv Vagyojaka.dmg "Vagyojaka-${{ github.ref_name }}-macos.dmg"
+          fi
         fi
 
     - name: Upload artifact

@@ -28,18 +28,39 @@ jobs:
         cache: true
         aqtversion: '==3.1.*'
 
+    - name: Prepare environment
+      run: |
+        brew cleanup
+        brew update-reset
+    
     - name: Install dependencies
       run: |
         brew update
         brew install cmake pkg-config
         brew install libgit2
         brew install fftw
-        brew install ffmpeg
+        brew install ffmpeg || {
+          echo "FFmpeg installation failed, retrying with verbose output"
+          brew install -v ffmpeg
+          if [ $? -ne 0 ]; then
+            echo "FFmpeg installation failed again"
+            brew doctor
+            exit 1
+          fi
+        }
         brew install webp
         brew install jpeg-xl
         brew install sdl2
         brew install libsoxr
-
+    - name: Verify dependencies
+      run: |
+        echo "Checking installed dependencies..."
+        for pkg in ffmpeg libgit2 fftw webp jpeg-xl sdl2 libsoxr; do
+          echo "Verifying $pkg..."
+          brew list $pkg || exit 1
+          echo "$pkg is properly installed"
+        done
+        
     - name: Create build directory
       run: mkdir build
     

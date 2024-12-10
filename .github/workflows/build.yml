@@ -211,7 +211,7 @@ jobs:
             if ! otool -L "$dest" >/dev/null 2>&1; then
               echo "Error: Library $dest corrupted after modification"
               return 1
-            }
+            fi
             
             echo "Processing dependencies for $dest"
             otool -L "$dest" | tail -n +2 | awk '{print $1}' | grep -E '^(/usr/local/|/opt/homebrew/)' | while read dep; do

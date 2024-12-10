@@ -53,13 +53,13 @@ jobs:
         PACKAGES=(
           "cmake"
           "pkg-config"
-          "libgit2@1.7.1"
-          "fftw@3.3.10"
-          "ffmpeg@6.1"
+          "libgit2@1.7"
+          "fftw"
+          "ffmpeg@6"
           "webp@1.3.2"
-          "jpeg-xl@0.8.2"
-          "sdl2@2.28.5"
-          "libsoxr@0.1.3"
+          "jpeg-xl"
+          "sdl2"
+          "libsoxr"
         )
         
         for package in "${PACKAGES[@]}"; do

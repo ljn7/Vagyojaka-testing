@@ -49,13 +49,12 @@ jobs:
     - name: Install dependencies
       run: |
         brew update
-        # Install with specific versions for reproducibility
         PACKAGES=(
           "cmake"
           "pkg-config"
-          "libgit2@1.7"
+          "libgit2"
           "fftw"
-          "ffmpeg@6"
+          "ffmpeg"
           "webp"
           "jpeg-xl"
           "sdl2"
@@ -88,17 +87,7 @@ jobs:
             BREW_PREFIX="/usr/local"
           fi
           
-          case $pkg in
-            "ffmpeg@6")
-              lib_path="$BREW_PREFIX/opt/ffmpeg@6/lib"
-              ;;
-            "libgit2")
-              lib_path="$BREW_PREFIX/opt/libgit2@1.7/lib"
-              ;;
-            *)
-              lib_path="$BREW_PREFIX/Cellar/$pkg/*/lib"
-              ;;
-          esac
+          lib_path="$BREW_PREFIX/opt/$pkg/lib"
           
           echo "Checking $pkg"
           echo "Looking in path: $lib_path"
@@ -116,7 +105,7 @@ jobs:
         }
         
         # Check each package
-        for pkg in ffmpeg@6 libgit2 fftw webp sdl2 libsoxr; do
+        for pkg in ffmpeg libgit2 fftw webp sdl2 libsoxr; do
           check_lib_files "$pkg" || exit 1
         done
         

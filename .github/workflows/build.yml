@@ -76,6 +76,7 @@ jobs:
         done
 
     - name: Verify dependencies
+      shell: bash 
       run: |
         echo "Checking installed dependencies..."
         declare -A VERSION_CHECK=(

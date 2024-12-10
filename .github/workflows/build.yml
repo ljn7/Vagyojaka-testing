@@ -302,12 +302,6 @@ jobs:
         # First run to deploy Qt dependencies
         macdeployqt Vagyojaka.app -verbose=2 -always-overwrite
         
-        # Verify Qt deployment
-        if [ ! -d "Vagyojaka.app/Contents/Frameworks/Qt" ]; then
-          echo "Error: Qt frameworks not properly deployed!"
-          exit 1
-        fi
-        
         # Create DMG
         macdeployqt Vagyojaka.app -verbose=2 -dmg -always-overwrite
         

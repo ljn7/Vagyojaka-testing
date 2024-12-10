@@ -80,7 +80,6 @@ jobs:
         echo "Checking library files..."
         check_lib_files() {
           local pkg=$1
-          local brew_formula=$2
           local lib_path
           
           if [ -d "/opt/homebrew" ]; then
@@ -89,23 +88,23 @@ jobs:
             BREW_PREFIX="/usr/local"
           fi
           
-          case $brew_formula in
-            "ffmpeg@6")
+          case $pkg in
+            "ffmpeg")
               lib_path="$BREW_PREFIX/opt/ffmpeg@6/lib"
               ;;
             *)
-              lib_path="$BREW_PREFIX/Cellar/$brew_formula/*/lib"
+              lib_path="$BREW_PREFIX/Cellar/$pkg/*/lib"
               ;;
           esac
           
-          echo "Checking $pkg using formula $brew_formula"
+          echo "Checking $pkg"
           echo "Looking in path: $lib_path"
           lib_files=$(find $lib_path -name "*.dylib" -type f 2>/dev/null)
           if [ -z "$lib_files" ]; then
             echo "❌ No library files found for $pkg!"
             echo "Brew install location: $(brew --prefix)"
             echo "Trying to locate package..."
-            brew list $brew_formula --verbose || echo "Failed to list package"
+            brew list $pkg --verbose || echo "Failed to list package"
             return 1
           else
             echo "✅ Library files found for $pkg:"
@@ -113,19 +112,9 @@ jobs:
           fi
         }
         
-        # Define package-to-formula mappings
-        declare -A packages=(
-          ["ffmpeg"]="ffmpeg@6"
-          ["libgit2"]="libgit2"
-          ["fftw"]="fftw"
-          ["webp"]="webp"
-          ["sdl2"]="sdl2"
-          ["libsoxr"]="libsoxr"
-        )
-        
-        for pkg in "${!packages[@]}"; do
-          formula="${packages[$pkg]}"
-          check_lib_files "$pkg" "$formula" || exit 1
+        # Check each package
+        for pkg in ffmpeg@6 libgit2 fftw webp sdl2 libsoxr; do
+          check_lib_files "$pkg" || exit 1
         done
         
     - name: Create build directory

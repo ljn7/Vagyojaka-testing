@@ -15,15 +15,25 @@ jobs:
     env:
       QT_VERSION: "6.6.1"
       MACOSX_DEPLOYMENT_TARGET: "12.0"
+      HOMEBREW_NO_AUTO_UPDATE: 1  # Prevent auto-updates during build
+      HOMEBREW_NO_INSTALL_CLEANUP: 1  # Prevent cleanup during build
     
     steps:
     - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Full history for versioning
+
+    - name: Setup ccache
+      uses: hendrikmuhs/ccache-action@v1.2
+      with:
+        key: ${{ runner.os }}-ccache-${{ github.sha }}
+        restore-keys: ${{ runner.os }}-ccache-
 
     - name: Install Qt
       uses: jurplel/install-qt-action@v4.1.1
       with:
         version: ${{ env.QT_VERSION }}
-        modules: 'qtmultimedia qtpositioning qtwebchannel'
+        modules: 'qtmultimedia qtpositioning qtwebchannel qtshadertools'
         tools: 'tools_cmake tools_ninja'
         cache: true
         aqtversion: '==3.1.*'
@@ -32,54 +42,93 @@ jobs:
       run: |
         brew cleanup
         brew update-reset
-    
+        # Pin versions to ensure reproducibility
+        brew pin ffmpeg
+        brew pin qt
+        
     - name: Install dependencies
       run: |
         brew update
-        brew install cmake pkg-config
-        brew install libgit2
-        brew install fftw
-        brew install ffmpeg || {
-          echo "FFmpeg installation failed, retrying with verbose output"
-          brew install -v ffmpeg
-          if [ $? -ne 0 ]; then
-            echo "FFmpeg installation failed again"
-            brew doctor
-            exit 1
-          fi
-        }
-        brew install webp
-        brew install jpeg-xl
-        brew install sdl2
-        brew install libsoxr
+        # Install with specific versions for reproducibility
+        PACKAGES=(
+          "cmake"
+          "pkg-config"
+          "libgit2@1.7.1"
+          "fftw@3.3.10"
+          "ffmpeg@6.1"
+          "webp@1.3.2"
+          "jpeg-xl@0.8.2"
+          "sdl2@2.28.5"
+          "libsoxr@0.1.3"
+        )
+        
+        for package in "${PACKAGES[@]}"; do
+          echo "Installing $package..."
+          brew install $package || {
+            echo "Failed to install $package, retrying with verbose output"
+            brew install -v $package
+            if [ $? -ne 0 ]; then
+              echo "Installation failed for $package"
+              brew doctor
+              exit 1
+            fi
+          }
+        done
+
     - name: Verify dependencies
       run: |
         echo "Checking installed dependencies..."
-        for pkg in ffmpeg libgit2 fftw webp jpeg-xl sdl2 libsoxr; do
+        declare -A VERSION_CHECK=(
+          ["ffmpeg"]="ffmpeg -version | head -n1"
+          ["libgit2"]="pkg-config --modversion libgit2"
+          ["fftw"]="pkg-config --modversion fftw3"
+          ["webp"]="pkg-config --modversion libwebp"
+          ["sdl2"]="sdl2-config --version"
+          ["libsoxr"]="pkg-config --modversion soxr"
+        )
+        
+        for pkg in "${!VERSION_CHECK[@]}"; do
           echo "Verifying $pkg..."
-          brew list $pkg || exit 1
-          echo "$pkg is properly installed"
+          if ! brew list $pkg > /dev/null 2>&1; then
+            echo "❌ $pkg is not installed!"
+            exit 1
+          fi
+          
+          version_cmd="${VERSION_CHECK[$pkg]}"
+          version=$(eval $version_cmd 2>/dev/null || echo "unknown")
+          echo "✅ $pkg is installed (version: $version)"
+          
+          # Verify library files exist
+          lib_files=$(find "$(brew --prefix $pkg)/lib" -name "*.dylib" -type f)
+          if [ -z "$lib_files" ]; then
+            echo "❌ No library files found for $pkg!"
+            exit 1
+          fi
         done
         
     - name: Create build directory
-      run: mkdir build
+      run: mkdir -p build
     
     - name: Configure CMake
       working-directory: ./build
       env:
         Qt6_DIR: ${{ env.Qt6_DIR }}
+        CMAKE_BUILD_PARALLEL_LEVEL: $(sysctl -n hw.ncpu)
       run: |
         cmake .. \
           -DCMAKE_BUILD_TYPE=Release \
           -DCMAKE_PREFIX_PATH=${{ env.Qt6_DIR }} \
           -DCMAKE_OSX_DEPLOYMENT_TARGET=12.0 \
-          -DCMAKE_INSTALL_RPATH="@executable_path/../Frameworks"
+          -DCMAKE_INSTALL_RPATH="@executable_path/../Frameworks" \
+          -DCMAKE_C_COMPILER_LAUNCHER=ccache \
+          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
+          -DCMAKE_INSTALL_PREFIX=/usr/local
     
     - name: Build
       working-directory: ./build
       run: |
         cmake --build . --config Release -j$(sysctl -n hw.ncpu)
-    
+        
     - name: Package
       working-directory: ./build
       run: |
@@ -101,9 +150,10 @@ jobs:
         echo "Setting initial permissions..."
         chmod -R 755 "Vagyojaka.app"
         
-        # Function to copy libraries with debug info
+        # Function to copy libraries with debug info and signature verification
         copy_lib_with_deps() {
           local lib=$1
+          local processed_libs=()
           
           if [ ! -f "$lib" ]; then
             echo "Warning: Library $lib not found"
@@ -113,16 +163,30 @@ jobs:
           local basename=$(basename "$lib")
           local dest="Vagyojaka.app/Contents/Frameworks/$basename"
           
+          # Check if we've already processed this library
+          if [[ " ${processed_libs[@]} " =~ " ${basename} " ]]; then
+            echo "Library $basename already processed, skipping..."
+            return 0
+          fi
+          
+          processed_libs+=("$basename")
+          
           echo "Processing library: $lib"
           echo "Destination: $dest"
           
           if [ ! -f "$dest" ]; then
             echo "Copying $lib to Frameworks directory..."
+            
+            # Verify library integrity
+            if ! otool -L "$lib" >/dev/null 2>&1; then
+              echo "Error: Library $lib failed integrity check"
+              return 1
+            }
+            
             cp -v -f -p "$lib" "Vagyojaka.app/Contents/Frameworks/" || {
               echo "Error: Failed to copy $lib"
               echo "Source exists: $([ -f "$lib" ] && echo "Yes" || echo "No")"
               echo "Destination dir exists: $([ -d "Vagyojaka.app/Contents/Frameworks" ] && echo "Yes" || echo "No")"
-              ls -la "$(dirname "$lib")"
               return 1
             }
             
@@ -140,12 +204,19 @@ jobs:
             echo "Updating library ID for $dest"
             install_name_tool -id "@rpath/$basename" "$dest"
             
+            # Verify the library is not corrupted after modification
+            if ! otool -L "$dest" >/dev/null 2>&1; then
+              echo "Error: Library $dest corrupted after modification"
+              return 1
+            }
+            
             echo "Processing dependencies for $dest"
             otool -L "$dest" | tail -n +2 | awk '{print $1}' | grep -E '^(/usr/local/|/opt/homebrew/)' | while read dep; do
               local depbase=$(basename "$dep")
               echo "Updating dependency path: $dep -> @rpath/$depbase"
               install_name_tool -change "$dep" "@rpath/$depbase" "$dest"
               
+              # Handle nested dependencies
               for prefix in /usr/local/lib /opt/homebrew/lib /usr/local/opt/*/lib /opt/homebrew/opt/*/lib; do
                 if [ -f "$prefix/$depbase" ]; then
                   echo "Found dependency: $prefix/$depbase"
@@ -159,24 +230,28 @@ jobs:
           fi
         }
 
-        # First verify FFmpeg installation
+        # Verify and copy FFmpeg libraries
         echo "FFmpeg prefix: $(brew --prefix ffmpeg)"
         echo "FFmpeg libraries:"
         ls -la "$(brew --prefix ffmpeg)/lib"
         
-        # Copy FFmpeg libraries with extra verification
+        # Copy FFmpeg libraries with verification
         echo "Copying FFmpeg libraries..."
-        for lib in $(find "$(brew --prefix ffmpeg)/lib" -name "*.dylib" -type f); do
+        find "$(brew --prefix ffmpeg)/lib" -name "*.dylib" -type f | while read lib; do
           echo "Found FFmpeg library: $lib"
           copy_lib_with_deps "$lib"
         done
 
-        # Process other libraries
+        # Process other libraries with version checking
         for formula in webp jpeg-xl sdl2 libsoxr libgit2 fftw; do
           echo "Processing $formula libraries..."
           prefix=$(brew --prefix $formula)
           echo "$formula prefix: $prefix"
-          for lib in $(find "$prefix/lib" -name "*.dylib" -type f); do
+          if [ ! -d "$prefix/lib" ]; then
+            echo "Error: Library directory for $formula not found!"
+            exit 1
+          fi
+          find "$prefix/lib" -name "*.dylib" -type f | while read lib; do
             copy_lib_with_deps "$lib"
           done
         done
@@ -189,15 +264,34 @@ jobs:
           install_name_tool -change "$dep" "@rpath/$(basename "$dep")" "Vagyojaka.app/Contents/MacOS/Vagyojaka"
         done
 
-        echo "Running macdeployqt..."
-        macdeployqt Vagyojaka.app -verbose=2 -always-overwrite
-        macdeployqt Vagyojaka.app -verbose=2 -dmg -always-overwrite
+        # Verify all libraries are properly linked
+        echo "Verifying library linkage..."
+        if ! otool -L "Vagyojaka.app/Contents/MacOS/Vagyojaka" | grep -q "^@rpath/"; then
+          echo "Error: Not all libraries are properly linked with @rpath"
+          exit 1
+        fi
 
+        echo "Running macdeployqt..."
+        # First run to deploy Qt dependencies
+        macdeployqt Vagyojaka.app -verbose=2 -always-overwrite
+        
+        # Verify Qt deployment
+        if [ ! -d "Vagyojaka.app/Contents/Frameworks/Qt" ]; then
+          echo "Error: Qt frameworks not properly deployed!"
+          exit 1
+        fi
+        
+        # Create DMG
+        macdeployqt Vagyojaka.app -verbose=2 -dmg -always-overwrite
+        
         if [ -f Vagyojaka.dmg ]; then
           chmod 644 Vagyojaka.dmg
           if [[ $GITHUB_REF == refs/tags/* ]]; then
             mv Vagyojaka.dmg "Vagyojaka-${{ github.ref_name }}-macos.dmg"
           fi
+        else
+          echo "Error: DMG file was not created!"
+          exit 1
         fi
 
     - name: Upload artifact

@@ -75,16 +75,35 @@ jobs:
           }
         done
         
-        # Verify library files exist
+    - name: Check Libraries
+      run: |
         echo "Checking library files..."
-        for pkg in ffmpeg libgit2 fftw webp sdl2 libsoxr; do
-          lib_files=$(find "$(brew --prefix $pkg)/lib" -name "*.dylib" -type f)
+        check_lib_files() {
+          local pkg=$1
+          local lib_path
+          
+          case $pkg in
+            "ffmpeg")
+              lib_path="$(brew --prefix ffmpeg@6)/lib"
+              ;;
+            *)
+              lib_path="$(brew --prefix $pkg)/lib"
+              ;;
+          esac
+          
+          echo "Checking $pkg in $lib_path"
+          lib_files=$(find "$lib_path" -name "*.dylib" -type f 2>/dev/null)
           if [ -z "$lib_files" ]; then
-            echo "❌ No library files found for $pkg!"
-            exit 1
+            echo "❌ No library files found for $pkg in $lib_path!"
+            return 1
           else
-            echo "✅ Library files found for $pkg"
+            echo "✅ Library files found for $pkg:"
+            echo "$lib_files"
           fi
+        }
+        
+        for pkg in ffmpeg libgit2 fftw webp sdl2 libsoxr; do
+          check_lib_files "$pkg" || exit 1
         done
         
         echo "All dependency checks passed!"

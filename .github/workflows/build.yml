@@ -151,15 +151,37 @@ jobs:
         # First run to deploy Qt dependencies
         macdeployqt Vagyojaka.app -verbose=2 -always-overwrite
 
-        echo "Running macdeployqtfix..."
-        curl -O https://raw.githubusercontent.com/arl/macdeployqtfix/master/macdeployqtfix.py
-        python3 macdeployqtfix.py \
-          "Vagyojaka.app/Contents/MacOS/Vagyojaka" \
-          "${{ env.Qt6_DIR }}" \
-          -v
+        # echo "Running macdeployqtfix..."
+        # curl -O https://raw.githubusercontent.com/arl/macdeployqtfix/master/macdeployqtfix.py
+        # python3 macdeployqtfix.py \
+        #   "Vagyojaka.app/Contents/MacOS/Vagyojaka" \
+        #   "${{ env.Qt6_DIR }}" \
+        #   -v
+
+        # Install dylibbundler
+        brew install dylibbundler
+
+        echo "Running dylibbundler..."
+        # -x targets the executable
+        # -b creates the bundle directory
+        # -d specifies where to copy the libraries
+        # -p @executable_path/../Frameworks/ sets the path where libraries will be searched
+        # -of shows what operations are being performed
+        dylibbundler -x "Vagyojaka.app/Contents/MacOS/Vagyojaka" \
+                 -b \
+                 -d "Vagyojaka.app/Contents/Frameworks/" \
+                 -p @executable_path/../Frameworks/ \
+                 -of
         
         # Create DMG
         macdeployqt Vagyojaka.app -verbose=2 -dmg -always-overwrite
+
+        # Show what libraries were bundled
+        echo "Checking Frameworks contents:"
+        ls -la "Vagyojaka.app/Contents/Frameworks/"
+        
+        echo "Checking library dependencies:"
+        otool -L "Vagyojaka.app/Contents/MacOS/Vagyojaka
         
         if [ -f Vagyojaka.dmg ]; then
           chmod 644 Vagyojaka.dmg

@@ -89,8 +89,11 @@ jobs:
           fi
           
           case $pkg in
-            "ffmpeg")
+            "ffmpeg@6")
               lib_path="$BREW_PREFIX/opt/ffmpeg@6/lib"
+              ;;
+            "libgit2")
+              lib_path="$BREW_PREFIX/opt/libgit2@1.7/lib"
               ;;
             *)
               lib_path="$BREW_PREFIX/Cellar/$pkg/*/lib"

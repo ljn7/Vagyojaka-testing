@@ -184,32 +184,32 @@ jobs:
         # otool -L "Vagyojaka.app/Contents/MacOS/Vagyojaka
 
         # Download deployqtmacx script
-    echo "Downloading deployqtmacx..."
-    curl -O https://raw.githubusercontent.com/e2se/deployqtmacx/main/deployqtmacx.sh
-    chmod +x deployqtmacx.sh
-    
-    # First run with simulation to check what will happen
-    echo "Running simulation..."
-    ./deployqtmacx.sh Vagyojaka.app --verbose --simulate \
-      -qt-path "${{ env.Qt6_DIR }}" \
-      -framework-path "${{ env.Qt6_DIR }}/lib" \
-      -plugins-path "${{ env.Qt6_DIR }}/plugins" \
-      -environment brew \
-      -system intel \
-      -qt-version 6.6.1 \
-      -plugins "platforms,styles,multimedia,tls,imageformats,networkinformation"
-    
-      # If simulation looks good, run the actual deployment
-      echo "Running actual deployment..."
-      ./deployqtmacx.sh Vagyojaka.app --verbose \
-        -qt-path "${{ env.Qt6_DIR }}" \
-        -framework-path "${{ env.Qt6_DIR }}/lib" \
-        -plugins-path "${{ env.Qt6_DIR }}/plugins" \
-        -environment brew \
-        -system intel \
-        -qt-version 6.6.1 \
-        -plugins "platforms,styles,multimedia,tls,imageformats,networkinformation"
-      
+        echo "Downloading deployqtmacx..."
+        curl -O https://raw.githubusercontent.com/e2se/deployqtmacx/main/deployqtmacx.sh
+        chmod +x deployqtmacx.sh
+        
+        # First run with simulation to check what will happen
+        echo "Running simulation..."
+        ./deployqtmacx.sh Vagyojaka.app --verbose --simulate \
+          -qt-path "${{ env.Qt6_DIR }}" \
+          -framework-path "${{ env.Qt6_DIR }}/lib" \
+          -plugins-path "${{ env.Qt6_DIR }}/plugins" \
+          -environment brew \
+          -system intel \
+          -qt-version 6.6.1 \
+          -plugins "platforms,styles,multimedia,tls,imageformats,networkinformation"
+        
+        # If simulation looks good, run the actual deployment
+        echo "Running actual deployment..."
+        ./deployqtmacx.sh Vagyojaka.app --verbose \
+          -qt-path "${{ env.Qt6_DIR }}" \
+          -framework-path "${{ env.Qt6_DIR }}/lib" \
+          -plugins-path "${{ env.Qt6_DIR }}/plugins" \
+          -environment brew \
+          -system intel \
+          -qt-version 6.6.1 \
+          -plugins "platforms,styles,multimedia,tls,imageformats,networkinformation"
+        
         echo "Checking library dependencies..."
         otool -L "Vagyojaka.app/Contents/MacOS/Vagyojaka"
         

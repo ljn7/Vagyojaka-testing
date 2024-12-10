@@ -137,51 +137,94 @@ jobs:
       run: |
         cd output
         
-        echo "Current directory: $(pwd)"
-        echo "Directory contents:"
-        ls -la
+        # echo "Current directory: $(pwd)"
+        # echo "Directory contents:"
+        # ls -la
         
-        # Setup app structure
-        if [ ! -d "Vagyojaka.app" ]; then
-          echo "Error: Vagyojaka.app not found"
-          exit 1
-        fi
+        # # Setup app structure
+        # if [ ! -d "Vagyojaka.app" ]; then
+        #   echo "Error: Vagyojaka.app not found"
+        #   exit 1
+        # fi
 
-        echo "Running macdeployqt..."
-        # First run to deploy Qt dependencies
-        macdeployqt Vagyojaka.app -verbose=2 -always-overwrite
+        # echo "Running macdeployqt..."
+        # # First run to deploy Qt dependencies
+        # macdeployqt Vagyojaka.app -verbose=2 -always-overwrite
 
-        # echo "Running macdeployqtfix..."
-        # curl -O https://raw.githubusercontent.com/arl/macdeployqtfix/master/macdeployqtfix.py
-        # python3 macdeployqtfix.py \
-        #   "Vagyojaka.app/Contents/MacOS/Vagyojaka" \
-        #   "${{ env.Qt6_DIR }}" \
-        #   -v
+        # # echo "Running macdeployqtfix..."
+        # # curl -O https://raw.githubusercontent.com/arl/macdeployqtfix/master/macdeployqtfix.py
+        # # python3 macdeployqtfix.py \
+        # #   "Vagyojaka.app/Contents/MacOS/Vagyojaka" \
+        # #   "${{ env.Qt6_DIR }}" \
+        # #   -v
 
-        # Install dylibbundler
-        brew install dylibbundler
+        # # Install dylibbundler
+        # brew install dylibbundler
 
-        echo "Running dylibbundler..."
-        # -x targets the executable
-        # -b creates the bundle directory
-        # -d specifies where to copy the libraries
-        # -p @executable_path/../Frameworks/ sets the path where libraries will be searched
-        # -of shows what operations are being performed
-        dylibbundler -x "Vagyojaka.app/Contents/MacOS/Vagyojaka" \
-                 -b \
-                 -d "Vagyojaka.app/Contents/Frameworks/" \
-                 -p @executable_path/../Frameworks/ \
-                 -of
+        # echo "Running dylibbundler..."
+        # # -x targets the executable
+        # # -b creates the bundle directory
+        # # -d specifies where to copy the libraries
+        # # -p @executable_path/../Frameworks/ sets the path where libraries will be searched
+        # # -of shows what operations are being performed
+        # dylibbundler -x "Vagyojaka.app/Contents/MacOS/Vagyojaka" \
+        #          -b \
+        #          -d "Vagyojaka.app/Contents/Frameworks/" \
+        #          -p @executable_path/../Frameworks/ \
+        #          -of
         
-        # Create DMG
-        macdeployqt Vagyojaka.app -verbose=2 -dmg -always-overwrite
+        # # Create DMG
+        # macdeployqt Vagyojaka.app -verbose=2 -dmg -always-overwrite
 
-        # Show what libraries were bundled
+        # # Show what libraries were bundled
+        # echo "Checking Frameworks contents:"
+        # ls -la "Vagyojaka.app/Contents/Frameworks/"
+        
+        # echo "Checking library dependencies:"
+        # otool -L "Vagyojaka.app/Contents/MacOS/Vagyojaka
+
+        # Download deployqtmacx script
+    echo "Downloading deployqtmacx..."
+    curl -O https://raw.githubusercontent.com/e2se/deployqtmacx/main/deployqtmacx.sh
+    chmod +x deployqtmacx.sh
+    
+    # First run with simulation to check what will happen
+    echo "Running simulation..."
+    ./deployqtmacx.sh Vagyojaka.app --verbose --simulate \
+      -qt-path "${{ env.Qt6_DIR }}" \
+      -framework-path "${{ env.Qt6_DIR }}/lib" \
+      -plugins-path "${{ env.Qt6_DIR }}/plugins" \
+      -environment brew \
+      -system intel \
+      -qt-version 6.6.1 \
+      -plugins "platforms,styles,multimedia,tls,imageformats,networkinformation"
+    
+      # If simulation looks good, run the actual deployment
+      echo "Running actual deployment..."
+      ./deployqtmacx.sh Vagyojaka.app --verbose \
+        -qt-path "${{ env.Qt6_DIR }}" \
+        -framework-path "${{ env.Qt6_DIR }}/lib" \
+        -plugins-path "${{ env.Qt6_DIR }}/plugins" \
+        -environment brew \
+        -system intel \
+        -qt-version 6.6.1 \
+        -plugins "platforms,styles,multimedia,tls,imageformats,networkinformation"
+      
+        echo "Checking library dependencies..."
+        otool -L "Vagyojaka.app/Contents/MacOS/Vagyojaka"
+        
         echo "Checking Frameworks contents:"
         ls -la "Vagyojaka.app/Contents/Frameworks/"
         
-        echo "Checking library dependencies:"
-        otool -L "Vagyojaka.app/Contents/MacOS/Vagyojaka
+        # Create DMG using hdiutil directly
+        echo "Creating DMG..."
+        if [[ $GITHUB_REF == refs/tags/* ]]; then
+          DMG_NAME="Vagyojaka-${{ github.ref_name }}-macos.dmg"
+        else
+          DMG_NAME="Vagyojaka.dmg"
+        fi
+        
+        hdiutil create -volname "Vagyojaka" -srcfolder "Vagyojaka.app" -ov -format UDZO "$DMG_NAME"
         
         if [ -f Vagyojaka.dmg ]; then
           chmod 644 Vagyojaka.dmg

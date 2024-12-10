@@ -82,12 +82,19 @@ jobs:
           local pkg=$1
           local lib_path
           
+          # Handle ARM64 vs Intel paths
+          if [ -d "/opt/homebrew" ]; then
+            BREW_PREFIX="/opt/homebrew"
+          else
+            BREW_PREFIX="/usr/local"
+          fi
+          
           case $pkg in
             "ffmpeg")
-              lib_path="$(brew --prefix ffmpeg@6)/lib"
+              lib_path="$BREW_PREFIX/opt/ffmpeg@6/lib"
               ;;
             *)
-              lib_path="$(brew --prefix $pkg)/lib"
+              lib_path="$BREW_PREFIX/opt/$pkg/lib"
               ;;
           esac
           
@@ -95,6 +102,9 @@ jobs:
           lib_files=$(find "$lib_path" -name "*.dylib" -type f 2>/dev/null)
           if [ -z "$lib_files" ]; then
             echo "❌ No library files found for $pkg in $lib_path!"
+            echo "Brew install location: $(brew --prefix)"
+            echo "Package location: $(brew --prefix $pkg)"
+            ls -la "$BREW_PREFIX/opt/$pkg" || echo "Directory not accessible"
             return 1
           else
             echo "✅ Library files found for $pkg:"
@@ -105,8 +115,6 @@ jobs:
         for pkg in ffmpeg libgit2 fftw webp sdl2 libsoxr; do
           check_lib_files "$pkg" || exit 1
         done
-        
-        echo "All dependency checks passed!"
         
     - name: Create build directory
       run: mkdir -p build

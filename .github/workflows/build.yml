@@ -76,36 +76,96 @@ jobs:
         done
 
     - name: Verify dependencies
-      shell: bash 
       run: |
         echo "Checking installed dependencies..."
-        declare -A VERSION_CHECK=(
-          ["ffmpeg"]="ffmpeg -version | head -n1"
-          ["libgit2"]="pkg-config --modversion libgit2"
-          ["fftw"]="pkg-config --modversion fftw3"
-          ["webp"]="pkg-config --modversion libwebp"
-          ["sdl2"]="sdl2-config --version"
-          ["libsoxr"]="pkg-config --modversion soxr"
-        )
         
-        for pkg in "${!VERSION_CHECK[@]}"; do
-          echo "Verifying $pkg..."
-          if ! brew list $pkg > /dev/null 2>&1; then
-            echo "❌ $pkg is not installed!"
-            exit 1
+        check_ffmpeg() {
+          echo "Verifying ffmpeg..."
+          if brew list ffmpeg > /dev/null 2>&1; then
+            version=$(ffmpeg -version | head -n1)
+            echo "✅ ffmpeg is installed ($version)"
+          else
+            echo "❌ ffmpeg is not installed!"
+            return 1
           fi
-          
-          version_cmd="${VERSION_CHECK[$pkg]}"
-          version=$(eval $version_cmd 2>/dev/null || echo "unknown")
-          echo "✅ $pkg is installed (version: $version)"
-          
-          # Verify library files exist
+        }
+        
+        check_libgit2() {
+          echo "Verifying libgit2..."
+          if brew list libgit2 > /dev/null 2>&1; then
+            version=$(pkg-config --modversion libgit2 2>/dev/null || echo "unknown")
+            echo "✅ libgit2 is installed ($version)"
+          else
+            echo "❌ libgit2 is not installed!"
+            return 1
+          fi
+        }
+        
+        check_fftw() {
+          echo "Verifying fftw..."
+          if brew list fftw > /dev/null 2>&1; then
+            version=$(pkg-config --modversion fftw3 2>/dev/null || echo "unknown")
+            echo "✅ fftw is installed ($version)"
+          else
+            echo "❌ fftw is not installed!"
+            return 1
+          fi
+        }
+        
+        check_webp() {
+          echo "Verifying webp..."
+          if brew list webp > /dev/null 2>&1; then
+            version=$(pkg-config --modversion libwebp 2>/dev/null || echo "unknown")
+            echo "✅ webp is installed ($version)"
+          else
+            echo "❌ webp is not installed!"
+            return 1
+          fi
+        }
+        
+        check_sdl2() {
+          echo "Verifying sdl2..."
+          if brew list sdl2 > /dev/null 2>&1; then
+            version=$(sdl2-config --version 2>/dev/null || echo "unknown")
+            echo "✅ sdl2 is installed ($version)"
+          else
+            echo "❌ sdl2 is not installed!"
+            return 1
+          fi
+        }
+        
+        check_libsoxr() {
+          echo "Verifying libsoxr..."
+          if brew list libsoxr > /dev/null 2>&1; then
+            version=$(pkg-config --modversion soxr 2>/dev/null || echo "unknown")
+            echo "✅ libsoxr is installed ($version)"
+          else
+            echo "❌ libsoxr is not installed!"
+            return 1
+          fi
+        }
+        
+        # Run all checks
+        check_ffmpeg || exit 1
+        check_libgit2 || exit 1
+        check_fftw || exit 1
+        check_webp || exit 1
+        check_sdl2 || exit 1
+        check_libsoxr || exit 1
+        
+        # Verify library files exist
+        echo "Checking library files..."
+        for pkg in ffmpeg libgit2 fftw webp sdl2 libsoxr; do
           lib_files=$(find "$(brew --prefix $pkg)/lib" -name "*.dylib" -type f)
           if [ -z "$lib_files" ]; then
             echo "❌ No library files found for $pkg!"
             exit 1
+          else
+            echo "✅ Library files found for $pkg"
           fi
         done
+        
+        echo "All dependency checks passed!"
         
     - name: Create build directory
       run: mkdir -p build

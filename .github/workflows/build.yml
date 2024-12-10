@@ -301,6 +301,13 @@ jobs:
         echo "Running macdeployqt..."
         # First run to deploy Qt dependencies
         macdeployqt Vagyojaka.app -verbose=2 -always-overwrite
+
+        echo "Running macdeployqtfix..."
+        curl -O https://raw.githubusercontent.com/arl/macdeployqtfix/master/macdeployqtfix.py
+        python3 macdeployqtfix.py \
+          "Vagyojaka.app/Contents/MacOS/Vagyojaka" \
+          "${{ env.Qt6_DIR }}" \
+          -v
         
         # Create DMG
         macdeployqt Vagyojaka.app -verbose=2 -dmg -always-overwrite

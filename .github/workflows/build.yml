@@ -184,7 +184,7 @@ jobs:
             if ! otool -L "$lib" >/dev/null 2>&1; then
               echo "Error: Library $lib failed integrity check"
               return 1
-            }
+            fi
             
             cp -v -f -p "$lib" "Vagyojaka.app/Contents/Frameworks/" || {
               echo "Error: Failed to copy $lib"

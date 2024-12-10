@@ -259,19 +259,43 @@ jobs:
           done
         done
 
-        echo "Setting up executable..."
+        # echo "Setting up executable..."
         chmod 755 "Vagyojaka.app/Contents/MacOS/Vagyojaka"
         
-        echo "Fixing executable library references..."
-        otool -L "Vagyojaka.app/Contents/MacOS/Vagyojaka" | tail -n +2 | awk '{print $1}' | grep -E '^(/usr/local/|/opt/homebrew/)' | while read dep; do
-          install_name_tool -change "$dep" "@rpath/$(basename "$dep")" "Vagyojaka.app/Contents/MacOS/Vagyojaka"
+        echo "Current library dependencies:"
+        otool -L "Vagyojaka.app/Contents/MacOS/Vagyojaka"
+        
+        # More comprehensive dependency fixing
+        otool -L "Vagyojaka.app/Contents/MacOS/Vagyojaka" | tail -n +2 | while read -r line; do
+            lib=$(echo "$line" | awk '{print $1}')
+            
+            # Skip system libraries and already fixed @rpath entries
+            if [[ "$lib" =~ ^@rpath/ ]] || [[ "$lib" =~ ^/System/ ]] || [[ "$lib" =~ ^/usr/lib/ ]]; then
+                continue
+            fi
+            
+            # Handle both /usr/local and /opt/homebrew paths
+            if [[ "$lib" =~ ^(/usr/local/|/opt/homebrew/) ]]; then
+                basename=$(basename "$lib")
+                echo "Fixing reference: $lib -> @rpath/$basename"
+                install_name_tool -change "$lib" "@rpath/$basename" "Vagyojaka.app/Contents/MacOS/Vagyojaka"
+            fi
         done
-
-        # Verify all libraries are properly linked
-        echo "Verifying library linkage..."
-        if ! otool -L "Vagyojaka.app/Contents/MacOS/Vagyojaka" | grep -q "^@rpath/"; then
-          echo "Error: Not all libraries are properly linked with @rpath"
-          exit 1
+        
+        # Add rpath to the executable if not already present
+        echo "Adding @rpath..."
+        install_name_tool -add_rpath "@executable_path/../Frameworks" "Vagyojaka.app/Contents/MacOS/Vagyojaka" || true
+        
+        # Verify changes
+        echo "Verifying final library linkage..."
+        otool -L "Vagyojaka.app/Contents/MacOS/Vagyojaka"
+        
+        # More detailed verification
+        if ! otool -L "Vagyojaka.app/Contents/MacOS/Vagyojaka" | grep -q "^[[:space:]]*@rpath/"; then
+            echo "Error: No @rpath libraries found in executable"
+            echo "Current library paths:"
+            otool -L "Vagyojaka.app/Contents/MacOS/Vagyojaka"
+            exit 1
         fi
 
         echo "Running macdeployqt..."

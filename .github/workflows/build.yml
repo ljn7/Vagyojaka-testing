@@ -136,87 +136,108 @@ jobs:
       working-directory: ./build
       run: |
         cd output
+         
+        # Create Python script to fix library paths
+        cat > fix_libs.py << 'EOL'
+        from pathlib import Path
+        import sys
+        import subprocess
+        import shutil
+        from collections import deque
+    
+        def fix_libraries(bundle_path):
+            framework_path = Path(bundle_path) / 'Contents' / 'Frameworks'
+            framework_path.mkdir(parents=True, exist_ok=True)
+            
+            # Track processed libraries
+            framework_libs = set()
+            libs_to_fix = deque()
+            
+            # Initial library scan
+            for lib in Path(bundle_path).glob('**/*.dylib'):
+                libs_to_fix.append(lib)
+            for lib in Path(bundle_path).glob('**/*.so'):
+                libs_to_fix.append(lib)
+    
+            while libs_to_fix:
+                lib = libs_to_fix.popleft()
+                print(f"Processing: {lib}")
+                
+                # Get library dependencies
+                result = subprocess.check_output(['otool', '-L', str(lib)], stderr=subprocess.STDOUT).decode('utf-8')
+                
+                for line in result.splitlines()[1:]:  # Skip first line (library ID)
+                    dep = line.strip().split()[0]
+                    
+                    # Handle different path cases
+                    if any(dep.startswith(prefix) for prefix in ['/usr/local', '/opt/homebrew']):
+                        dep_path = Path(dep.split(' (compatibility')[0])
+                        if dep_path.name not in framework_libs:
+                            # Copy library if it exists
+                            brew_paths = [
+                                Path('/opt/homebrew'),
+                                Path('/usr/local')
+                            ]
+                            
+                            for brew_path in brew_paths:
+                                possible_paths = [
+                                    brew_path / 'lib' / dep_path.name,
+                                    brew_path / 'opt/webp/lib' / dep_path.name,
+                                    brew_path / 'opt/jpeg-xl/lib' / dep_path.name,
+                                    brew_path / 'opt/ffmpeg/lib' / dep_path.name
+                                ]
+                                
+                                for path in possible_paths:
+                                    if path.exists():
+                                        print(f"Copying {path} to {framework_path}")
+                                        shutil.copy2(str(path), str(framework_path))
+                                        framework_libs.add(dep_path.name)
+                                        libs_to_fix.append(framework_path / dep_path.name)
+                                        break
+                        
+                    # Handle @loader_path cases
+                    elif '@loader_path' in dep:
+                        dep_path = Path(dep.split(' (compatibility')[0])
+                        rel_path = str(dep_path).replace('@loader_path/../../../../', '')
+                        actual_path = Path('/opt/homebrew') / rel_path
+                        
+                        if actual_path.exists() and dep_path.name not in framework_libs:
+                            print(f"Copying {actual_path} to {framework_path}")
+                            shutil.copy2(str(actual_path), str(framework_path))
+                            framework_libs.add(dep_path.name)
+                            libs_to_fix.append(framework_path / dep_path.name)
+    
+        if __name__ == '__main__':
+            if len(sys.argv) != 2:
+                print("Usage: python3 fix_libs.py <app-bundle-path>")
+                sys.exit(1)
+            fix_libraries(sys.argv[1])
+        EOL
         
-        # echo "Current directory: $(pwd)"
-        # echo "Directory contents:"
-        # ls -la
+        # Run our fix script first
+        echo "Running library fix script..."
+        python3 fix_libs.py "Vagyojaka.app"
         
-        # # Setup app structure
-        # if [ ! -d "Vagyojaka.app" ]; then
-        #   echo "Error: Vagyojaka.app not found"
-        #   exit 1
-        # fi
-
-        # echo "Running macdeployqt..."
-        # # First run to deploy Qt dependencies
-        # macdeployqt Vagyojaka.app -verbose=2 -always-overwrite
-
-        # # echo "Running macdeployqtfix..."
-        # # curl -O https://raw.githubusercontent.com/arl/macdeployqtfix/master/macdeployqtfix.py
-        # # python3 macdeployqtfix.py \
-        # #   "Vagyojaka.app/Contents/MacOS/Vagyojaka" \
-        # #   "${{ env.Qt6_DIR }}" \
-        # #   -v
-
-        # # Install dylibbundler
-        # brew install dylibbundler
-
-        # echo "Running dylibbundler..."
-        # # -x targets the executable
-        # # -b creates the bundle directory
-        # # -d specifies where to copy the libraries
-        # # -p @executable_path/../Frameworks/ sets the path where libraries will be searched
-        # # -of shows what operations are being performed
-        # dylibbundler -x "Vagyojaka.app/Contents/MacOS/Vagyojaka" \
-        #          -b \
-        #          -d "Vagyojaka.app/Contents/Frameworks/" \
-        #          -p @executable_path/../Frameworks/ \
-        #          -of
+        # Run initial macdeployqt
+        echo "Running initial macdeployqt..."
+        macdeployqt Vagyojaka.app -verbose=2
         
-        # # Create DMG
-        # macdeployqt Vagyojaka.app -verbose=2 -dmg -always-overwrite
-
-        # # Show what libraries were bundled
-        # echo "Checking Frameworks contents:"
-        # ls -la "Vagyojaka.app/Contents/Frameworks/"
+        # Run macdeployqtfix
+        echo "Running macdeployqtfix..."
+        curl -O https://raw.githubusercontent.com/arl/macdeployqtfix/master/macdeployqtfix.py
+        python3 macdeployqtfix.py \
+          "Vagyojaka.app/Contents/MacOS/Vagyojaka" \
+          "${{ env.Qt6_DIR }}" \
+          -v
         
-        # echo "Checking library dependencies:"
-        # otool -L "Vagyojaka.app/Contents/MacOS/Vagyojaka
-
-        # Download deployqtmacx script
-        echo "Downloading deployqtmacx..."
-        curl -O https://raw.githubusercontent.com/e2se/deployqtmacx/main/deployqtmacx.sh
-        chmod +x deployqtmacx.sh
-        
-        # First run with simulation to check what will happen
-        echo "Running simulation..."
-        ./deployqtmacx.sh Vagyojaka.app --verbose --simulate \
-          -qt-path "${{ env.Qt6_DIR }}" \
-          -framework-path "${{ env.Qt6_DIR }}/lib" \
-          -plugins-path "${{ env.Qt6_DIR }}/plugins" \
-          -environment brew \
-          -system intel \
-          -qt-version 6.6.1 \
-          -plugins "platforms,styles,multimedia,tls,imageformats,networkinformation"
-        
-        # If simulation looks good, run the actual deployment
-        echo "Running actual deployment..."
-        ./deployqtmacx.sh Vagyojaka.app --verbose \
-          -qt-path "${{ env.Qt6_DIR }}" \
-          -framework-path "${{ env.Qt6_DIR }}/lib" \
-          -plugins-path "${{ env.Qt6_DIR }}/plugins" \
-          -environment brew \
-          -system intel \
-          -qt-version 6.6.1 \
-          -plugins "platforms,styles,multimedia,tls,imageformats,networkinformation"
-        
+        # Verify libraries
         echo "Checking library dependencies..."
         otool -L "Vagyojaka.app/Contents/MacOS/Vagyojaka"
         
         echo "Checking Frameworks contents:"
         ls -la "Vagyojaka.app/Contents/Frameworks/"
         
-        # Create DMG using hdiutil directly
+        # Create DMG
         echo "Creating DMG..."
         if [[ $GITHUB_REF == refs/tags/* ]]; then
           DMG_NAME="Vagyojaka-${{ github.ref_name }}-macos.dmg"
@@ -224,17 +245,8 @@ jobs:
           DMG_NAME="Vagyojaka.dmg"
         fi
         
-        hdiutil create -volname "Vagyojaka" -srcfolder "Vagyojaka.app" -ov -format UDZO "$DMG_NAME"
-        
-        if [ -f Vagyojaka.dmg ]; then
-          chmod 644 Vagyojaka.dmg
-          if [[ $GITHUB_REF == refs/tags/* ]]; then
-            mv Vagyojaka.dmg "Vagyojaka-${{ github.ref_name }}-macos.dmg"
-          fi
-        else
-          echo "Error: DMG file was not created!"
-          exit 1
-        fi
+        # Use macdeployqt for DMG creation
+        macdeployqt Vagyojaka.app -verbose=2 -dmg -always-overwrite
 
     - name: Upload artifact
       uses: actions/upload-artifact@v3

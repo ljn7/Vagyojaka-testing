@@ -137,6 +137,10 @@ jobs:
       run: |
         cd output
          
+        # First run macdeployqt
+        echo "Running initial macdeployqt..."
+        macdeployqt Vagyojaka.app -verbose=2
+        
         # Create Python script to fix library paths
         cat > fix_libs.py << 'EOL'
         from pathlib import Path
@@ -158,10 +162,25 @@ jobs:
                 libs_to_fix.append(lib)
             for lib in Path(bundle_path).glob('**/*.so'):
                 libs_to_fix.append(lib)
+            
+            # Special handling for webp dependencies
+            webp_deps = ['libsharpyuv.0.dylib', 'libjxl_cms.0.11.dylib']
+            for dep in webp_deps:
+                for prefix in ['/opt/homebrew', '/usr/local']:
+                    source = Path(prefix) / 'opt/webp/lib' / dep
+                    if source.exists():
+                        dest = framework_path / dep
+                        print(f"Copying special dependency: {source} -> {dest}")
+                        shutil.copy2(str(source), str(dest))
+                        framework_libs.add(dep)
+                        libs_to_fix.append(dest)
     
             while libs_to_fix:
                 lib = libs_to_fix.popleft()
                 print(f"Processing: {lib}")
+                
+                # Fix the library ID
+                subprocess.run(['install_name_tool', '-id', f'@rpath/{lib.name}', str(lib)])
                 
                 # Get library dependencies
                 result = subprocess.check_output(['otool', '-L', str(lib)], stderr=subprocess.STDOUT).decode('utf-8')
@@ -195,6 +214,10 @@ jobs:
                                         libs_to_fix.append(framework_path / dep_path.name)
                                         break
                         
+                        # Fix the dependency path
+                        new_path = f'@rpath/{dep_path.name}'
+                        subprocess.run(['install_name_tool', '-change', dep, new_path, str(lib)])
+                    
                     # Handle @loader_path cases
                     elif '@loader_path' in dep:
                         dep_path = Path(dep.split(' (compatibility')[0])
@@ -206,6 +229,9 @@ jobs:
                             shutil.copy2(str(actual_path), str(framework_path))
                             framework_libs.add(dep_path.name)
                             libs_to_fix.append(framework_path / dep_path.name)
+                        
+                        new_path = f'@rpath/{dep_path.name}'
+                        subprocess.run(['install_name_tool', '-change', dep, new_path, str(lib)])
     
         if __name__ == '__main__':
             if len(sys.argv) != 2:
@@ -214,13 +240,9 @@ jobs:
             fix_libraries(sys.argv[1])
         EOL
         
-        # Run our fix script first
+        # Run our fix script
         echo "Running library fix script..."
         python3 fix_libs.py "Vagyojaka.app"
-        
-        # Run initial macdeployqt
-        echo "Running initial macdeployqt..."
-        macdeployqt Vagyojaka.app -verbose=2
         
         # Run macdeployqtfix
         echo "Running macdeployqtfix..."
@@ -234,6 +256,10 @@ jobs:
         echo "Checking library dependencies..."
         otool -L "Vagyojaka.app/Contents/MacOS/Vagyojaka"
         
+        echo "Checking library webp dependencies..."
+        otool -L "Vagyojaka.app/Contents/Frameworks/libwebp.7.dylib"
+        otool -L "Vagyojaka.app/Contents/Frameworks/libwebpmux.3.dylib"
+        
         echo "Checking Frameworks contents:"
         ls -la "Vagyojaka.app/Contents/Frameworks/"
         
@@ -245,7 +271,6 @@ jobs:
           DMG_NAME="Vagyojaka.dmg"
         fi
         
-        # Use macdeployqt for DMG creation
         macdeployqt Vagyojaka.app -verbose=2 -dmg -always-overwrite
 
     - name: Upload artifact

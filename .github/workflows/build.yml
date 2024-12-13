@@ -15,135 +15,124 @@ jobs:
     env:
       QT_VERSION: "6.6.1"
       MACOSX_DEPLOYMENT_TARGET: "12.0"
-      BUILD_DIR: ${{ github.workspace }}/deps_build
-      INSTALL_PREFIX: ${{ github.workspace }}/deps_install
       SDKROOT: /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX12.3.sdk
-      PKG_CONFIG_PATH: ${{ github.workspace }}/deps_install/lib/pkgconfig
+      HOMEBREW_NO_AUTO_UPDATE: 1
+      HOMEBREW_NO_INSTALL_CLEANUP: 1
       
     steps:
     - uses: actions/checkout@v4
       with:
         fetch-depth: 0
 
+    - name: Setup ccache
+      uses: hendrikmuhs/ccache-action@v1.2
+      with:
+        key: ${{ runner.os }}-ccache-${{ github.sha }}
+        restore-keys: ${{ runner.os }}-ccache-
+
     - name: Setup build environment
       run: |
-        # Create build directories
-        mkdir -p $BUILD_DIR $INSTALL_PREFIX
+        # Set SDK and deployment target
+        sudo xcode-select --switch /Applications/Xcode.app
         
-        # Set compilation flags for macOS 12
-        echo "CFLAGS=-mmacosx-version-min=12.0 -I$INSTALL_PREFIX/include" >> $GITHUB_ENV
-        echo "CXXFLAGS=-mmacosx-version-min=12.0 -I$INSTALL_PREFIX/include" >> $GITHUB_ENV
-        echo "LDFLAGS=-mmacosx-version-min=12.0 -L$INSTALL_PREFIX/lib" >> $GITHUB_ENV
+        # Set global compilation flags for macOS 12
+        echo "CFLAGS=-mmacosx-version-min=12.0" >> $GITHUB_ENV
+        echo "CXXFLAGS=-mmacosx-version-min=12.0" >> $GITHUB_ENV
+        echo "LDFLAGS=-mmacosx-version-min=12.0" >> $GITHUB_ENV
         
-        # Add installation path to PATH
-        echo "$INSTALL_PREFIX/bin" >> $GITHUB_PATH
+        # Configure Homebrew for source builds
+        echo "HOMEBREW_BUILD_FROM_SOURCE=1" >> $GITHUB_ENV
+        echo "HOMEBREW_NO_BINARY=1" >> $GITHUB_ENV
+        
+        # Create bottle configuration for macOS 12
+        mkdir -p ~/Library/Homebrew/
+        cat > ~/Library/Homebrew/bottle.json << EOF
+        {
+          "macOS": {
+            "monterey": {
+              "MACOS_VERSION": "12",
+              "MACOS_SDK": "12.3"
+            }
+          }
+        }
+        EOF
 
-    - name: Build zlib
-      working-directory: ${{ env.BUILD_DIR }}
+    - name: Download and build dependencies
       run: |
-        curl -L https://zlib.net/zlib-1.3.tar.gz | tar xz
-        cd zlib-1.3
-        ./configure --prefix=$INSTALL_PREFIX
-        make -j$(sysctl -n hw.ncpu)
-        make install
-
-    - name: Build yasm
-      working-directory: ${{ env.BUILD_DIR }}
-      run: |
-        curl -L https://www.tortall.net/projects/yasm/releases/yasm-1.3.0.tar.gz | tar xz
-        cd yasm-1.3.0
-        ./configure --prefix=$INSTALL_PREFIX
-        make -j$(sysctl -n hw.ncpu)
-        make install
-
-    - name: Build nasm
-      working-directory: ${{ env.BUILD_DIR }}
-      run: |
-        curl -L https://www.nasm.us/pub/nasm/releasebuilds/2.16.01/nasm-2.16.01.tar.gz | tar xz
-        cd nasm-2.16.01
-        ./configure --prefix=$INSTALL_PREFIX
-        make -j$(sysctl -n hw.ncpu)
-        make install
-
-    - name: Build libpng
-      working-directory: ${{ env.BUILD_DIR }}
-      run: |
-        curl -L https://download.sourceforge.net/libpng/libpng-1.6.40.tar.gz | tar xz
-        cd libpng-1.6.40
-        ./configure --prefix=$INSTALL_PREFIX
-        make -j$(sysctl -n hw.ncpu)
-        make install
-
-    - name: Build libjpeg-turbo
-      working-directory: ${{ env.BUILD_DIR }}
-      run: |
-        curl -L https://github.com/libjpeg-turbo/libjpeg-turbo/archive/refs/tags/3.0.0.tar.gz | tar xz
-        cd libjpeg-turbo-3.0.0
-        cmake -B build \
-          -DCMAKE_BUILD_TYPE=Release \
-          -DCMAKE_INSTALL_PREFIX=$INSTALL_PREFIX \
-          -DCMAKE_OSX_DEPLOYMENT_TARGET=12.0
-        cmake --build build -j$(sysctl -n hw.ncpu)
-        cmake --install build
-
-    - name: Build SDL2
-      working-directory: ${{ env.BUILD_DIR }}
-      run: |
-        curl -L https://github.com/libsdl-org/SDL/releases/download/release-2.28.5/SDL2-2.28.5.tar.gz | tar xz
-        cd SDL2-2.28.5
-        ./configure --prefix=$INSTALL_PREFIX
-        make -j$(sysctl -n hw.ncpu)
-        make install
-
-    - name: Build x264
-      working-directory: ${{ env.BUILD_DIR }}
-      run: |
-        git clone --depth 1 https://code.videolan.org/videolan/x264.git
-        cd x264
-        ./configure --prefix=$INSTALL_PREFIX --enable-shared --disable-asm
-        make -j$(sysctl -n hw.ncpu)
-        make install
-
-    - name: Build x265
-      working-directory: ${{ env.BUILD_DIR }}
-      run: |
-        curl -L https://github.com/videolan/x265/archive/refs/tags/3.5.tar.gz | tar xz
-        cd x265-3.5/build/linux
-        cmake -G "Unix Makefiles" ../../source \
-          -DCMAKE_INSTALL_PREFIX=$INSTALL_PREFIX \
-          -DENABLE_SHARED=ON \
-          -DCMAKE_OSX_DEPLOYMENT_TARGET=12.0
-        make -j$(sysctl -n hw.ncpu)
-        make install
+        # Initialize source list
+        PACKAGES=(
+          "nasm"
+          "libgit2"
+          "fftw"
+          "webp"
+          "jpeg-xl"
+          "sdl2"
+          "libsoxr"
+          "aom"
+          "dav1d"
+          "libvmaf"
+          "opencore-amr"
+          "opus"
+          "rav1e"
+          "libsrt"
+          "tesseract"
+          "theora"
+          "x264"
+          "x265"
+          "libvpx"
+          "snappy"
+          "zimg"
+          "rubberband"
+          "speex"
+          "librist"
+        )
+        
+        # Download sources
+        for pkg in "${PACKAGES[@]}"; do
+          echo "Downloading source for $pkg..."
+          brew fetch --force --build-from-source $pkg
+        done
+        
+        # Extract and build each package
+        for pkg in "${PACKAGES[@]}"; do
+          echo "Building $pkg..."
+          export HOMEBREW_OPTFLAGS="-mmacosx-version-min=12.0"
+          export HOMEBREW_OPTIMIZATION_LEVEL="2"
+          
+          # Download source and extract formula
+          brew extract --version=latest $pkg homebrew/core
+          
+          # Build with macOS 12 targeting
+          HOMEBREW_DEVELOPER=1 brew install --build-from-source \
+            --env=std \
+            --cc=clang \
+            --build-bottle \
+            --bottle-arch=core2 \
+            $pkg || {
+              echo "Failed to build $pkg"
+              exit 1
+            }
+        done
 
     - name: Build FFmpeg
-      working-directory: ${{ env.BUILD_DIR }}
       run: |
-        git clone --depth 1 --branch n6.1.1 https://github.com/FFmpeg/FFmpeg.git
-        cd FFmpeg
-        ./configure \
-          --prefix=$INSTALL_PREFIX \
-          --enable-shared \
-          --disable-static \
-          --enable-pthreads \
-          --enable-version3 \
-          --enable-libx264 \
-          --enable-libx265 \
-          --enable-libsdl2 \
-          --enable-videotoolbox \
+        # Download FFmpeg source using brew
+        brew fetch --force --build-from-source ffmpeg
+        
+        # Build with custom options
+        HOMEBREW_DEVELOPER=1 brew install --build-from-source \
+          --env=std \
+          --cc=clang \
+          --build-bottle \
+          --bottle-arch=core2 \
+          --with-macos-sdk=12.3 \
+          --with-sdl2 \
+          --with-freetype \
+          --with-fftw \
+          --with-webp \
+          --with-jpeg-xl \
           --disable-avfoundation \
-          --disable-doc \
-          --disable-programs \
-          --disable-everything \
-          --enable-decoder=h264,hevc,aac,mp3 \
-          --enable-demuxer=mov,mp4,m4a,wav \
-          --enable-protocol=file \
-          --enable-filter=aresample \
-          --disable-xlib \
-          --disable-zlib \
-          --disable-securetransport
-        make -j$(sysctl -n hw.ncpu)
-        make install
+          ffmpeg
 
     - name: Install Qt
       uses: jurplel/install-qt-action@v4.1.1
@@ -154,20 +143,26 @@ jobs:
         cache: true
         aqtversion: '==3.1.*'
 
+    - name: Verify dependencies
+      run: |
+        echo "Checking library deployment targets..."
+        find /usr/local/lib -name "*.dylib" -exec sh -c 'echo "{}"; otool -l "{}" | grep -A2 "LC_VERSION_MIN_MACOSX"' \;
+
     - name: Build project
       run: |
         mkdir build && cd build
         
         cmake .. \
           -DCMAKE_BUILD_TYPE=Release \
-          -DCMAKE_PREFIX_PATH="${{ env.Qt6_DIR }};$INSTALL_PREFIX" \
+          -DCMAKE_PREFIX_PATH=${{ env.Qt6_DIR }} \
           -DCMAKE_OSX_DEPLOYMENT_TARGET=12.0 \
           -DCMAKE_OSX_SYSROOT=$SDKROOT \
           -DCMAKE_INSTALL_RPATH="@executable_path/../Frameworks" \
+          -DCMAKE_C_COMPILER_LAUNCHER=ccache \
+          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
           -DCMAKE_C_FLAGS="-mmacosx-version-min=12.0" \
           -DCMAKE_CXX_FLAGS="-mmacosx-version-min=12.0" \
-          -DCMAKE_SHARED_LINKER_FLAGS="-mmacosx-version-min=12.0" \
-          -DCMAKE_INSTALL_PREFIX=$INSTALL_PREFIX
+          -DCMAKE_SHARED_LINKER_FLAGS="-mmacosx-version-min=12.0"
         
         cmake --build . --config Release -j$(sysctl -n hw.ncpu)
 
@@ -177,29 +172,98 @@ jobs:
         # Initial deployment
         macdeployqt Vagyojaka.app -verbose=2
         
-        # Copy our built libraries
-        mkdir -p Vagyojaka.app/Contents/Frameworks
-        for lib in $INSTALL_PREFIX/lib/*.dylib; do
-          if [ -f "$lib" ]; then
-            cp -L "$lib" Vagyojaka.app/Contents/Frameworks/
-          fi
-        done
+        # Create and run fix_libs script for library deployment
+        cat > fix_libs.py << 'EOL'
+        from pathlib import Path
+        import sys
+        import subprocess
+        import shutil
+        from collections import deque
+
+        def fix_libraries(bundle_path):
+            framework_path = Path(bundle_path) / 'Contents' / 'Frameworks'
+            framework_path.mkdir(parents=True, exist_ok=True)
+            
+            # Track processed libraries
+            framework_libs = set()
+            libs_to_fix = deque()
+            
+            # Initial library scan
+            for lib in Path(bundle_path).glob('**/*.dylib'):
+                libs_to_fix.append(lib)
+            for lib in Path(bundle_path).glob('**/*.so'):
+                libs_to_fix.append(lib)
+            
+            # Define special dependencies
+            special_deps = {
+                'webp': ['libsharpyuv.0.dylib'],
+                'jpeg-xl': ['libjxl_cms.0.11.dylib', 'libjxl_threads.0.11.dylib'],
+                'ffmpeg': [
+                    'libavcodec.61.dylib',
+                    'libavdevice.61.dylib',
+                    'libavfilter.10.dylib',
+                    'libavformat.61.dylib',
+                    'libavutil.59.dylib',
+                    'libpostproc.58.dylib',
+                    'libswresample.5.dylib',
+                    'libswscale.8.dylib'
+                ]
+            }
+            
+            # Copy special dependencies
+            for pkg, deps in special_deps.items():
+                for dep in deps:
+                    source = Path('/usr/local/opt') / pkg / 'lib' / dep
+                    if source.exists():
+                        dest = framework_path / dep
+                        print(f"Copying special dependency: {source} -> {dest}")
+                        shutil.copy2(str(source), str(dest))
+                        framework_libs.add(dep)
+                        libs_to_fix.append(dest)
+
+            while libs_to_fix:
+                lib = libs_to_fix.popleft()
+                print(f"Processing: {lib}")
+                
+                # Fix library ID
+                subprocess.run(['install_name_tool', '-id', f'@rpath/{lib.name}', str(lib)], check=True)
+                
+                try:
+                    result = subprocess.check_output(['otool', '-L', str(lib)], stderr=subprocess.STDOUT).decode('utf-8')
+                except subprocess.CalledProcessError as e:
+                    print(f"Error checking dependencies for {lib}: {e}")
+                    continue
+                
+                for line in result.splitlines()[1:]:
+                    dep = line.strip().split()[0]
+                    
+                    if dep.startswith('/usr/local'):
+                        dep_path = Path(dep)
+                        if dep_path.name not in framework_libs:
+                            if dep_path.exists():
+                                print(f"Copying {dep_path} to {framework_path}")
+                                shutil.copy2(str(dep_path), str(framework_path))
+                                framework_libs.add(dep_path.name)
+                                libs_to_fix.append(framework_path / dep_path.name)
+                        
+                        # Fix dependency path
+                        new_path = f'@rpath/{dep_path.name}'
+                        subprocess.run(['install_name_tool', '-change', dep, new_path, str(lib)], check=True)
+
+        if __name__ == '__main__':
+            if len(sys.argv) != 2:
+                print("Usage: python3 fix_libs.py <app-bundle-path>")
+                sys.exit(1)
+            fix_libraries(sys.argv[1])
+        EOL
         
-        # Fix library paths
-        find Vagyojaka.app/Contents/Frameworks -name "*.dylib" | while read lib; do
-          echo "Processing $lib"
-          # Fix ID
-          install_name_tool -id "@rpath/$(basename $lib)" "$lib"
-          
-          # Fix dependencies
-          otool -L "$lib" | grep $INSTALL_PREFIX | cut -d' ' -f1 | while read dep; do
-            if [ "$dep" != "$lib" ]; then
-              install_name_tool -change "$dep" "@rpath/$(basename $dep)" "$lib"
-            fi
-          done
-        done
+        # Run fix_libs script
+        python3 fix_libs.py "Vagyojaka.app"
         
-        # Create DMG
+        # Verify libraries and create DMG
+        echo "Checking all libraries in bundle..."
+        find Vagyojaka.app -name "*.dylib" -exec otool -L {} \;
+        
         macdeployqt Vagyojaka.app -verbose=2 -dmg -always-overwrite
 
     - name: Upload artifact

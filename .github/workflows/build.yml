@@ -148,7 +148,7 @@ jobs:
         import subprocess
         import shutil
         from collections import deque
-    
+        
         def fix_libraries(bundle_path):
             framework_path = Path(bundle_path) / 'Contents' / 'Frameworks'
             framework_path.mkdir(parents=True, exist_ok=True)
@@ -163,18 +163,24 @@ jobs:
             for lib in Path(bundle_path).glob('**/*.so'):
                 libs_to_fix.append(lib)
             
-            # Special handling for webp dependencies
-            webp_deps = ['libsharpyuv.0.dylib', 'libjxl_cms.0.11.dylib']
-            for dep in webp_deps:
-                for prefix in ['/opt/homebrew', '/usr/local']:
-                    source = Path(prefix) / 'opt/webp/lib' / dep
-                    if source.exists():
-                        dest = framework_path / dep
-                        print(f"Copying special dependency: {source} -> {dest}")
-                        shutil.copy2(str(source), str(dest))
-                        framework_libs.add(dep)
-                        libs_to_fix.append(dest)
-    
+            # Special handling for dependencies
+            special_deps = {
+                'webp': ['libsharpyuv.0.dylib'],
+                'jpeg-xl': ['libjxl_cms.0.11.dylib', 'libjxl_threads.0.11.dylib']
+            }
+            
+            for pkg, deps in special_deps.items():
+                for dep in deps:
+                    for prefix in ['/opt/homebrew', '/usr/local']:
+                        source = Path(prefix) / f'opt/{pkg}/lib' / dep
+                        if source.exists():
+                            dest = framework_path / dep
+                            print(f"Copying special dependency: {source} -> {dest}")
+                            shutil.copy2(str(source), str(dest))
+                            framework_libs.add(dep)
+                            libs_to_fix.append(dest)
+                            break
+        
             while libs_to_fix:
                 lib = libs_to_fix.popleft()
                 print(f"Processing: {lib}")
@@ -213,11 +219,11 @@ jobs:
                                         framework_libs.add(dep_path.name)
                                         libs_to_fix.append(framework_path / dep_path.name)
                                         break
+                            
+                            # Fix the dependency path
+                            new_path = f'@rpath/{dep_path.name}'
+                            subprocess.run(['install_name_tool', '-change', dep, new_path, str(lib)])
                         
-                        # Fix the dependency path
-                        new_path = f'@rpath/{dep_path.name}'
-                        subprocess.run(['install_name_tool', '-change', dep, new_path, str(lib)])
-                    
                     # Handle @loader_path cases
                     elif '@loader_path' in dep:
                         dep_path = Path(dep.split(' (compatibility')[0])
@@ -232,7 +238,7 @@ jobs:
                         
                         new_path = f'@rpath/{dep_path.name}'
                         subprocess.run(['install_name_tool', '-change', dep, new_path, str(lib)])
-    
+        
         if __name__ == '__main__':
             if len(sys.argv) != 2:
                 print("Usage: python3 fix_libs.py <app-bundle-path>")
